@@ -1,0 +1,30 @@
+import { useGetMeQuery } from "@/redux/api/authApi";
+import { clearUser, setUser } from "@/redux/features/auth/authSlice";
+import { useAppDispatch } from "@/redux/hooks";
+import { useEffect } from "react";
+
+export default function AuthInitializer() {
+  const dispatch = useAppDispatch();
+  const { data, isError, isSuccess } = useGetMeQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
+
+  useEffect(() => {
+    if (isSuccess && data?.user) {
+      dispatch(
+        setUser({
+          id: (data.user as any)._id || data.user.id,
+          username: data.user.username,
+          name: data.user.name,
+          email: data.user.email,
+          profileImage: (data.user as any).profileImage || "",
+        }),
+      );
+    }
+    if (isError) {
+      dispatch(clearUser());
+    }
+  }, [data, isSuccess, isError, dispatch]);
+
+  return null;
+}
