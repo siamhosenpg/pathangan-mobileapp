@@ -32,6 +32,7 @@ export interface User {
   name: string;
   email: string;
   bio?: string;
+
   aboutText?: string;
   gender?: string;
   location?: string;
@@ -41,6 +42,7 @@ export interface User {
   coverImage?: string;
   role?: string;
   badges?: [string];
+  greenmarkVerified?: boolean;
   status?: string;
   createdAt?: string;
   activityStats?: ActivityStats;

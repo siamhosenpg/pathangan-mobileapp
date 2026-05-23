@@ -5,6 +5,7 @@ export interface PostUser {
   username: string;
   profileImage?: string;
   badges?: string[];
+  greenmarkVerified?: boolean;
   gender?: string;
   bio?: string;
 }

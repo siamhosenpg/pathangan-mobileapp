@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
+import GreenMark from "../../badges/GreenMark";
 import BanglaNumber from "../../extra/BanglaNumber";
 import PostThreeDotMenu from "../../threedotmenu/PostThreeDotMenu";
 // import FollowButton from "@/components/ui/buttons/FollowButton";
@@ -75,8 +76,9 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
           </TouchableOpacity>
 
           <View style={{ flex: 1 }}>
-            <View className="flex-row items-center gap-2">
+            <View className="flex-row items-center gap-1">
               <Text
+                className="flex-row items-center gap-1"
                 style={{
                   color: "#111827",
                   fontWeight: "600",
@@ -85,8 +87,8 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
               >
                 {user.name}
               </Text>
-              {user?.badges && user.badges.length > 0 && (
-                <Ionicons name="checkmark-circle" size={15} color="#00914d" />
+              {user?.greenmarkVerified && (
+                <GreenMark mark={!!user.greenmarkVerified} size={14} />
               )}
               {/* <FollowButton targetUserId={user._id} /> */}
             </View>
