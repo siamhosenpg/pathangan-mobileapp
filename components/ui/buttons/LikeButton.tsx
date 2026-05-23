@@ -47,7 +47,7 @@ const LikeButton = ({
     <TouchableOpacity
       onPress={handleLike}
       disabled={isLoading}
-      className="flex-row items-center gap-1.5"
+      className="flex-row items-center gap-1.5 py-3"
       style={{ opacity: isLoading ? 0.6 : 1 }}
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>

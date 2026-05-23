@@ -9,7 +9,7 @@ const CommentsButton = ({ onClick }: Props) => {
   return (
     <TouchableOpacity
       onPress={onClick}
-      className="flex-row items-center gap-1.5"
+      className="flex-row items-center gap-1.5 py-3"
     >
       <Ionicons name="chatbubble-outline" size={20} color="#9CA3AF" />
       <Text className="font-semibold text-base text-text-secondary">মতামত</Text>

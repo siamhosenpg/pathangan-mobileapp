@@ -65,7 +65,7 @@ const QuestionCard = ({ post }: Props) => {
       </View>
 
       {/* actions */}
-      <View className="px-4 py-3 flex-row items-center justify-between">
+      <View className="px-4  flex-row items-center justify-between">
         <View className="flex-row items-center gap-6">
           <LikeButton postId={_id} initialLiked={post.isReacted} />
 

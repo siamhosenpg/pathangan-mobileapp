@@ -36,10 +36,11 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
       <View className="px-4 pb-1 flex-row items-center justify-between">
         <View className="flex-row items-center gap-2 flex-1">
           <TouchableOpacity
+            className="border border-border"
             onPress={() => router.push(`/user/${user.username}` as any)}
             style={{
-              width: 44,
-              height: 44,
+              width: 40,
+              height: 40,
               borderRadius: 99,
               overflow: "hidden",
               backgroundColor: "rgba(0,145,77,0.15)",
@@ -89,7 +90,7 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
               )}
               {/* <FollowButton targetUserId={user._id} /> */}
             </View>
-            <Text style={{ color: "#9CA3AF", fontSize: 12, marginTop: 1 }}>
+            <Text style={{ color: "#9CA3AF", fontSize: 12 }}>
               <BanglaNumber value={getTimeAgo(createdAt)} />
             </Text>
           </View>

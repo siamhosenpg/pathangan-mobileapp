@@ -3,7 +3,7 @@ import { Text, TouchableOpacity } from "react-native";
 
 const ShareButton = () => {
   return (
-    <TouchableOpacity className="flex-row items-center gap-1.5">
+    <TouchableOpacity className="flex-row items-center gap-1.5 py-3">
       <Ionicons name="share-social-outline" size={20} color="#9CA3AF" />
       <Text className="font-semibold text-base text-text-secondary">
         প্রচার

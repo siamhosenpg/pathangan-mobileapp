@@ -18,7 +18,8 @@ export default function TabLayout() {
           height: 68,
           backgroundColor: "#ffffff",
           borderRadius: 999,
-          borderTopWidth: 0,
+          borderWidth: 1,
+          borderColor: "#E5E7EB",
           paddingTop: 0,
           paddingBottom: 0,
           shadowColor: "#000",
@@ -77,14 +78,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="create"
         options={{
-          title: "তৈরি",
-          tabBarIcon: ({ focused }) => (
-            <Ionicons
-              name={focused ? "add-circle" : "add-circle-outline"}
-              size={26}
-              color={focused ? "#00914d" : "#9CA3AF"}
-            />
-          ),
+          href: null,
         }}
       />
 
@@ -103,6 +97,20 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="people"
+        options={{
+          title: "ব্যবহারকারী",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "people" : "people-outline"}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="profile"
         options={{
           title: "প্রোফাইল",
@@ -113,6 +121,13 @@ export default function TabLayout() {
               color={color}
             />
           ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="search"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

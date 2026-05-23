@@ -1,9 +1,13 @@
 import CourseCardFeed from "@/components/ui/card/course/CourseCardFeed";
+import CreatePostCard from "@/components/ui/card/createpostcard/CreatePostCard";
+
 import Postcard from "@/components/ui/card/postcard/Postcard";
 import PostCardSkeleton from "@/components/ui/card/postcard/PostCardSkeleton";
 import QuestionCard from "@/components/ui/card/questioncard/QuestionCard";
+
 import { useGetPostsInfiniteQuery } from "@/redux/api/postApi";
 import type { Post } from "@/types/postTypes";
+
 import { FlatList, Text, View } from "react-native";
 
 export default function HomeFeed() {
@@ -45,12 +49,15 @@ export default function HomeFeed() {
 
   const renderItem = ({ item: post }: { item: Post }) => {
     if (!post) return null;
+
     if (post.postType === "question") {
       return <QuestionCard post={post} />;
     }
+
     if (post.postType === "course") {
       return <CourseCardFeed post={post} />;
     }
+
     return <Postcard post={post} />;
   };
 
@@ -62,6 +69,7 @@ export default function HomeFeed() {
         </View>
       );
     }
+
     if (!hasNextPage && posts.length > 0) {
       return (
         <View className="py-6 items-center">
@@ -69,6 +77,7 @@ export default function HomeFeed() {
         </View>
       );
     }
+
     return null;
   };
 
@@ -83,12 +92,20 @@ export default function HomeFeed() {
       data={posts}
       keyExtractor={(item) => item._id}
       renderItem={renderItem}
+      // 👇 Create Post Card
+      ListHeaderComponent={
+        <View className="mb-2">
+          <CreatePostCard />
+        </View>
+      }
       ListFooterComponent={renderFooter}
       ListEmptyComponent={renderEmpty}
       onEndReached={handleEndReached}
       onEndReachedThreshold={0.5}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 80 }}
+      contentContainerStyle={{
+        paddingBottom: 80,
+      }}
       ItemSeparatorComponent={() => <View className="h-2" />}
     />
   );

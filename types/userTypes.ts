@@ -40,6 +40,7 @@ export interface User {
   profileImage?: string;
   coverImage?: string;
   role?: string;
+  badges?: [string];
   status?: string;
   createdAt?: string;
   activityStats?: ActivityStats;

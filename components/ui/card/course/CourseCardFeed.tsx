@@ -44,12 +44,12 @@ const CourseCardFeed = ({ post }: Props) => {
       </View>
 
       {/* course info */}
-      <View className="flex-row gap-3 px-4">
+      <View className="flex-row gap-2.5 px-4">
         <TouchableOpacity
           onPress={() =>
             router.push(`/(tabs)/profile?username=${userid.username}`)
           }
-          className="w-12 h-12 rounded-full overflow-hidden bg-indigo-500/20 border border-border"
+          className="w-11 h-11 rounded-full overflow-hidden bg-indigo-500/20 border border-border"
         >
           {userid.profileImage ? (
             <Image
@@ -92,7 +92,7 @@ const CourseCardFeed = ({ post }: Props) => {
           />
         </View>
 
-        <View className="px-4 py-3 flex-row items-center justify-between">
+        <View className="px-4  flex-row items-center justify-between">
           <View className="flex-row items-center gap-6">
             <LikeButton postId={post._id} initialLiked={post.isReacted} />
 

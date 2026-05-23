@@ -1,3 +1,4 @@
+import { Header } from "@/components/ui/headers/Header";
 import { Ionicons } from "@expo/vector-icons";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
@@ -29,12 +30,7 @@ const courses = [
 export default function CourseScreen() {
   return (
     <View className="flex-1 bg-gray-50">
-      <View className="bg-white px-4 pt-12 pb-3 border-b border-gray-100">
-        <View className="flex-row items-center justify-between">
-          <Text className="text-xl font-bold text-gray-800">কোর্স</Text>
-          <Ionicons name="search-outline" size={24} color="#4F46E5" />
-        </View>
-      </View>
+      <Header title="কোর্সসমূহ" />
 
       <ScrollView
         className="flex-1 px-4 pt-4"
