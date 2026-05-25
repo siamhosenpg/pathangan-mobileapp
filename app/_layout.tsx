@@ -1,4 +1,5 @@
 import AuthInitializer from "@/components/ui/AuthInitializer";
+import { BottomSheetProvider } from "@/components/ui/bottom-sheet/BottomSheetProvider";
 import { store } from "@/redux/store";
 import { Stack } from "expo-router";
 import { useColorScheme } from "nativewind";
@@ -24,13 +25,19 @@ export default function RootLayout() {
   }, []);
   return (
     <Provider store={store}>
-      <AuthInitializer />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="user/[username]" />
-        <Stack.Screen name="post/[id]" />
-      </Stack>
+      <BottomSheetProvider>
+        <AuthInitializer />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="user/[username]" />
+          <Stack.Screen name="post/[id]" />
+        </Stack>
+      </BottomSheetProvider>
     </Provider>
   );
 }

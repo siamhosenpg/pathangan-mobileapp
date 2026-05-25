@@ -1,5 +1,6 @@
 import { useToggleReactionMutation } from "@/redux/api/reactionApi";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Text, TouchableOpacity } from "react-native";
 
@@ -20,6 +21,7 @@ const LikeButton = ({
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handleLike = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Animated.sequence([
       Animated.spring(scaleAnim, {
         toValue: 1.4,

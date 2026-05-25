@@ -19,15 +19,8 @@ const AnswerCard = ({ answer, questionId }: Props) => {
     <TouchableOpacity
       onPress={() => router.push(`/answer/${answer._id}` as any)}
       activeOpacity={0.7}
-      className="flex-col-reverse  p-3 rounded-lg  bg-background-secondary dark:bg-dark-background-secondary"
+      className="flex-col  p-3 rounded-lg  bg-background-secondary dark:bg-dark-background-secondary"
     >
-      {/* Avatar */}
-      <View className="flex-row items-center gap-3">
-        <Text className="font-semibold  text-text-tertiary dark:text-dark-text-tertiary text-sm">
-          {answer.userId.name}
-        </Text>
-      </View>
-
       {/* Content */}
       <View className="flex-1">
         <Text
@@ -43,6 +36,12 @@ const AnswerCard = ({ answer, questionId }: Props) => {
             <StarRating rating={averageRating} />
           )} */}
         </View>
+      </View>
+      {/* Avatar */}
+      <View className="flex-row items-center gap-3">
+        <Text className="font-semibold  text-text-tertiary dark:text-dark-text-tertiary text-sm">
+          {answer.userId.name}
+        </Text>
       </View>
     </TouchableOpacity>
   );

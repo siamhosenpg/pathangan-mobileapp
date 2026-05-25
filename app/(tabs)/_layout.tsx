@@ -10,7 +10,6 @@ export default function TabLayout() {
   const isDark = colorScheme === "dark";
   const user = useAppSelector((state) => state.auth.user);
 
-  // Profile tab custom icon
   const ProfileIcon = ({
     color,
     focused,
@@ -48,7 +47,6 @@ export default function TabLayout() {
           backgroundColor: focused ? "#00914d" : isDark ? "#2a2a2a" : "#e7e7e7",
           alignItems: "center",
           justifyContent: "center",
-          borderWidth: focused ? 0 : 0,
         }}
       >
         <Text
@@ -68,49 +66,33 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarShowLabel: true, // ✅ label সরানো হয়েছে
-
-        // ✅ এখানে বসাও
+        tabBarShowLabel: true,
         tabBarActiveTintColor: "#00914d",
-        tabBarInactiveTintColor: isDark ? "#eee" : "#555",
+        tabBarInactiveTintColor: isDark ? "#fff" : "#6d6d6",
 
         tabBarStyle: {
-          position: "absolute",
-          bottom: 12,
-          left: 12,
-          right: 12,
-          height: 64,
-          backgroundColor: isDark ? "#000" : "#ffffff",
-          borderRadius: 999,
-          borderWidth: 1,
-          borderColor: isDark ? "#2e2e2e" : "#E5E7EB",
-          paddingTop: 0,
-          paddingBottom: 0,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: isDark ? 0.3 : 0.08,
-          shadowRadius: 14,
-          elevation: 12,
-          marginLeft: 12,
-          marginRight: 12,
+          backgroundColor: isDark ? "#0f0f0f" : "#ffffff",
+          borderTopWidth: 1,
+          borderTopColor: isDark ? "#2e2e2e" : "#e7e7e7",
+          elevation: 0,
+          shadowOpacity: 0,
+          height: 84,
+          paddingHorizontal: 6,
         },
 
         tabBarItemStyle: {
-          marginHorizontal: 4,
-          borderRadius: 999,
-          // ✅ icon center
           alignItems: "center",
           justifyContent: "center",
         },
 
         tabBarIconStyle: {
-          marginTop: 2,
+          marginTop: 6,
         },
 
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: "600",
-          marginTop: 2,
+          marginBottom: 6,
         },
       }}
     >
@@ -142,12 +124,7 @@ export default function TabLayout() {
         }}
       />
 
-      <Tabs.Screen
-        name="create"
-        options={{
-          href: null,
-        }}
-      />
+      <Tabs.Screen name="create" options={{ href: null }} />
 
       <Tabs.Screen
         name="course"

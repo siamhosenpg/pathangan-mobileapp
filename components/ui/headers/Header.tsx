@@ -4,9 +4,19 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
+import NotificationBadge from "@/components/layout/notifications/NotificationBadge";
+import NotificationPanel from "@/components/layout/notifications/NotificationPanel";
+import { useBottomSheet } from "@/components/ui/bottom-sheet/useBottomSheet";
+import { useGetUnreadNotificationCountQuery } from "@/redux/api/notification/notificationApi";
+
 export function Header({ title }: { title?: string }) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const { open } = useBottomSheet();
+
+  const { data } = useGetUnreadNotificationCountQuery();
+  const unreadCount = data?.count ?? 0;
 
   return (
     <>
@@ -34,14 +44,16 @@ export function Header({ title }: { title?: string }) {
             >
               <Ionicons name="search-outline" size={24} color="#6B7280" />
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push("/(tabs)/notifications" as any)}
-            >
-              <Ionicons
-                name="notifications-outline"
-                size={24}
-                color="#6B7280"
-              />
+            <TouchableOpacity onPress={() => open(<NotificationPanel />)}>
+              <View style={{ position: "relative" }}>
+                <Ionicons
+                  name="notifications-outline"
+                  size={24}
+                  color="#6B7280"
+                />
+
+                <NotificationBadge count={unreadCount} />
+              </View>
             </TouchableOpacity>
             {/* menu button */}
             <TouchableOpacity onPress={() => setMenuOpen(true)}>

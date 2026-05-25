@@ -10,7 +10,10 @@ import type { Post } from "@/types/postTypes";
 
 import { FlatList, Text, View } from "react-native";
 
-export default function HomeFeed() {
+interface HomeFeedProps {
+  onScroll?: (scrollY: number) => void;
+}
+export default function HomeFeed({ onScroll }: HomeFeedProps) {
   const {
     data,
     isLoading,
@@ -93,6 +96,8 @@ export default function HomeFeed() {
 
   return (
     <FlatList
+      onScroll={(e) => onScroll?.(e.nativeEvent.contentOffset.y)}
+      scrollEventThrottle={32} // ✅ smooth tracking
       data={posts}
       keyExtractor={(item) => item._id}
       renderItem={renderItem}
