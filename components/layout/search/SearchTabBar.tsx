@@ -16,15 +16,7 @@ interface Props {
 
 export default function SearchTabBar({ activeTab, onTabChange }: Props) {
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        backgroundColor: "#fff",
-        borderBottomWidth: 1,
-        borderBottomColor: "#F3F4F6",
-        paddingHorizontal: 16,
-      }}
-    >
+    <View className="flex-row bg-background dark:bg-dark-background border-b border-background-secondary dark:border-dark-border px-4">
       {TABS.map((tab) => {
         const isActive = activeTab === tab.key;
         return (
@@ -32,20 +24,16 @@ export default function SearchTabBar({ activeTab, onTabChange }: Props) {
             key={tab.key}
             onPress={() => onTabChange(tab.key)}
             activeOpacity={0.7}
-            style={{
-              paddingVertical: 13,
-              paddingHorizontal: 6,
-              marginRight: 20,
-              borderBottomWidth: 2,
-              borderBottomColor: isActive ? "#00914d" : "transparent",
-            }}
+            className={`py-3.5 px-1.5 mr-5 border-b-2 ${
+              isActive ? "border-accent" : "border-transparent"
+            }`}
           >
             <Text
-              style={{
-                fontSize: 13,
-                fontWeight: isActive ? "700" : "500",
-                color: isActive ? "#00914d" : "#6B7280",
-              }}
+              className={`text-[13px] ${
+                isActive
+                  ? "font-bold text-accent"
+                  : "font-medium text-text-tertiary dark:text-dark-text-tertiary"
+              }`}
             >
               {tab.label}
             </Text>

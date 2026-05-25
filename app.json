@@ -1,26 +1,29 @@
 {
   "expo": {
-    "name": "pathangan",
+    "name": "Pathangan",
     "slug": "pathangan",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "pathangan",
     "userInterfaceStyle": "automatic",
-
+    "updates": {
+      "url": "https://u.expo.dev/c9f32d03-edb5-4f62-bf40-32335ae02c9e"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "ios": {
       "supportsTablet": true
     },
-
     "android": {
-      "package": "com.siamhosenpg.pathangan", // ← এটা add করো
+      "package": "com.siamhosenpg.pathangan",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -46,6 +49,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c9f32d03-edb5-4f62-bf40-32335ae02c9e"
+      }
     }
   }
 }

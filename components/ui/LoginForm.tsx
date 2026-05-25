@@ -24,15 +24,26 @@ export default function LoginForm() {
   const [form, setForm] = useState<LoginRequest>({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [googleAlert, setGoogleAlert] = useState(false);
-
+  const [loginError, setLoginError] = useState<string | null>(null);
   const handleSubmit = async () => {
+    setLoginError(null); // আগের error clear করো
     try {
       const res = await login(form).unwrap();
       dispatch(setUser(res.user));
       await refetch();
       router.replace("/(tabs)/feed");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login error:", err);
+      // Backend error message দেখাও
+      if (err?.data?.message) {
+        setLoginError(err.data.message);
+      } else if (err?.status === "FETCH_ERROR") {
+        setLoginError("সার্ভারের সাথে সংযোগ হচ্ছে না। একটু পরে চেষ্টা করুন।");
+      } else if (err?.status === 401) {
+        setLoginError("ইমেইল বা পাসওয়ার্ড ভুল।");
+      } else {
+        setLoginError("কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+      }
     }
   };
 
@@ -89,7 +100,7 @@ export default function LoginForm() {
               স্বাগতম 👋
             </Text>
             <Text className="text-gray-400 text-sm">
-              আপনার অ্যাকাউন্টে প্রবেশ করুন
+              আপনার অ্যাকাউন্টে প্রবেশ করুন ok
             </Text>
           </View>
 
@@ -97,6 +108,13 @@ export default function LoginForm() {
           {errorMessage && (
             <View className="bg-red-500/10 border border-red-500/30 px-4 py-3 rounded-xl mb-4">
               <Text className="text-red-400 text-sm">⚠️ {errorMessage}</Text>
+            </View>
+          )}
+          {(errorMessage || loginError) && (
+            <View className="bg-red-500/10 border border-red-500/30 px-4 py-3 rounded-xl mb-4">
+              <Text className="text-red-400 text-sm">
+                ⚠️ {errorMessage || loginError}
+              </Text>
             </View>
           )}
 

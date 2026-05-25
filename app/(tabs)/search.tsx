@@ -1,6 +1,8 @@
 import type { SearchUser } from "@/redux/api/others/searchApi";
 import { useGlobalSearchQuery } from "@/redux/api/others/searchApi";
 import type { Post } from "@/types/postTypes";
+import { Ionicons } from "@expo/vector-icons";
+import { useColorScheme } from "nativewind";
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
@@ -11,18 +13,15 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import PostRow from "@/components/layout/search/PostRow";
+import SearchEmptyState from "@/components/layout/search/SearchEmptyState";
+import SearchInput from "@/components/layout/search/SearchInput";
 import SearchSectionHeader from "@/components/layout/search/SearchSectionHeader";
 import SearchTabBar, {
   SearchTab,
 } from "@/components/layout/search/SearchTabBar";
-import { Ionicons } from "@expo/vector-icons";
-
-import PostRow from "@/components/layout/search/PostRow";
-import SearchEmptyState from "@/components/layout/search/SearchEmptyState";
-import SearchInput from "@/components/layout/search/SearchInput";
 import UserCard from "@/components/ui/card/user/UserCard";
 
-// ─── List item types ────────────────────────────────────────────────────────────
 type ListItem =
   | { type: "tab_bar" }
   | { type: "section_header"; title: string; count: number }
@@ -32,6 +31,8 @@ type ListItem =
 
 export default function SearchScreen() {
   const insets = useSafeAreaInsets();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
@@ -57,12 +58,9 @@ export default function SearchScreen() {
   const posts = data?.posts ?? [];
   const users = data?.users ?? [];
 
-  // ─── Build FlatList data ─────────────────────────────────────────────────────
   const buildListData = (): ListItem[] => {
     if (!submittedQuery) return [];
-
     const items: ListItem[] = [{ type: "tab_bar" }];
-
     if (isLoading || isError) return items;
 
     if (activeTab === "all") {
@@ -107,7 +105,6 @@ export default function SearchScreen() {
 
   const listData = buildListData();
 
-  // ─── Render item ─────────────────────────────────────────────────────────────
   const renderItem = ({ item }: { item: ListItem }) => {
     if (item.type === "tab_bar") {
       return <SearchTabBar activeTab={activeTab} onTabChange={setActiveTab} />;
@@ -119,36 +116,33 @@ export default function SearchScreen() {
     if (item.type === "post") return <PostRow post={item.data} />;
     if (item.type === "no_results") {
       return (
-        <View style={{ alignItems: "center", paddingTop: 60, gap: 10 }}>
-          <Ionicons name="search-outline" size={40} color="#E5E7EB" />
-          <Text style={{ fontSize: 13, color: "#9CA3AF" }}>{item.message}</Text>
+        <View className="items-center pt-16 gap-2.5">
+          <Ionicons
+            name="search-outline"
+            size={40}
+            color={isDark ? "#2e2e2e" : "#E5E7EB"}
+          />
+          <Text className="text-[13px] text-text-tertiary dark:text-dark-text-tertiary">
+            {item.message}
+          </Text>
         </View>
       );
     }
     return null;
   };
 
-  // ─── Key extractor ───────────────────────────────────────────────────────────
   const keyExtractor = (item: ListItem, index: number) => {
     if (item.type === "post") return `post-${item.data._id}`;
     if (item.type === "user") return `user-${item.data._id}`;
     return `${item.type}-${index}`;
   };
 
-  // ─── Render ──────────────────────────────────────────────────────────────────
   return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+    <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
       {/* Header */}
       <View
-        style={{
-          backgroundColor: "#fff",
-          paddingTop: insets.top + 8,
-          paddingBottom: 12,
-          paddingHorizontal: 16,
-          borderBottomWidth: 1,
-          borderBottomColor: "#F3F4F6",
-          gap: 10,
-        }}
+        className="bg-background dark:bg-dark-background border-b border-border dark:border-dark-border px-4 pb-3 gap-2.5"
+        style={{ paddingTop: insets.top + 8 }}
       >
         <SearchInput
           value={query}
@@ -165,9 +159,7 @@ export default function SearchScreen() {
           message="কিছু লিখে সার্চ করুন"
         />
       ) : isLoading ? (
-        <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-        >
+        <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#00914d" />
         </View>
       ) : isError ? (

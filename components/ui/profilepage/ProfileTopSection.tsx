@@ -18,13 +18,13 @@ const ProfileTopSection = ({ data }: Props) => {
   const isOwnProfile = currentUser?.id === data._id;
 
   return (
-    <View className="bg-background">
+    <View className="bg-background dark:bg-dark-background">
       {/* Cover Image */}
       <View className="w-full  p-4 ">
         {data.coverImage ? (
           <Image
             source={{ uri: data.coverImage }}
-            className="w-full aspect-[6/2] rounded-lg"
+            className="w-full aspect-[6/2] rounded-lg border border-border dark:border-dark-border"
             resizeMode="cover"
           />
         ) : (
@@ -36,7 +36,7 @@ const ProfileTopSection = ({ data }: Props) => {
       <View className="px-4 pb-4">
         <View className="flex-row items-center gap-2 justify-start ">
           {/* Avatar */}
-          <View className="w-20 h-20 rounded-full border border-border overflow-hidden bg-accent/20">
+          <View className="w-20 h-20 rounded-full border border-border dark:border-dark-border overflow-hidden bg-accent/20">
             {data.profileImage ? (
               <Image
                 source={{ uri: data.profileImage }}
@@ -45,7 +45,7 @@ const ProfileTopSection = ({ data }: Props) => {
               />
             ) : (
               <View className="w-full h-full items-center justify-center bg-accent-secondary">
-                <Text className="text-3xl font-bold text-accent">
+                <Text className="text-4xl font-bold text-accent uppercase mt-1">
                   {data.name?.charAt(0).toUpperCase()}
                 </Text>
               </View>
@@ -55,7 +55,9 @@ const ProfileTopSection = ({ data }: Props) => {
           {/* Name + Rating */}
           <View className="  ">
             <View className="flex-row items-center gap-1">
-              <Text className="text-lg font-bold text-text">{data.name}</Text>
+              <Text className="text-lg font-bold text-text dark:text-dark-text">
+                {data.name}
+              </Text>
               {data?.greenmarkVerified && (
                 <GreenMark mark={!!data.greenmarkVerified} size={16} />
               )}
@@ -73,12 +75,12 @@ const ProfileTopSection = ({ data }: Props) => {
 
         {/* Bio + About */}
         {data.bio && (
-          <Text className="mt-3 font-semibold text-base text-text">
+          <Text className="mt-3 font-semibold text-base text-text dark:text-dark-text">
             {data.bio}
           </Text>
         )}
         {data.aboutText && (
-          <Text className="mt-1 text-sm text-text-secondary leading-5">
+          <Text className="mt-1 text-sm text-text-secondary dark:text-dark-text-secondary leading-5">
             {data.aboutText}
           </Text>
         )}

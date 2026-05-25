@@ -8,36 +8,12 @@ interface Props {
 
 export default function SearchSectionHeader({ title, count }: Props) {
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-        paddingHorizontal: 16,
-        paddingTop: 16,
-        paddingBottom: 8,
-        backgroundColor: "#F9FAFB",
-      }}
-    >
-      <Text
-        style={{
-          fontSize: 12,
-          fontWeight: "700",
-          color: "#374151",
-          letterSpacing: 0.5,
-        }}
-      >
+    <View className="flex-row items-center gap-1.5 px-4 pt-4 pb-2 bg-background-secondary dark:bg-dark-background-secondary">
+      <Text className="text-xs font-bold text-text-secondary dark:text-dark-text-secondary tracking-wide">
         {title}
       </Text>
-      <View
-        style={{
-          backgroundColor: "#E5E7EB",
-          borderRadius: 99,
-          paddingHorizontal: 6,
-          paddingVertical: 1,
-        }}
-      >
-        <Text style={{ fontSize: 10, color: "#6B7280", fontWeight: "600" }}>
+      <View className="bg-background-tertiary dark:bg-dark-background-tertiary rounded-full px-1.5 py-0.5">
+        <Text className="text-[10px] font-semibold text-text-tertiary dark:text-dark-text-tertiary">
           {count}
         </Text>
       </View>

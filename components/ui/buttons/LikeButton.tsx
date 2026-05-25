@@ -55,14 +55,16 @@ const LikeButton = ({
           name={isLiked ? "heart" : "heart-outline"}
           size={20}
           color={isLiked ? "#00914d" : undefined}
-          className={isLiked ? "" : "text-text-secondary"}
+          className={
+            isLiked ? "" : "text-text-secondary dark:text-dark-text-secondary"
+          }
         />
       </Animated.View>
       <Text
         className={
           isLiked
             ? "font-semibold text-base text-accent"
-            : "font-semibold text-base text-text-secondary"
+            : "font-semibold text-base text-text-secondary dark:text-dark-text-secondary"
         }
       >
         সমর্থন

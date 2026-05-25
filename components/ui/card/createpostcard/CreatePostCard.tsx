@@ -11,16 +11,16 @@ const CreatePostCard = () => {
   return (
     <TouchableOpacity
       onPress={handleCreatePost}
-      className="bg-background px-4 py-1"
+      className="bg-background dark:bg-dark-background px-4 py-1"
     >
       <View className="flex-row items-center gap-3">
         {/* Left Icon Button */}
-        <View className="w-11 h-11 rounded-full bg-gray-200 items-center justify-center">
+        <View className="w-11 h-11 rounded-full bg-background-tertiary dark:bg-dark-background-tertiary items-center justify-center">
           <Ionicons name="add" size={22} color="#4B5563" />
         </View>
 
         {/* Text */}
-        <Text className="text-gray-600 text-base flex-1 leading-5 py-3">
+        <Text className="text-gray-600 text-base flex-1 leading-5 py-3 dark:text-dark-gray-600">
           আপনি কি কিছু বলতে, প্রশ্ন করতে বা কোর্স আপলোড করতে চাচ্ছেন?
         </Text>
       </View>

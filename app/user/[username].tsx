@@ -24,7 +24,7 @@ export default function UserProfileScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
+      <View className="flex-1 items-center justify-center bg-background dark:bg-dark-background">
         <ActivityIndicator size="large" color="#00914d" />
       </View>
     );
@@ -32,8 +32,8 @@ export default function UserProfileScreen() {
 
   if (isError || !user) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <Text className="text-text-secondary text-sm">
+      <View className="flex-1 items-center justify-center bg-background dark:bg-dark-background">
+        <Text className="text-text-secondary text-sm dark:text-dark-text-secondary">
           ব্যবহারকারী পাওয়া যায়নি
         </Text>
       </View>
@@ -41,14 +41,16 @@ export default function UserProfileScreen() {
   }
 
   return (
-    <View className="flex-1 bg-background-secondary">
+    <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
       {/* Header */}
-      <View className="bg-background px-4 pt-12 pb-3 border-b border-border flex-row items-center justify-between">
+      <View className="bg-background dark:bg-dark-background px-4 pt-12 pb-3 border-b border-border dark:border-dark-border flex-row items-center justify-between">
         <View className="flex-row items-center gap-3">
           <TouchableOpacity onPress={() => router.back()} className="p-1">
             <Ionicons name="arrow-back" size={22} color="#3a3a3a" />
           </TouchableOpacity>
-          <Text className="text-xl font-bold text-text">{user.name}</Text>
+          <Text className="text-xl font-bold text-text dark:text-dark-text">
+            {user.name}
+          </Text>
         </View>
         <TouchableOpacity className="p-1">
           <Ionicons name="ellipsis-vertical" size={22} color="#3a3a3a" />
@@ -60,7 +62,9 @@ export default function UserProfileScreen() {
         contentContainerStyle={{ paddingBottom: 80 }}
       >
         <ProfileTopSection data={user} />
-        <View className="h-2" />
+        {user.educations?.length || user.work?.length ? (
+          <View className="h-2" />
+        ) : null}
         <ProfileAbout
           educations={user.educations ?? []}
           work={user.work ?? []}

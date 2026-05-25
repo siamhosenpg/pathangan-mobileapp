@@ -7,6 +7,7 @@ import { useAppSelector } from "@/redux/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -34,6 +35,17 @@ export default function CreatePostScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAppSelector((state) => state.auth);
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  // placeholder color — dynamic তাই variable
+  const placeholderColor = isDark ? "#4a4a4a" : "#a0a0a0";
+  // input bg
+  const inputBg = isDark
+    ? "bg-dark-background-secondary"
+    : "bg-background-secondary";
+  // input border
+  const inputBorder = "border border-border dark:border-dark-border";
 
   const [activeType, setActiveType] = useState<PostType>("post");
 
@@ -44,7 +56,6 @@ export default function CreatePostScreen() {
     useCreateCoursePostMutation();
   const isLoading = postLoading || questionLoading || courseLoading;
 
-  // NORMAL POST STATE
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [privacy, setPrivacy] = useState<"public" | "friends" | "private">(
@@ -52,11 +63,9 @@ export default function CreatePostScreen() {
   );
   const [media, setMedia] = useState<MediaPreview[]>([]);
 
-  // QUESTION STATE
   const [questionText, setQuestionText] = useState("");
   const [questionTags, setQuestionTags] = useState("");
 
-  // COURSE STATE
   const [courseTitle, setCourseTitle] = useState("");
   const [courseDesc, setCourseDesc] = useState("");
   const [coursePrice, setCoursePrice] = useState("");
@@ -87,16 +96,13 @@ export default function CreatePostScreen() {
       allowsMultipleSelection: true,
       quality: 0.85,
     });
-
     if (result.canceled) return;
-
     const selected: MediaPreview[] = result.assets.map((a) => ({
       uri: a.uri,
       type: a.type === "video" ? "video" : "image",
       fileName: a.fileName ?? undefined,
       mimeType: a.mimeType ?? undefined,
     }));
-
     if (target === "post") {
       const hasVideo = selected.some((m) => m.type === "video");
       const hasImage = selected.some((m) => m.type === "image");
@@ -142,7 +148,6 @@ export default function CreatePostScreen() {
         buildFormData(media, formData);
         await createPost(formData).unwrap();
       }
-
       if (activeType === "question") {
         if (!questionText.trim()) {
           setError("প্রশ্ন লিখুন");
@@ -157,7 +162,6 @@ export default function CreatePostScreen() {
           privacy,
         }).unwrap();
       }
-
       if (activeType === "course") {
         if (!courseTitle.trim()) {
           setError("কোর্সের শিরোনাম দিন");
@@ -176,7 +180,6 @@ export default function CreatePostScreen() {
         buildFormData(courseMedia, formData);
         await createCourse(formData).unwrap();
       }
-
       router.push("/(tabs)/feed" as any);
     } catch (err: any) {
       setError(err?.data?.message || "কিছু একটা সমস্যা হয়েছে");
@@ -189,7 +192,7 @@ export default function CreatePostScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
-        className="flex-1 bg-background"
+        className="flex-1 bg-background dark:bg-dark-background"
         contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -199,16 +202,20 @@ export default function CreatePostScreen() {
           <View className="flex-row items-center gap-3 mb-6">
             <TouchableOpacity
               onPress={() => router.back()}
-              className="w-9 h-9 rounded-full items-center justify-center border border-border"
+              className="w-9 h-9 rounded-full items-center justify-center border border-border dark:border-dark-border"
             >
-              <Ionicons name="arrow-back" size={20} className="text-text" />
+              <Ionicons
+                name="arrow-back"
+                size={20}
+                color={isDark ? "#f1f1f1" : "#1b1b1b"}
+              />
             </TouchableOpacity>
-            <Text className="text-text text-lg font-bold flex-1">
+            <Text className="text-text dark:text-dark-text text-lg font-bold flex-1">
               নতুন পোস্ট
             </Text>
 
             {/* Privacy toggle */}
-            <View className="flex-row items-center gap-1 bg-white/5 border border-border rounded-full px-1 py-1">
+            <View className="flex-row items-center gap-1 border border-border dark:border-dark-border rounded-full px-1 py-1">
               {privacyOptions.map((opt) => (
                 <TouchableOpacity
                   key={opt.value}
@@ -221,7 +228,7 @@ export default function CreatePostScreen() {
                     className={`text-xs font-semibold ${
                       privacy === opt.value
                         ? "text-white"
-                        : "text-text-secondary"
+                        : "text-text-secondary dark:text-dark-text-secondary"
                     }`}
                   >
                     {opt.label}
@@ -232,7 +239,7 @@ export default function CreatePostScreen() {
           </View>
 
           {/* ===== TABS ===== */}
-          <View className="flex-row gap-2 mb-5 bg-white/5 border border-border rounded-xl p-1">
+          <View className="flex-row gap-2 mb-5 border border-border dark:border-dark-border rounded-xl p-1">
             {tabs.map((tab) => (
               <TouchableOpacity
                 key={tab.type}
@@ -247,13 +254,19 @@ export default function CreatePostScreen() {
                 <Ionicons
                   name={tab.icon}
                   size={16}
-                  color={activeType === tab.type ? "#fff" : "#888"}
+                  color={
+                    activeType === tab.type
+                      ? "#fff"
+                      : isDark
+                        ? "#8a8a8a"
+                        : "#888"
+                  }
                 />
                 <Text
                   className={`text-sm font-semibold ${
                     activeType === tab.type
                       ? "text-white"
-                      : "text-text-secondary"
+                      : "text-text-secondary dark:text-dark-text-secondary"
                   }`}
                 >
                   {tab.label}
@@ -277,7 +290,9 @@ export default function CreatePostScreen() {
                 </Text>
               )}
             </View>
-            <Text className="text-text text-sm font-medium">{user?.name}</Text>
+            <Text className="text-text dark:text-dark-text text-sm font-medium">
+              {user?.name}
+            </Text>
           </View>
 
           {/* ===== ERROR ===== */}
@@ -291,28 +306,28 @@ export default function CreatePostScreen() {
           {/* ===== NORMAL POST ===== */}
           {activeType === "post" && (
             <View className="gap-4">
-              {/* title */}
-              <View className="border border-border rounded-xl px-4 bg-white/5 focus-within:border-accent">
+              <View className={`${inputBorder} rounded-xl px-4 ${inputBg}`}>
                 <TextInput
                   value={title}
                   onChangeText={setTitle}
                   placeholder="শিরোনাম লিখুন (ঐচ্ছিক)"
-                  placeholderTextColor="#ffffff30"
-                  className="text-text text-sm font-medium py-3.5"
+                  placeholderTextColor={placeholderColor}
+                  className="text-text dark:text-dark-text text-sm font-medium py-3.5"
                 />
               </View>
 
-              {/* text */}
-              <View className="border border-border rounded-xl px-4 py-3 bg-white/5">
+              <View
+                className={`${inputBorder} rounded-xl px-4 py-3 ${inputBg}`}
+              >
                 <TextInput
                   value={text}
                   onChangeText={setText}
                   placeholder="আপনার মনের কথা লিখুন..."
-                  placeholderTextColor="#ffffff30"
+                  placeholderTextColor={placeholderColor}
                   multiline
                   numberOfLines={5}
                   textAlignVertical="top"
-                  className="text-text text-sm"
+                  className="text-text dark:text-dark-text text-sm"
                   style={{ minHeight: 100 }}
                 />
               </View>
@@ -329,7 +344,7 @@ export default function CreatePostScreen() {
                         width: media.length === 1 ? "100%" : "48.5%",
                         aspectRatio: 1,
                       }}
-                      className="rounded-xl overflow-hidden bg-white/5"
+                      className="rounded-xl overflow-hidden bg-background-tertiary dark:bg-dark-background-tertiary"
                     >
                       <Image
                         source={{ uri: m.uri }}
@@ -358,7 +373,6 @@ export default function CreatePostScreen() {
                 </View>
               )}
 
-              {/* media upload */}
               <TouchableOpacity
                 onPress={() => pickMedia("post")}
                 className="flex-row items-center gap-2 py-1"
@@ -366,9 +380,9 @@ export default function CreatePostScreen() {
                 <Ionicons
                   name="image-outline"
                   size={20}
-                  className="text-text-secondary"
+                  color={isDark ? "#8a8a8a" : "#6d6d6d"}
                 />
-                <Text className="text-text-secondary text-sm">
+                <Text className="text-text-secondary dark:text-dark-text-secondary text-sm">
                   ছবি / ভিডিও যোগ করুন
                 </Text>
               </TouchableOpacity>
@@ -378,34 +392,40 @@ export default function CreatePostScreen() {
           {/* ===== QUESTION POST ===== */}
           {activeType === "question" && (
             <View className="gap-4">
-              <View className="border border-border rounded-xl px-4 py-3 bg-white/5">
+              <View
+                className={`${inputBorder} rounded-xl px-4 py-3 ${inputBg}`}
+              >
                 <TextInput
                   value={questionText}
                   onChangeText={setQuestionText}
                   placeholder="আপনার প্রশ্নটি লিখুন..."
-                  placeholderTextColor="#ffffff30"
+                  placeholderTextColor={placeholderColor}
                   multiline
                   numberOfLines={4}
                   textAlignVertical="top"
-                  className="text-text text-sm"
+                  className="text-text dark:text-dark-text text-sm"
                   style={{ minHeight: 90 }}
                 />
               </View>
 
               <View className="gap-2">
-                <Text className="text-text text-sm font-medium">ট্যাগ</Text>
-                <View className="flex-row items-center border border-border rounded-xl px-4 bg-white/5 gap-3">
+                <Text className="text-text dark:text-dark-text text-sm font-medium">
+                  ট্যাগ
+                </Text>
+                <View
+                  className={`flex-row items-center ${inputBorder} rounded-xl px-4 ${inputBg} gap-3`}
+                >
                   <Ionicons
                     name="pricetag-outline"
                     size={16}
-                    className="text-text-secondary"
+                    color={isDark ? "#8a8a8a" : "#6d6d6d"}
                   />
                   <TextInput
                     value={questionTags}
                     onChangeText={setQuestionTags}
                     placeholder="react, nextjs (কমা দিয়ে আলাদা করুন)"
-                    placeholderTextColor="#ffffff30"
-                    className="flex-1 text-text text-sm py-3.5"
+                    placeholderTextColor={placeholderColor}
+                    className="flex-1 text-text dark:text-dark-text text-sm py-3.5"
                   />
                 </View>
               </View>
@@ -416,32 +436,36 @@ export default function CreatePostScreen() {
           {activeType === "course" && (
             <View className="gap-4">
               <View className="gap-2">
-                <Text className="text-text text-sm font-medium">
+                <Text className="text-text dark:text-dark-text text-sm font-medium">
                   কোর্সের শিরোনাম *
                 </Text>
-                <View className="border border-border rounded-xl px-4 bg-white/5">
+                <View className={`${inputBorder} rounded-xl px-4 ${inputBg}`}>
                   <TextInput
                     value={courseTitle}
                     onChangeText={setCourseTitle}
                     placeholder="কোর্সের নাম লিখুন"
-                    placeholderTextColor="#ffffff30"
-                    className="text-text text-sm py-3.5"
+                    placeholderTextColor={placeholderColor}
+                    className="text-text dark:text-dark-text text-sm py-3.5"
                   />
                 </View>
               </View>
 
               <View className="gap-2">
-                <Text className="text-text text-sm font-medium">বিবরণ</Text>
-                <View className="border border-border rounded-xl px-4 py-3 bg-white/5">
+                <Text className="text-text dark:text-dark-text text-sm font-medium">
+                  বিবরণ
+                </Text>
+                <View
+                  className={`${inputBorder} rounded-xl px-4 py-3 ${inputBg}`}
+                >
                   <TextInput
                     value={courseDesc}
                     onChangeText={setCourseDesc}
                     placeholder="কোর্স সম্পর্কে বিস্তারিত লিখুন..."
-                    placeholderTextColor="#ffffff30"
+                    placeholderTextColor={placeholderColor}
                     multiline
                     numberOfLines={4}
                     textAlignVertical="top"
-                    className="text-text text-sm"
+                    className="text-text dark:text-dark-text text-sm"
                     style={{ minHeight: 90 }}
                   />
                 </View>
@@ -449,31 +473,37 @@ export default function CreatePostScreen() {
 
               <View className="flex-row gap-3">
                 <View className="flex-1 gap-2">
-                  <Text className="text-text text-sm font-medium">
+                  <Text className="text-text dark:text-dark-text text-sm font-medium">
                     মূল্য (টাকা)
                   </Text>
-                  <View className="flex-row items-center border border-border rounded-xl px-4 bg-white/5 gap-2">
-                    <Text className="text-text-secondary text-sm">৳</Text>
+                  <View
+                    className={`flex-row items-center ${inputBorder} rounded-xl px-4 ${inputBg} gap-2`}
+                  >
+                    <Text className="text-text-secondary dark:text-dark-text-secondary text-sm">
+                      ৳
+                    </Text>
                     <TextInput
                       value={coursePrice}
                       onChangeText={setCoursePrice}
                       placeholder="০"
-                      placeholderTextColor="#ffffff30"
+                      placeholderTextColor={placeholderColor}
                       keyboardType="numeric"
-                      className="flex-1 text-text text-sm py-3.5"
+                      className="flex-1 text-text dark:text-dark-text text-sm py-3.5"
                     />
                   </View>
                 </View>
 
                 <View className="flex-1 gap-2">
-                  <Text className="text-text text-sm font-medium">ট্যাগ</Text>
-                  <View className="border border-border rounded-xl px-4 bg-white/5">
+                  <Text className="text-text dark:text-dark-text text-sm font-medium">
+                    ট্যাগ
+                  </Text>
+                  <View className={`${inputBorder} rounded-xl px-4 ${inputBg}`}>
                     <TextInput
                       value={courseTags}
                       onChangeText={setCourseTags}
                       placeholder="react, nextjs"
-                      placeholderTextColor="#ffffff30"
-                      className="text-text text-sm py-3.5"
+                      placeholderTextColor={placeholderColor}
+                      className="text-text dark:text-dark-text text-sm py-3.5"
                     />
                   </View>
                 </View>
@@ -486,7 +516,7 @@ export default function CreatePostScreen() {
                     <View
                       key={i}
                       style={{ width: "48.5%", aspectRatio: 1 }}
-                      className="rounded-xl overflow-hidden bg-white/5"
+                      className="rounded-xl overflow-hidden bg-background-tertiary dark:bg-dark-background-tertiary"
                     >
                       <Image
                         source={{ uri: m.uri }}
@@ -529,9 +559,9 @@ export default function CreatePostScreen() {
                 <Ionicons
                   name="image-outline"
                   size={20}
-                  className="text-text-secondary"
+                  color={isDark ? "#8a8a8a" : "#6d6d6d"}
                 />
-                <Text className="text-text-secondary text-sm">
+                <Text className="text-text-secondary dark:text-dark-text-secondary text-sm">
                   ছবি / ভিডিও যোগ করুন
                 </Text>
               </TouchableOpacity>

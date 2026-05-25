@@ -17,7 +17,7 @@ interface Props {
 }
 
 const screenWidth = Dimensions.get("window").width;
-const maxImageSize = screenWidth - 0; // px-4 দুই পাশে
+const maxImageSize = screenWidth - 0;
 
 const Postcard = ({ post }: Props) => {
   const router = useRouter();
@@ -33,12 +33,12 @@ const Postcard = ({ post }: Props) => {
     : [];
 
   return (
-    <View className="bg-background pt-4 ">
+    <View className="bg-background dark:bg-dark-background pt-4">
       <PostProfileTop user={userid} createdAt={createdAt} postId={post._id} />
 
       <View>
         {content?.title && (
-          <Text className="mt-2 px-4 text-text font-semibold text-base">
+          <Text className="mt-2 px-4 text-text dark:text-dark-text font-semibold text-base">
             {content.title}
           </Text>
         )}
@@ -46,14 +46,14 @@ const Postcard = ({ post }: Props) => {
         {content?.text && (
           <View className="mt-1.5 px-4">
             <Text
-              className="text-text-secondary text-base leading-6"
+              className="text-text dark:text-dark-text text-base leading-6"
               numberOfLines={expanded ? undefined : 4}
             >
               {content.text}
             </Text>
             {content.text.length > 200 && (
               <TouchableOpacity onPress={() => setExpanded((prev) => !prev)}>
-                <Text className="text-sm text-gray-500 font-medium py-1 mt-1">
+                <Text className="text-sm text-text-tertiary dark:text-dark-text-tertiary font-medium py-1 mt-1">
                   {expanded ? "আগের অবস্থায় আসুন" : "আরো পড়ুন"}
                 </Text>
               </TouchableOpacity>
@@ -63,11 +63,11 @@ const Postcard = ({ post }: Props) => {
 
         {/* media */}
         {mediaList.length > 0 && (
-          <View className="w-full mt-2 ">
+          <View className="w-full mt-2">
             {(content as any)?.type === "video" ? (
               <View
                 style={{ width: maxImageSize, height: maxImageSize }}
-                className="bg-gray-800 items-center justify-center rounded-xl"
+                className="bg-dark-background-secondary items-center justify-center rounded-xl"
               >
                 <Ionicons
                   name="play-circle-outline"
@@ -76,7 +76,6 @@ const Postcard = ({ post }: Props) => {
                 />
               </View>
             ) : mediaList.length === 1 ? (
-              // একটা image — square max, ছোট হলে ছোটই থাকবে
               <TouchableOpacity onPress={handleGoToPost} activeOpacity={0.9}>
                 <Image
                   source={{ uri: mediaList[0] }}
@@ -89,7 +88,6 @@ const Postcard = ({ post }: Props) => {
                 />
               </TouchableOpacity>
             ) : (
-              // একাধিক image — 2 column grid, প্রতিটা square
               <TouchableOpacity
                 onPress={handleGoToPost}
                 activeOpacity={0.9}
@@ -120,7 +118,7 @@ const Postcard = ({ post }: Props) => {
         )}
 
         {/* counts */}
-        <View className="flex-row items-center justify-between px-4 py-1.5 border-b border-border ">
+        <View className="flex-row items-center justify-between px-4 py-1.5 border-b border-border dark:border-dark-border">
           <PostCountLeft
             likesCount={post.likesCount}
             commentsCount={post.commentsCount}
@@ -129,12 +127,10 @@ const Postcard = ({ post }: Props) => {
         </View>
 
         {/* actions */}
-        <View className="px-4  flex-row items-center justify-between">
+        <View className="px-4 flex-row items-center justify-between">
           <View className="flex-row items-center gap-6">
             <LikeButton postId={post._id} initialLiked={post.isReacted} />
-
             <CommentsButton onClick={handleGoToPost} />
-
             <ShareButton />
           </View>
           <BookmarkButton postId={post._id} />

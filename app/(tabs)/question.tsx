@@ -37,7 +37,7 @@ export default function QuestionScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background-secondary">
+    <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
       {/* Header */}
       <Header title="প্রশ্নসমূহ" />
 
@@ -51,14 +51,18 @@ export default function QuestionScreen() {
         <View className="flex-1 items-center justify-center gap-y-2">
           <Ionicons name="alert-circle-outline" size={40} color="#9CA3AF" />
 
-          <Text className="text-sm text-gray-500">প্রশ্ন লোড করা যায়নি</Text>
+          <Text className="text-sm text-gray-500 dark:text-dark-gray-500">
+            প্রশ্ন লোড করা যায়নি
+          </Text>
         </View>
       ) : allQuestions.length === 0 ? (
         /* Empty */
         <View className="flex-1 items-center justify-center gap-y-2">
           <Ionicons name="help-circle-outline" size={48} color="#D1D5DB" />
 
-          <Text className="text-sm text-gray-400">এখনো কোনো প্রশ্ন নেই</Text>
+          <Text className="text-sm text-gray-400 dark:text-dark-gray-400">
+            এখনো কোনো প্রশ্ন নেই
+          </Text>
         </View>
       ) : (
         /* List */

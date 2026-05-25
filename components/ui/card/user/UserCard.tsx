@@ -1,6 +1,7 @@
 import type { SearchUser } from "@/redux/api/others/searchApi";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
@@ -10,63 +11,51 @@ interface Props {
 
 export default function UserCard({ user }: Props) {
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   return (
     <TouchableOpacity
       onPress={() => router.push(`/profile/${user.username}` as any)}
       activeOpacity={0.7}
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 12,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: "#fff",
-        borderBottomWidth: 1,
-        borderBottomColor: "#F3F4F6",
-      }}
+      className="flex-row items-center gap-3 px-4 py-3 bg-background dark:bg-dark-background border-b border-background-secondary dark:border-dark-border"
     >
-      <View
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: 22,
-          backgroundColor: "#F3F4F6",
-          overflow: "hidden",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
+      {/* Avatar */}
+      <View className="w-11 h-11 rounded-full bg-background-secondary dark:bg-dark-background-secondary overflow-hidden items-center justify-center shrink-0">
         {user.profileImage ? (
           <Image
             source={{ uri: user.profileImage }}
-            style={{ width: 44, height: 44 }}
+            className="w-11 h-11"
             resizeMode="cover"
           />
         ) : (
-          <Text style={{ fontSize: 18, fontWeight: "600", color: "#6B7280" }}>
+          <Text className="text-lg font-semibold text-text-tertiary dark:text-dark-text-tertiary">
             {user.name?.[0]?.toUpperCase() ?? "?"}
           </Text>
         )}
       </View>
 
-      <View style={{ flex: 1, minWidth: 0 }}>
+      {/* Info */}
+      <View className="flex-1 min-w-0">
         <Text
           numberOfLines={1}
-          style={{ fontSize: 14, fontWeight: "600", color: "#111827" }}
+          className="text-sm font-semibold text-text dark:text-dark-text"
         >
           {user.name}
         </Text>
         <Text
           numberOfLines={1}
-          style={{ fontSize: 12, color: "#6B7280", marginTop: 1 }}
+          className="text-xs text-text-tertiary dark:text-dark-text-tertiary mt-0.5"
         >
           {user.username}
         </Text>
       </View>
 
-      <Ionicons name="chevron-forward" size={16} color="#D1D5DB" />
+      <Ionicons
+        name="chevron-forward"
+        size={16}
+        color={isDark ? "#2e2e2e" : "#D1D5DB"}
+      />
     </TouchableOpacity>
   );
 }

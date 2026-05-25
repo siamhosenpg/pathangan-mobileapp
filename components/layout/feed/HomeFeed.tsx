@@ -30,7 +30,7 @@ export default function HomeFeed() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-background-secondary">
+      <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary ">
         <PostCardSkeleton />
         <PostCardSkeleton />
       </View>
@@ -39,8 +39,8 @@ export default function HomeFeed() {
 
   if (isError) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-950">
-        <Text className="text-gray-400 text-sm">
+      <View className="flex-1 items-center justify-center bg-gray-950 dark:bg-dark-background-secondary">
+        <Text className="text-gray-400 dark:text-dark-text text-sm">
           পোস্ট লোড করতে সমস্যা হয়েছে
         </Text>
       </View>
@@ -73,7 +73,9 @@ export default function HomeFeed() {
     if (!hasNextPage && posts.length > 0) {
       return (
         <View className="py-6 items-center">
-          <Text className="text-gray-500 text-sm">আর কোনো পোস্ট নেই</Text>
+          <Text className="text-gray-500 dark:text-dark-text text-sm">
+            আর কোনো পোস্ট নেই
+          </Text>
         </View>
       );
     }
@@ -83,7 +85,9 @@ export default function HomeFeed() {
 
   const renderEmpty = () => (
     <View className="py-10 items-center">
-      <Text className="text-gray-500 text-sm">কোনো পোস্ট নেই</Text>
+      <Text className="text-gray-500 dark:text-dark-text text-sm">
+        কোনো পোস্ট নেই
+      </Text>
     </View>
   );
 

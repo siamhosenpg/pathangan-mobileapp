@@ -16,3 +16,16 @@
   --foreground: #1b1b1b;
   --border: #e7e7e7;
 }
+
+/* ✅ Dark mode */
+.dark {
+  --text: #f1f1f1;
+  --text-secondary: #c4c4c4;
+  --text-tertiary: #8a8a8a;
+  --background: #0f0f0f;
+  --background-secondary: #1a1a1a;
+  --background-tertiary: #2a2a2a;
+  --background-transparent: #ffffff1a;
+  --foreground: #f1f1f1;
+  --border: #2e2e2e;
+}

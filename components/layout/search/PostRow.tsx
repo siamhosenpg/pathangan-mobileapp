@@ -1,6 +1,7 @@
 import type { Post } from "@/types/postTypes";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
@@ -27,6 +28,8 @@ const getMainText = (post: Post): string => {
 
 export default function PostRow({ post }: Props) {
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const badge = getBadge(post.postType);
   const text = getMainText(post);
 
@@ -34,57 +37,42 @@ export default function PostRow({ post }: Props) {
     <TouchableOpacity
       onPress={() => router.push(`/post/${post._id}` as any)}
       activeOpacity={0.7}
-      style={{
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        backgroundColor: "#fff",
-        borderBottomWidth: 1,
-        borderBottomColor: "#F3F4F6",
-        gap: 8,
-      }}
+      className="px-4 py-3.5 bg-background dark:bg-dark-background border-b border-background-secondary dark:border-dark-border gap-2"
     >
       {/* Author row */}
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <View
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 14,
-            backgroundColor: "#F3F4F6",
-            overflow: "hidden",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+      <View className="flex-row items-center gap-2">
+        {/* Avatar */}
+        <View className="w-7 h-7 rounded-full bg-background-secondary dark:bg-dark-background-secondary overflow-hidden items-center justify-center">
           {post.userid?.profileImage ? (
             <Image
               source={{ uri: post.userid.profileImage }}
-              style={{ width: 28, height: 28 }}
+              className="w-7 h-7"
               resizeMode="cover"
             />
           ) : (
-            <Text style={{ fontSize: 11, color: "#6B7280", fontWeight: "600" }}>
+            <Text className="text-[11px] font-semibold text-text-tertiary dark:text-dark-text-tertiary">
               {post.userid?.name?.[0]?.toUpperCase() ?? "?"}
             </Text>
           )}
         </View>
 
+        {/* Name */}
         <Text
           numberOfLines={1}
-          style={{ fontSize: 12, fontWeight: "600", color: "#374151", flex: 1 }}
+          className="flex-1 text-xs font-semibold text-text-secondary dark:text-dark-text-secondary"
         >
           {post.userid?.name ?? "অজানা"}
         </Text>
 
+        {/* Badge — inline style শুধু dynamic color এর জন্য */}
         <View
-          style={{
-            paddingHorizontal: 8,
-            paddingVertical: 2,
-            borderRadius: 99,
-            backgroundColor: badge.bg,
-          }}
+          className="px-2 py-0.5 rounded-full"
+          style={{ backgroundColor: badge.bg }}
         >
-          <Text style={{ fontSize: 10, fontWeight: "600", color: badge.color }}>
+          <Text
+            className="text-[10px] font-semibold"
+            style={{ color: badge.color }}
+          >
             {badge.label}
           </Text>
         </View>
@@ -94,23 +82,31 @@ export default function PostRow({ post }: Props) {
       {text ? (
         <Text
           numberOfLines={2}
-          style={{ fontSize: 13, color: "#1F2937", lineHeight: 19 }}
+          className="text-[13px] leading-5 text-text dark:text-dark-text"
         >
           {text}
         </Text>
       ) : null}
 
       {/* Stats */}
-      <View style={{ flexDirection: "row", gap: 14 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-          <Ionicons name="heart-outline" size={12} color="#9CA3AF" />
-          <Text style={{ fontSize: 11, color: "#9CA3AF" }}>
+      <View className="flex-row gap-3.5">
+        <View className="flex-row items-center gap-1">
+          <Ionicons
+            name="heart-outline"
+            size={12}
+            color={isDark ? "#8a8a8a" : "#9CA3AF"}
+          />
+          <Text className="text-[11px] text-text-tertiary dark:text-dark-text-tertiary">
             {post.likesCount ?? 0}
           </Text>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-          <Ionicons name="chatbubble-outline" size={12} color="#9CA3AF" />
-          <Text style={{ fontSize: 11, color: "#9CA3AF" }}>
+        <View className="flex-row items-center gap-1">
+          <Ionicons
+            name="chatbubble-outline"
+            size={12}
+            color={isDark ? "#8a8a8a" : "#9CA3AF"}
+          />
+          <Text className="text-[11px] text-text-tertiary dark:text-dark-text-tertiary">
             {post.commentsCount ?? 0}
           </Text>
         </View>

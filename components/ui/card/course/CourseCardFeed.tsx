@@ -22,7 +22,7 @@ const CourseCardFeed = ({ post }: Props) => {
   const [menuVisible, setMenuVisible] = useState(false);
 
   return (
-    <View className="bg-background ">
+    <View className="bg-background dark:bg-dark-background ">
       {/* thumbnail */}
       <View className="p-4">
         <TouchableOpacity
@@ -36,8 +36,10 @@ const CourseCardFeed = ({ post }: Props) => {
               resizeMode="cover"
             />
           ) : (
-            <View className="w-full aspect-square rounded-xl bg-indigo-500/10 items-center justify-center border border-border">
-              <Text className="text-text-secondary text-sm">ছবি নেই</Text>
+            <View className="w-full aspect-square rounded-xl bg-indigo-500/10 items-center justify-center border border-border dark:border-dark-border">
+              <Text className="text-text-secondary dark:text-dark-text-secondary text-sm">
+                ছবি নেই
+              </Text>
             </View>
           )}
         </TouchableOpacity>
@@ -49,7 +51,7 @@ const CourseCardFeed = ({ post }: Props) => {
           onPress={() =>
             router.push(`/(tabs)/profile?username=${userid.username}`)
           }
-          className="w-11 h-11 rounded-full overflow-hidden bg-indigo-500/20 border border-border"
+          className="w-11 h-11 rounded-full overflow-hidden bg-indigo-500/20 border border-border dark:border-dark-border"
         >
           {userid.profileImage ? (
             <Image
@@ -68,14 +70,16 @@ const CourseCardFeed = ({ post }: Props) => {
 
         <View className="flex-1">
           <Text
-            className="text-text font-semibold text-base leading-5"
+            className="text-text dark:text-dark-text font-semibold text-base leading-5"
             numberOfLines={2}
           >
             {course?.title}
           </Text>
           <View className="flex-row items-center gap-2 mt-1">
-            <Text className="text-text-secondary text-sm">{userid.name}</Text>
-            <Text className="text-text-tertiary text-sm">
+            <Text className="text-text-secondary dark:text-dark-text-secondary text-sm">
+              {userid.name}
+            </Text>
+            <Text className="text-text-tertiary dark:text-dark-text-tertiary text-sm">
               {course?.price === 0 ? "বিনামূল্যে" : `৳${course?.price}`}
             </Text>
           </View>
@@ -84,7 +88,7 @@ const CourseCardFeed = ({ post }: Props) => {
 
       {/* counts + actions */}
       <View className="mt-3">
-        <View className="px-4 py-2 border-b border-border">
+        <View className="px-4 py-2 border-b border-border dark:border-dark-border">
           <PostCountLeft
             likesCount={post.likesCount}
             commentsCount={post.commentsCount}

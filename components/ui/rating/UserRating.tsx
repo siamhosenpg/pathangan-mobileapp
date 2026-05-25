@@ -20,7 +20,7 @@ const UserRating = ({ userId }: { userId: string }) => {
     return (
       <View className="flex-row items-center gap-3">
         <StarRating rating={0} />
-        <Text className="text-sm font-medium text-text-secondary">
+        <Text className="text-sm font-medium text-text-secondary dark:text-dark-text-secondary">
           ০ জন রেটিং দিয়েছে
         </Text>
       </View>
@@ -33,7 +33,7 @@ const UserRating = ({ userId }: { userId: string }) => {
   return (
     <View className="flex-row items-center gap-3">
       <StarRating rating={data?.averageRating || 0} />
-      <Text className="text-sm font-medium text-text-secondary">
+      <Text className="text-sm font-medium text-text-secondary dark:text-dark-text-secondary">
         {totalBangla} জন রেটিং দিয়েছে
       </Text>
     </View>

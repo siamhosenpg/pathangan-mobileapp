@@ -12,7 +12,9 @@ const AnswerButton = ({ onClick }: Props) => {
       className="flex-row items-center gap-1.5"
     >
       <Ionicons name="create-outline" size={20} color="#9CA3AF" />
-      <Text className="font-semibold text-base text-text-secondary">উত্তর</Text>
+      <Text className="font-semibold text-base text-text-secondary dark:text-dark-text-secondary">
+        উত্তর
+      </Text>
     </TouchableOpacity>
   );
 };

@@ -12,7 +12,9 @@ const CommentsButton = ({ onClick }: Props) => {
       className="flex-row items-center gap-1.5 py-3"
     >
       <Ionicons name="chatbubble-outline" size={20} color="#9CA3AF" />
-      <Text className="font-semibold text-base text-text-secondary">মতামত</Text>
+      <Text className="font-semibold text-base text-text-secondary dark:text-dark-text-secondary">
+        মতামত
+      </Text>
     </TouchableOpacity>
   );
 };

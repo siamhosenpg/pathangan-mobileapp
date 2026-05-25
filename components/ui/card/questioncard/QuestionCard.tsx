@@ -29,10 +29,10 @@ const QuestionCard = ({ post }: Props) => {
   });
 
   return (
-    <View className="bg-background pt-4">
+    <View className="bg-background dark:bg-dark-background pt-4">
       <PostProfileTop user={userid} createdAt={createdAt} postId={_id} />
 
-      <Text className="mt-2 px-4 text-text font-semibold text-base leading-6">
+      <Text className="mt-2 px-4 text-text dark:text-dark-text  font-semibold text-base leading-6">
         {question?.questionText}
       </Text>
 
@@ -40,8 +40,8 @@ const QuestionCard = ({ post }: Props) => {
       <View className="px-4 mt-2 gap-2">
         {isLoading ? (
           <>
-            <View className="h-20 rounded-xl bg-background-secondary" />
-            <View className="h-20 rounded-xl bg-background-secondary" />
+            <View className="h-20 rounded-xl bg-background-secondary dark:bg-dark-background-secondary" />
+            <View className="h-20 rounded-xl bg-background-secondary dark:bg-dark-background-secondary" />
           </>
         ) : (
           data?.answers.map((answer) => (
@@ -51,7 +51,7 @@ const QuestionCard = ({ post }: Props) => {
       </View>
 
       {/* counts */}
-      <View className="px-4 py-2 mt-2 border-b border-border flex-row items-center justify-between">
+      <View className="px-4 py-2 mt-2 border-b border-border dark:border-dark-border flex-row items-center justify-between">
         <PostCountLeft
           likesCount={post.likesCount}
           commentsCount={post.commentsCount}

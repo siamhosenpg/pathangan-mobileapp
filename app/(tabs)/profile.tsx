@@ -25,7 +25,7 @@ export default function ProfileScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
+      <View className="flex-1 items-center justify-center bg-background dark:bg-dark-background">
         <ActivityIndicator size="large" color="#00914d" />
       </View>
     );
@@ -33,7 +33,7 @@ export default function ProfileScreen() {
 
   if (isError || !user) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
+      <View className="flex-1 items-center justify-center bg-background dark:bg-dark-background">
         <Text className="text-text-secondary text-sm">
           প্রোফাইল লোড করতে সমস্যা হয়েছে
         </Text>
@@ -42,10 +42,12 @@ export default function ProfileScreen() {
   }
 
   return (
-    <View className="flex-1 bg-background-secondary">
+    <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
       {/* Header */}
-      <View className="bg-background px-4 pt-12 pb-3 border-b border-border flex-row items-center justify-between">
-        <Text className="text-xl font-bold text-text">প্রোফাইল</Text>
+      <View className="bg-background dark:bg-dark-background px-4 pt-12 pb-3 border-b border-border dark:border-dark-border flex-row items-center justify-between">
+        <Text className="text-xl font-bold text-text dark:text-dark-text">
+          প্রোফাইল
+        </Text>
         <TouchableOpacity className="p-1">
           <Ionicons name="ellipsis-vertical" size={22} color="#3a3a3a" />
         </TouchableOpacity>
@@ -56,7 +58,10 @@ export default function ProfileScreen() {
         contentContainerStyle={{ paddingBottom: 80 }}
       >
         <ProfileTopSection data={user} />
-        <View className="h-2" />
+        {user.educations?.length || user.work?.length ? (
+          <View className="h-2" />
+        ) : null}
+
         <ProfileAbout
           educations={user.educations ?? []}
           work={user.work ?? []}

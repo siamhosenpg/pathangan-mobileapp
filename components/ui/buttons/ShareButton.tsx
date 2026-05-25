@@ -5,7 +5,7 @@ const ShareButton = () => {
   return (
     <TouchableOpacity className="flex-row items-center gap-1.5 py-3">
       <Ionicons name="share-social-outline" size={20} color="#9CA3AF" />
-      <Text className="font-semibold text-base text-text-secondary">
+      <Text className="font-semibold text-base text-text-secondary dark:text-dark-text-secondary">
         প্রচার
       </Text>
     </TouchableOpacity>
