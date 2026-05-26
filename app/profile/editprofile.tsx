@@ -147,7 +147,7 @@ export default function EditProfileScreen() {
       {/* COVER */}
       <TouchableOpacity
         onPress={() => pickImage("cover")}
-        className="h-48 bg-accent/10 justify-center items-center"
+        className="h-48 bg-accent/10 justify-center items-center "
       >
         {coverImage ? (
           <Image source={{ uri: coverImage.uri }} className="w-full h-full" />

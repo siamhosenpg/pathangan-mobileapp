@@ -25,7 +25,7 @@ export default function PostPageLeft({ post, onCommentPress }: Props) {
     : [];
 
   return (
-    <View className="bg-background overflow-hidden">
+    <View className="bg-background dark:bg-dark-background overflow-hidden">
       {/* Profile top */}
       <View className="pt-4 px-1">
         <PostProfileTop user={userid} createdAt={createdAt} postId={post._id} />
@@ -33,7 +33,7 @@ export default function PostPageLeft({ post, onCommentPress }: Props) {
 
       {/* Title */}
       {content?.title ? (
-        <Text className="mt-3 px-4  font-semibold text-gray-900">
+        <Text className="mt-3 px-4  font-semibold text-text dark:text-dark-text">
           {content.title}
         </Text>
       ) : null}
@@ -43,7 +43,7 @@ export default function PostPageLeft({ post, onCommentPress }: Props) {
         <View className="mt-2 px-4">
           <Text
             numberOfLines={expanded ? undefined : isLongText ? 4 : undefined}
-            className="text-base text-gray-800 leading-[21px]"
+            className="text-base text-text-secondary dark:text-dark-text-secondary leading-[21px]"
           >
             {content.text}
           </Text>
@@ -52,7 +52,7 @@ export default function PostPageLeft({ post, onCommentPress }: Props) {
               onPress={() => setExpanded((p) => !p)}
               className="mt-1"
             >
-              <Text className="text-[13px] text-gray-500 font-semibold">
+              <Text className="text-[13px] text-text-tertiary dark:text-dark-text-tertiary font-semibold">
                 {expanded ? "আগের অবস্থায় আসুন" : "আরো পড়ুন"}
               </Text>
             </TouchableOpacity>
@@ -64,7 +64,7 @@ export default function PostPageLeft({ post, onCommentPress }: Props) {
       {mediaList.length > 0 ? (
         <View className="mt-3">
           {content?.type === "video" ? (
-            <View className="w-full  aspect-square bg-gray-800 items-center justify-center">
+            <View className="w-full  aspect-square bg-foreground dark:bg-dark-foreground items-center justify-center">
               <Ionicons name="play-circle-outline" size={48} color="#9CA3AF" />
             </View>
           ) : mediaList.length === 1 ? (
@@ -89,7 +89,7 @@ export default function PostPageLeft({ post, onCommentPress }: Props) {
       ) : null}
 
       {/* counts */}
-      <View className="flex-row items-center justify-between px-4 py-1.5 border-b border-border ">
+      <View className="flex-row items-center justify-between px-4 py-1.5 border-b border-border dark:border-dark-border ">
         <PostCountLeft
           likesCount={post.likesCount}
           commentsCount={post.commentsCount}
@@ -98,7 +98,7 @@ export default function PostPageLeft({ post, onCommentPress }: Props) {
       </View>
 
       {/* Actions */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-t border-border">
+      <View className="flex-row items-center justify-between px-4  ">
         <View className="flex-row items-center gap-5">
           <LikeButton postId={post._id} initialLiked={post.isReacted} />
           <CommentsButton onClick={onCommentPress} />

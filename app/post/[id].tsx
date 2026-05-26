@@ -1,3 +1,5 @@
+import PostPageLeft from "@/components/layout/postpage/PostPageLeft";
+import CommentsSection from "@/components/ui/comments/CommentsSection";
 import { useGetPostByIdQuery } from "@/redux/api/postApi";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -10,9 +12,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import PostPageLeft from "@/components/layout/postpage/PostPageLeft";
-import CommentsSection from "@/components/ui/comments/CommentsSection";
 
 export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -28,7 +27,7 @@ export default function PostDetailScreen() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <View className="flex-1 items-center justify-center bg-background dark:bg-dark-background">
         <ActivityIndicator size="large" color="#00914d" />
       </View>
     );
@@ -36,8 +35,8 @@ export default function PostDetailScreen() {
 
   if (isError || !post) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <Text style={{ fontSize: 14, color: "#9CA3AF" }}>
+      <View className="flex-1 items-center justify-center bg-background dark:bg-dark-background">
+        <Text className="text-sm text-text-tertiary dark:text-dark-text-tertiary">
           পোস্ট লোড করতে সমস্যা হয়েছে
         </Text>
       </View>
@@ -45,53 +44,38 @@ export default function PostDetailScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+    <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
       {/* Header */}
       <View
-        style={{
-          backgroundColor: "#fff",
-          paddingTop: insets.top + 8,
-          paddingBottom: 12,
-          paddingHorizontal: 16,
-          borderBottomWidth: 1,
-          borderBottomColor: "#F3F4F6",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 12,
-        }}
+        style={{ paddingTop: insets.top + 8 }}
+        className="bg-background dark:bg-dark-background border-b border-border dark:border-dark-border px-4 pb-3 flex-row items-center gap-3"
       >
         <TouchableOpacity
           onPress={() => router.back()}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons name="arrow-back" size={22} color="#111827" />
+          <Ionicons name="arrow-back" size={22} color="#00914d" />
         </TouchableOpacity>
-        <Text style={{ fontSize: 16, fontWeight: "700", color: "#111827" }}>
+
+        <Text className="text-base font-bold text-text dark:text-dark-text">
           পোস্ট
         </Text>
       </View>
 
-      {/* Scrollable body */}
+      {/* Body */}
       <ScrollView
         ref={commentsRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          gap: 12,
           paddingBottom: insets.bottom + 20,
+          gap: 8,
         }}
       >
-        {/* Post content */}
+        {/* Post */}
         <PostPageLeft post={post} onCommentPress={scrollToComments} />
 
         {/* Comments */}
-        <View
-          style={{
-            backgroundColor: "#fff",
-
-            overflow: "hidden",
-            minHeight: 300,
-          }}
-        >
+        <View className="bg-background dark:bg-dark-background min-h-[300px] overflow-hidden">
           <CommentsSection
             postId={post._id}
             commentsCount={post.commentsCount}

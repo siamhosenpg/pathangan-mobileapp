@@ -17,7 +17,7 @@ interface Props {
 export default function CommentList({ comments, isLoading }: Props) {
   if (isLoading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="small" color="#00914d" />
       </View>
     );
@@ -25,73 +25,40 @@ export default function CommentList({ comments, isLoading }: Props) {
 
   if (comments.length === 0) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <Text style={{ fontSize: 13, color: "#9CA3AF" }}>কোনো মন্তব্য নেই</Text>
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-[13px] text-gray-400">কোনো মন্তব্য নেই</Text>
       </View>
     );
   }
 
   return (
     <ScrollView
-      style={{ flex: 1 }}
+      className="flex-1"
       contentContainerStyle={{ padding: 16, gap: 16 }}
       showsVerticalScrollIndicator={false}
     >
       {comments.map((comment) => (
-        <View
-          key={comment.id}
-          style={{ flexDirection: "row", gap: 10, marginBottom: 16 }}
-        >
+        <View key={comment.id} className="flex-row gap-2.5 mb-4">
           {/* Avatar */}
-          <View
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: "#F3F4F6",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <Text style={{ fontSize: 12, fontWeight: "600", color: "#6B7280" }}>
+          <View className="w-8 h-8 rounded-full bg-accent/10 items-center justify-center shrink-0">
+            <Text className="text-xs font-semibold text-accent">
               {comment.name?.[0]?.toUpperCase() ?? "?"}
             </Text>
           </View>
 
           {/* Bubble */}
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <View
-              style={{
-                backgroundColor: "#F3F4F6",
-                borderRadius: 16,
-                borderTopLeftRadius: 4,
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: "700",
-                  color: "#111827",
-                  marginBottom: 2,
-                }}
-              >
+          <View className="flex-1 min-w-0">
+            <View className="bg-background-secondary dark:bg-dark-background-secondary rounded-2xl rounded-tl-sm px-3 py-2.5">
+              <Text className="text-xs font-bold text-text dark:text-dark-text mb-0.5">
                 {comment.name}
               </Text>
-              <Text style={{ fontSize: 13, color: "#1F2937", lineHeight: 19 }}>
+
+              <Text className="text-[13px] text-text-secondary dark:text-dark-text-secondary leading-[19px]">
                 {comment.text}
               </Text>
             </View>
-            <Text
-              style={{
-                fontSize: 11,
-                color: "#9CA3AF",
-                marginTop: 4,
-                paddingLeft: 4,
-              }}
-            >
+
+            <Text className="text-[11px] text-gray-400 mt-1 pl-1">
               {comment.time}
             </Text>
           </View>

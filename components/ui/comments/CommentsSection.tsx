@@ -45,17 +45,10 @@ export default function CommentsSection({ postId, commentsCount }: Props) {
     })) ?? [];
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
+    <View className="flex-1 bg-background dark:bg-dark-background">
       {/* Header */}
-      <View
-        style={{
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          borderBottomWidth: 1,
-          borderBottomColor: "#F3F4F6",
-        }}
-      >
-        <Text style={{ fontSize: 14, fontWeight: "700", color: "#111827" }}>
+      <View className="px-4 py-3 border-b border-border dark:border-dark-border">
+        <Text className="text-sm font-bold text-text dark:text-dark-text">
           মন্তব্য ({commentsCount || 0})
         </Text>
       </View>

@@ -16,40 +16,18 @@ export default function CommentInput({ onSubmit }: Props) {
   };
 
   return (
-    <View
-      style={{
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderTopWidth: 1,
-        borderTopColor: "#F3F4F6",
-        backgroundColor: "#fff",
-      }}
-    >
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 10,
-          backgroundColor: "#F3F4F6",
-          borderRadius: 99,
-          paddingHorizontal: 16,
-          paddingVertical: 10,
-        }}
-      >
+    <View className="px-4 py-2.5 border-t border-border dark:border-dark-border bg-background dark:bg-dark-background">
+      <View className="flex-row items-center gap-2.5 bg-background-secondary dark:bg-dark-background-secondary rounded-full px-4 py-2.5">
         <TextInput
           value={text}
           onChangeText={setText}
           placeholder="মন্তব্য লিখুন..."
           placeholderTextColor="#9CA3AF"
-          style={{
-            flex: 1,
-            fontSize: 14,
-            color: "#111827",
-            paddingVertical: 0,
-          }}
+          className="flex-1 text-sm text-text dark:text-dark-text py-0"
           returnKeyType="send"
           onSubmitEditing={handleSubmit}
         />
+
         <TouchableOpacity
           onPress={handleSubmit}
           disabled={!text.trim()}

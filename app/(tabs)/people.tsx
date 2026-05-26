@@ -1,69 +1,53 @@
-import { Ionicons } from "@expo/vector-icons";
-import React from "react";
-import { FlatList, Text, TouchableOpacity, View } from "react-native";
-
+import UserCardSuggestion from "@/components/ui/card/user/UserCardSuggestion";
 import { Header } from "@/components/ui/headers/Header";
+import { useGetSuggestedUsersQuery } from "@/redux/api/userApi";
+import { ActivityIndicator, FlatList, Text, View } from "react-native";
 
-type User = {
-  id: string;
-  name: string;
-  username: string;
-};
+export default function PeopleScreen() {
+  const { data, isLoading, isError } = useGetSuggestedUsersQuery();
 
-const demoUsers: User[] = [
-  { id: "1", name: "Siam Hosen", username: "@siam" },
-  { id: "2", name: "Rahim Uddin", username: "@rahim" },
-  { id: "3", name: "Nusrat Jahan", username: "@nusrat" },
-  { id: "4", name: "Tanvir Ahmed", username: "@tanvir" },
-];
-
-const PeopleScreen = () => {
-  const renderItem = ({ item }: { item: User }) => {
+  if (isLoading) {
     return (
-      <View className="flex-row items-center justify-between bg-white px-4 py-3 mb-2 rounded-xl border border-gray-100">
-        {/* Left Side */}
-        <View className="flex-row items-center gap-3">
-          {/* Avatar */}
-          <View className="w-11 h-11 rounded-full bg-gray-200 items-center justify-center">
-            <Ionicons name="person" size={20} color="#6B7280" />
-          </View>
-
-          {/* Info */}
-          <View>
-            <Text className="text-base font-semibold text-gray-800">
-              {item.name}
-            </Text>
-            <Text className="text-sm text-gray-500">{item.username}</Text>
-          </View>
-        </View>
-
-        {/* Follow Button */}
-        <TouchableOpacity className="px-4 py-1.5 rounded-full bg-green-600">
-          <Text className="text-white text-sm font-semibold">Follow</Text>
-        </TouchableOpacity>
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#3b82f6" />
       </View>
     );
-  };
+  }
+
+  if (isError || !data) {
+    return (
+      <View className="flex-1 items-center justify-center px-6">
+        <Text className="text-red-500 text-sm text-center">
+          ইউজার লোড করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।
+        </Text>
+      </View>
+    );
+  }
 
   return (
-    <View className="flex-1 bg-gray-50">
-      {/* 👇 Custom Header */}
-      <Header title="ব্যবহারকারী" />
+    <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
+      {/* Header */}
+      <Header title=" সাজেস্টেড ইউজার" />
 
       {/* List */}
       <FlatList
-        data={demoUsers}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          paddingHorizontal: 12,
-          paddingTop: 10,
-          paddingBottom: 80,
+          paddingHorizontal: 16,
+          paddingTop: 12,
+          gap: 8,
         }}
+        data={data.users}
+        keyExtractor={(item) => String(item.userid)}
+        renderItem={({ item }) => <UserCardSuggestion user={item} />}
+        ListEmptyComponent={
+          <View className="items-center justify-center py-16">
+            <Text className="text-text-secondary dark:text-dark-text-secondary text-sm ">
+              কোনো সাজেস্টেড ইউজার নেই
+            </Text>
+          </View>
+        }
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );
-};
-
-export default PeopleScreen;
+}

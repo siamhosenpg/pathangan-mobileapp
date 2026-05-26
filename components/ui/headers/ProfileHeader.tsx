@@ -137,7 +137,7 @@ function OtherProfileHeader({
           className={`text-xs font-semibold ${
             isFollowing
               ? "text-text-secondary dark:text-dark-text-secondary"
-              : "text-white"
+              : "text-text dark:text-dark-text"
           }`}
         >
           {isLoading ? "..." : isFollowing ? "আনফলো" : "ফলো করুন"}
