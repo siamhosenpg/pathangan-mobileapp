@@ -38,7 +38,7 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
         <View className="flex-row items-center gap-2 flex-1">
           <TouchableOpacity
             className="border border-border dark:border-dark-border"
-            onPress={() => router.push(`/user/${user.username}` as any)}
+            onPress={() => router.push(`/${user.username}` as any)}
             style={{
               width: 40,
               height: 40,

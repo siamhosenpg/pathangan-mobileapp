@@ -1,16 +1,11 @@
+import ProfileHeader from "@/components/ui/headers/ProfileHeader";
 import ProfileAbout from "@/components/ui/profilepage/ProfileAbout";
 import ProfilePosts from "@/components/ui/profilepage/ProfilePosts";
 import ProfileTopSection from "@/components/ui/profilepage/ProfileTopSection";
 import { useGetUserByUsernameQuery } from "@/redux/api/userApi";
-import { Ionicons } from "@expo/vector-icons";
+import { useAppSelector } from "@/redux/hooks";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-  ActivityIndicator,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
 export default function UserProfileScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
@@ -21,6 +16,8 @@ export default function UserProfileScreen() {
     isLoading,
     isError,
   } = useGetUserByUsernameQuery(username ?? "", { skip: !username });
+
+  const currentUser = useAppSelector((state) => state.auth.user);
 
   if (isLoading) {
     return (
@@ -43,19 +40,15 @@ export default function UserProfileScreen() {
   return (
     <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
       {/* Header */}
-      <View className="bg-background dark:bg-dark-background px-4 pt-12 pb-3 border-b border-border dark:border-dark-border flex-row items-center justify-between">
-        <View className="flex-row items-center gap-3">
-          <TouchableOpacity onPress={() => router.back()} className="p-1">
-            <Ionicons name="arrow-back" size={22} color="#3a3a3a" />
-          </TouchableOpacity>
-          <Text className="text-xl font-bold text-text dark:text-dark-text">
-            {user.name}
-          </Text>
-        </View>
-        <TouchableOpacity className="p-1">
-          <Ionicons name="ellipsis-vertical" size={22} color="#3a3a3a" />
-        </TouchableOpacity>
-      </View>
+
+      {currentUser?.id === user._id ? (
+        <ProfileHeader
+          mode="own"
+          onEditPress={() => router.push("/editprofile" as any)}
+        />
+      ) : (
+        <ProfileHeader mode="other" userId={user._id} name={user.name} />
+      )}
 
       <ScrollView
         showsVerticalScrollIndicator={false}

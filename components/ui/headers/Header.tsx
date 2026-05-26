@@ -20,23 +20,30 @@ export function Header({ title }: { title?: string }) {
 
   return (
     <>
-      <View className="bg-background dark:bg-dark-background  px-4 pt-14 pb-3 border-b border-border dark:border-dark-border">
+      <View className="bg-background dark:bg-dark-background  px-4 pt-14 pb-1 border-b border-border dark:border-dark-border">
         <View className="flex-row items-center justify-between">
-          {title ? (
-            <View className="flex-row items-center gap-2 h-10">
-              <Text className="text-xl font-semibold text-gray-900 dark:text-dark-text">
-                {title}
-              </Text>
-            </View>
-          ) : (
-            <View className="flex-row items-center gap-2 w-32 h-10 -ml-1">
+          <View className="flex-row items-center gap-0.5">
+            <View className="flex-row items-center  w-12 h-12 -ml-1">
               <Image
-                source={require("../../../assets/logo/pathangan.png")}
+                source={require("../../../assets/images/favicon.png")}
                 className="w-full object-cover h-full"
                 resizeMode="contain"
               />
             </View>
-          )}
+            {title ? (
+              <View className="">
+                <Text className="text-xl font-semibold text-gray-900 dark:text-dark-text">
+                  {title}
+                </Text>
+              </View>
+            ) : (
+              <View className=" ">
+                <Text className="text-xl font-bold text-text dark:text-dark-text">
+                  পাঠাঙ্গান
+                </Text>
+              </View>
+            )}
+          </View>
 
           <View className="flex-row gap-4 items-center">
             <TouchableOpacity

@@ -1,19 +1,15 @@
+import ProfileHeader from "@/components/ui/headers/ProfileHeader";
 import ProfileAbout from "@/components/ui/profilepage/ProfileAbout";
 import ProfilePosts from "@/components/ui/profilepage/ProfilePosts";
 import ProfileTopSection from "@/components/ui/profilepage/ProfileTopSection";
 import { useGetUserByUsernameQuery } from "@/redux/api/userApi";
 import { useAppSelector } from "@/redux/hooks";
-import { Ionicons } from "@expo/vector-icons";
-import {
-  ActivityIndicator,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { useRouter } from "expo-router";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
 export default function ProfileScreen() {
   const currentUser = useAppSelector((state) => state.auth.user);
+  const router = useRouter();
 
   const {
     data: user,
@@ -44,14 +40,10 @@ export default function ProfileScreen() {
   return (
     <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
       {/* Header */}
-      <View className="bg-background dark:bg-dark-background px-4 pt-12 pb-3 border-b border-border dark:border-dark-border flex-row items-center justify-between">
-        <Text className="text-xl font-bold text-text dark:text-dark-text">
-          প্রোফাইল
-        </Text>
-        <TouchableOpacity className="p-1">
-          <Ionicons name="ellipsis-vertical" size={22} color="#3a3a3a" />
-        </TouchableOpacity>
-      </View>
+      <ProfileHeader
+        mode="own"
+        onEditPress={() => router.push("/profile/editprofile" as any)}
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
