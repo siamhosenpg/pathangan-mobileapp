@@ -1,13 +1,18 @@
-import React, { useEffect, useRef } from "react";
-import {
-  Animated,
-  Dimensions,
-  PanResponder,
-  Pressable,
-  View,
-} from "react-native";
+import React, { useEffect, useState } from "react";
+import { Dimensions, Pressable, Text, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  Easing,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
+const DISMISS_THRESHOLD = 150;
+const DISMISS_VELOCITY = 800;
 
 interface Props {
   visible: boolean;
@@ -15,83 +20,124 @@ interface Props {
   children: React.ReactNode;
 }
 
+const OPEN_SPRING = {
+  damping: 60,
+  stiffness: 500,
+  mass: 1,
+  overshootClamping: false,
+};
+
+const SNAP_SPRING = {
+  damping: 40,
+  stiffness: 400,
+  mass: 0.8,
+};
+
 const BottomSheet = ({ visible, onClose, children }: Props) => {
-  const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const [mounted, setMounted] = useState(false);
+  // content আছে কিনা বোঝার জন্য
+  const [hasContent, setHasContent] = useState(false);
+
+  const translateY = useSharedValue(SCREEN_HEIGHT);
+  const backdropOpacity = useSharedValue(0);
 
   useEffect(() => {
     if (visible) {
-      Animated.parallel([
-        Animated.timing(translateY, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropOpacity, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      setMounted(true);
+      requestAnimationFrame(() => {
+        translateY.value = withSpring(0, OPEN_SPRING);
+        backdropOpacity.value = withTiming(1, { duration: 250 });
+      });
     } else {
-      Animated.parallel([
-        Animated.timing(translateY, {
-          toValue: SCREEN_HEIGHT,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropOpacity, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      translateY.value = withTiming(SCREEN_HEIGHT, {
+        duration: 180,
+        easing: Easing.in(Easing.ease),
+      });
+      backdropOpacity.value = withTiming(
+        0,
+        { duration: 160, easing: Easing.in(Easing.ease) },
+        (finished) => {
+          if (finished) runOnJS(setMounted)(false);
+        },
+      );
     }
   }, [visible]);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, g) => g.dy > 10,
+  const handleGesture = Gesture.Pan()
+    .onUpdate((e) => {
+      const next = e.translationY;
+      if (next >= 0) {
+        translateY.value = next * 0.85;
+      }
+    })
+    .onEnd((e) => {
+      const shouldDismiss =
+        e.translationY > DISMISS_THRESHOLD || e.velocityY > DISMISS_VELOCITY;
 
-      onPanResponderMove: (_, g) => {
-        if (g.dy > 0) translateY.setValue(g.dy);
-      },
+      if (shouldDismiss) {
+        runOnJS(onClose)();
+      } else {
+        translateY.value = withSpring(0, SNAP_SPRING);
+      }
+    });
 
-      onPanResponderRelease: (_, g) => {
-        if (g.dy > 120) {
-          onClose();
-        } else {
-          Animated.spring(translateY, {
-            toValue: 0,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    }),
-  ).current;
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
 
-  if (!visible) return null;
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: backdropOpacity.value,
+  }));
+
+  if (!mounted) return null;
+
+  // children আছে কিনা check
+  const isEmpty =
+    !children || (Array.isArray(children) && children.length === 0);
 
   return (
     <View className="absolute inset-0 z-[999] justify-end">
       {/* Backdrop */}
       <Pressable className="absolute inset-0" onPress={onClose}>
         <Animated.View
-          style={{ opacity: backdropOpacity }}
+          style={backdropStyle}
           className="flex-1 bg-background-transparent dark:bg-dark-background-transparent"
         />
       </Pressable>
 
       {/* Sheet */}
       <Animated.View
-        {...panResponder.panHandlers}
-        style={{ transform: [{ translateY }] }}
-        className="max-h-[80%] h-full bg-background dark:bg-dark-background rounded-t-3xl pb-8"
+        style={[
+          sheetStyle,
+          {
+            flex: 1,
+            maxHeight: SCREEN_HEIGHT * 0.8,
+            // empty হলে minimum 30% height
+            minHeight: isEmpty ? SCREEN_HEIGHT * 0.3 : undefined,
+          },
+        ]}
+        className="bg-background dark:bg-dark-background rounded-t-3xl pb-8"
       >
-        {/* handle */}
-        <View className="w-14 h-1.5 bg-border dark:bg-dark-border rounded-full self-center mt-3 mb-4" />
+        {/* Handle bar */}
+        <GestureDetector gesture={handleGesture}>
+          <View className="pb-2">
+            <View className="w-14 h-1.5 bg-border dark:bg-dark-border rounded-full self-center mt-3 mb-2" />
+          </View>
+        </GestureDetector>
 
-        {children}
+        {/* Empty state */}
+        {isEmpty ? (
+          <View className="flex-1 items-center justify-center gap-2">
+            <Text className="text-3xl">📭</Text>
+            <Text className="text-text-secondary dark:text-dark-text-secondary text-sm">
+              কোনো তথ্য নেই
+            </Text>
+          </View>
+        ) : (
+          // ✅ ScrollView নেই — VirtualizedList conflict হবে না
+          // content নিজেই layout নেবে, max-height এ overflow হলে sheet বড় হবে না
+          <View className="flex-1">{children}</View>
+        )}
       </Animated.View>
     </View>
   );

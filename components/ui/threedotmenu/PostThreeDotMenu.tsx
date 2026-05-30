@@ -1,22 +1,14 @@
+// PostThreeDotMenu.tsx
+import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
+import { useDeletePostMutation } from "@/redux/api/postApi";
 import { useAppSelector } from "@/redux/hooks";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useRef } from "react";
-import {
-  Animated,
-  Dimensions,
-  Modal,
-  Pressable,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React from "react";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
   postId: string;
   postAuthorId: string;
-  visible: boolean;
-  onClose: () => void;
 }
 
 interface MenuItem {
@@ -27,61 +19,24 @@ interface MenuItem {
   danger?: boolean;
 }
 
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-
-const PostThreeDotMenu = ({
-  postId,
-  postAuthorId,
-  visible,
-  onClose,
-}: Props) => {
-  const insets = useSafeAreaInsets();
+const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
+  const { close } = useBottomSheet();
   const currentUserId = useAppSelector((state) => state.auth.user?.id);
   const isOwnPost = currentUserId === postAuthorId;
 
-  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-  const backdropAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          useNativeDriver: true,
-          damping: 20,
-          stiffness: 200,
-        }),
-        Animated.timing(backdropAnim, {
-          toValue: 1,
-          duration: 180,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: SCREEN_HEIGHT,
-          duration: 220,
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropAnim, {
-          toValue: 0,
-          duration: 180,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [visible]);
+  const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
 
   const handleCopyLink = () => {
-    // await Clipboard.setStringAsync(`https://prosongo.com/post/${postId}`);
-    onClose();
+    close();
   };
 
-  const handleDeletePost = () => {
-    // TODO: dispatch delete
-    console.log("Delete post:", postId);
-    onClose();
+  const handleDeletePost = async () => {
+    try {
+      await deletePost(postId).unwrap();
+      close();
+    } catch (err) {
+      console.error("Delete failed:", err);
+    }
   };
 
   const menuItems: MenuItem[] = [
@@ -89,7 +44,7 @@ const PostThreeDotMenu = ({
       icon: "help-circle-outline",
       title: "কেন এই পোস্টটি দেখছি?",
       subtitle: "এই পোস্টটি কেন দেখানো হচ্ছে তা জানুন",
-      onPress: onClose,
+      onPress: close,
     },
     {
       icon: "link-outline",
@@ -101,13 +56,13 @@ const PostThreeDotMenu = ({
       icon: "eye-off-outline",
       title: "আগ্রহী নই",
       subtitle: "এই ধরনের পোস্ট কম দেখাও",
-      onPress: onClose,
+      onPress: close,
     },
     {
       icon: "flag-outline",
       title: "পোস্ট রিপোর্ট করুন",
       subtitle: "এই পোস্টটি নিয়ে আমি উদ্বিগ্ন",
-      onPress: onClose,
+      onPress: close,
     },
   ];
 
@@ -122,158 +77,82 @@ const PostThreeDotMenu = ({
   }
 
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="none"
-      onRequestClose={onClose}
-      statusBarTranslucent
-    >
-      {/* Backdrop */}
-      <Animated.View
-        style={[
-          {
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            opacity: backdropAnim,
-          },
-        ]}
-      >
-        <Pressable style={{ flex: 1 }} onPress={onClose} />
-      </Animated.View>
+    <View className="px-3 pt-1 pb-2">
+      {/* Header */}
+      <View className="px-3 py-3 mb-1 border-b border-border dark:border-dark-border">
+        <Text className="text-base font-bold text-text dark:text-dark-text">
+          পোস্ট অপশন
+        </Text>
+      </View>
 
-      {/* Bottom Sheet */}
-      <Animated.View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          transform: [{ translateY: slideAnim }],
-          paddingBottom: insets.bottom + 8,
-          backgroundColor: "white",
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 16,
-          elevation: 24,
-        }}
-      >
-        {/* Handle bar */}
-        <View
-          style={{ alignItems: "center", paddingTop: 12, paddingBottom: 4 }}
-        >
-          <View
-            style={{
-              width: 40,
-              height: 4,
-              borderRadius: 99,
-              backgroundColor: "#E5E7EB",
-            }}
-          />
-        </View>
-
-        {/* Header */}
-        <View
-          style={{
-            paddingHorizontal: 20,
-            paddingVertical: 12,
-            borderBottomWidth: 1,
-            borderBottomColor: "#F3F4F6",
-          }}
-        >
-          <Text style={{ fontSize: 16, fontWeight: "700", color: "#111827" }}>
-            পোস্ট অপশন
-          </Text>
-        </View>
-
-        {/* Menu Items */}
-        <View style={{ paddingHorizontal: 12, paddingTop: 8 }}>
-          {menuItems.map((item, index) => (
-            <React.Fragment key={index}>
-              {item.danger && (
-                <View
-                  style={{
-                    height: 1,
-                    backgroundColor: "#F3F4F6",
-                    marginVertical: 8,
-                    marginHorizontal: 4,
-                  }}
-                />
-              )}
-              <TouchableOpacity
-                onPress={item.onPress}
-                activeOpacity={0.6}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 12,
-                  paddingHorizontal: 12,
-                  paddingVertical: 11,
-                  borderRadius: 14,
-                  marginBottom: 2,
-                  backgroundColor: item.danger
-                    ? "rgba(239,68,68,0.06)"
-                    : "transparent",
-                }}
+      {/* Menu Items */}
+      <View className="pt-2">
+        {menuItems.map((item, index) => (
+          <React.Fragment key={index}>
+            {item.danger && (
+              <View className="h-px bg-border dark:bg-dark-border my-2 mx-1" />
+            )}
+            <TouchableOpacity
+              onPress={item.onPress}
+              activeOpacity={0.6}
+              // delete loading চলাকালে সব button disable
+              disabled={isDeleting}
+              className={`flex-row items-center gap-3 px-3 py-2.5 rounded-2xl mb-0.5 ${
+                item.danger ? "bg-red-500/5" : ""
+              }`}
+            >
+              {/* Icon circle */}
+              <View
+                className={`w-11 h-11 rounded-full items-center justify-center ${
+                  item.danger
+                    ? "bg-red-500/10"
+                    : "bg-background-secondary dark:bg-dark-background-secondary"
+                }`}
               >
-                {/* Icon circle */}
-                <View
-                  style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 99,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: item.danger
-                      ? "rgba(239,68,68,0.1)"
-                      : "#F3F4F6",
-                  }}
-                >
+                {/* delete button এ loading spinner */}
+                {item.danger && isDeleting ? (
+                  <ActivityIndicator size="small" color="#EF4444" />
+                ) : (
                   <Ionicons
                     name={item.icon}
                     size={20}
                     color={item.danger ? "#EF4444" : "#374151"}
                   />
-                </View>
+                )}
+              </View>
 
-                {/* Text */}
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "600",
-                      color: item.danger ? "#EF4444" : "#111827",
-                      lineHeight: 20,
-                    }}
-                  >
-                    {item.title}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: item.danger ? "#FCA5A5" : "#6B7280",
-                      marginTop: 1,
-                    }}
-                  >
-                    {item.subtitle}
-                  </Text>
-                </View>
+              {/* Text */}
+              <View className="flex-1">
+                <Text
+                  className={`text-sm font-semibold leading-5 ${
+                    item.danger
+                      ? "text-red-500"
+                      : "text-text dark:text-dark-text"
+                  }`}
+                >
+                  {item.danger && isDeleting
+                    ? "মুছে ফেলা হচ্ছে..."
+                    : item.title}
+                </Text>
+                <Text
+                  className={`text-xs mt-0.5 ${
+                    item.danger
+                      ? "text-red-300"
+                      : "text-text-secondary dark:text-dark-text-secondary"
+                  }`}
+                >
+                  {item.subtitle}
+                </Text>
+              </View>
 
-                {/* Chevron */}
+              {!(item.danger && isDeleting) && (
                 <Ionicons name="chevron-forward" size={16} color="#D1D5DB" />
-              </TouchableOpacity>
-            </React.Fragment>
-          ))}
-        </View>
-      </Animated.View>
-    </Modal>
+              )}
+            </TouchableOpacity>
+          </React.Fragment>
+        ))}
+      </View>
+    </View>
   );
 };
 

@@ -4,8 +4,10 @@ import React, {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
 } from "react";
+import BottomSheet from "./BottomSheet";
 
 interface BottomSheetContextType {
   open: (content: React.ReactNode) => void;
@@ -24,9 +26,17 @@ export const BottomSheetProvider = ({
   const [content, setContent] = useState<React.ReactNode>(null);
   const [visible, setVisible] = useState(false);
 
-  const open = useCallback((node: React.ReactNode) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  // যদি rapidly open → close → open হয়, content clear না হোক
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const open = useCallback((node: React.ReactNode) => {
+    // পুরনো close timer cancel করো (rapid re-open case)
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setContent(node);
     setVisible(true);
   }, []);
@@ -34,9 +44,12 @@ export const BottomSheetProvider = ({
   const close = useCallback(() => {
     setVisible(false);
 
-    setTimeout(() => {
+    // BottomSheet এর close animation (280ms) শেষ হওয়ার পরে content clear করো
+    // এর আগে clear করলে children unmount হয়ে animation jerky দেখায়
+    closeTimerRef.current = setTimeout(() => {
       setContent(null);
-    }, 300);
+      closeTimerRef.current = null;
+    }, 220); // 280ms animation + 40ms buffer
   }, []);
 
   const value = useMemo(
@@ -67,5 +80,3 @@ export const useBottomSheet = () => {
 
   return context;
 };
-
-import BottomSheet from "./BottomSheet";

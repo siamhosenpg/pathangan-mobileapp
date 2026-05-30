@@ -13,6 +13,7 @@ export default function UserCardSuggestion({ user }: Props) {
 
   return (
     <TouchableOpacity
+      activeOpacity={0.5}
       onPress={() => router.push(`/${user.username}`)}
       className="flex-row bg-background dark:bg-dark-background items-center gap-3 px-4 py-4 rounded-xl"
     >

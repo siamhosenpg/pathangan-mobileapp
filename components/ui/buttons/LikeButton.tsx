@@ -1,6 +1,7 @@
 import { useToggleReactionMutation } from "@/redux/api/reactionApi";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { useColorScheme } from "nativewind";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Text, TouchableOpacity } from "react-native";
 
@@ -13,6 +14,11 @@ const LikeButton = ({
 }) => {
   const [isLiked, setIsLiked] = useState(initialLiked);
   const [toggleReaction, { isLoading }] = useToggleReactionMutation();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  // liked হলে accent, না হলে dark/light text color
+  const iconColor = isLiked ? "#00914d" : isDark ? "#f1f1f1" : "#1b1b1b";
 
   useEffect(() => {
     setIsLiked(initialLiked);
@@ -56,17 +62,15 @@ const LikeButton = ({
         <Ionicons
           name={isLiked ? "heart" : "heart-outline"}
           size={20}
-          color={isLiked ? "#00914d" : undefined}
-          className={
-            isLiked ? "" : "text-text-secondary dark:text-dark-text-secondary"
-          }
+          color={isLiked ? "#00914d" : iconColor}
+          className={isLiked ? "" : "text-text dark:text-dark-text"}
         />
       </Animated.View>
       <Text
         className={
           isLiked
             ? "font-semibold text-base text-accent"
-            : "font-semibold text-base text-text-secondary dark:text-dark-text-secondary"
+            : "font-semibold text-base text-text dark:text-dark-text"
         }
       >
         সমর্থন

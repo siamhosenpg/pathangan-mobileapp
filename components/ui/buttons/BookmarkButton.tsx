@@ -5,6 +5,7 @@ import {
   useSavePostMutation,
 } from "@/redux/api/save/savedItemApi";
 import { Ionicons } from "@expo/vector-icons";
+import { useColorScheme } from "nativewind";
 import { TouchableOpacity } from "react-native";
 
 export default function BookmarkButton({ postId }: { postId: string }) {
@@ -13,6 +14,13 @@ export default function BookmarkButton({ postId }: { postId: string }) {
   });
   const { data: defaultCol, isLoading: colLoading } =
     useGetDefaultCollectionQuery();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const iconColor = savedStatus?.saved
+    ? "#00914d"
+    : isDark
+      ? "#f1f1f1"
+      : "#1b1b1b";
   const [savePost, { isLoading: saving }] = useSavePostMutation();
   const [deleteSaved, { isLoading: deleting }] = useDeleteSavedItemMutation();
 
@@ -36,7 +44,7 @@ export default function BookmarkButton({ postId }: { postId: string }) {
       <Ionicons
         name={savedStatus?.saved ? "bookmark" : "bookmark-outline"}
         size={22}
-        color={savedStatus?.saved ? "#00914d" : "#9CA3AF"}
+        color={savedStatus?.saved ? "#00914d" : iconColor}
       />
     </TouchableOpacity>
   );

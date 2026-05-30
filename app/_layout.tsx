@@ -5,6 +5,7 @@ import { Stack } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useEffect } from "react";
 import { Appearance } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Provider } from "react-redux";
 import "../global.css";
 
@@ -25,19 +26,21 @@ export default function RootLayout() {
   }, []);
   return (
     <Provider store={store}>
-      <BottomSheetProvider>
-        <AuthInitializer />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="user/[username]" />
-          <Stack.Screen name="post/[id]" />
-        </Stack>
-      </BottomSheetProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <BottomSheetProvider>
+          <AuthInitializer />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+            }}
+          >
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="user/[username]" />
+            <Stack.Screen name="post/[id]" />
+          </Stack>
+        </BottomSheetProvider>
+      </GestureHandlerRootView>
     </Provider>
   );
 }

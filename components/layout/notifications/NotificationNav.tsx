@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, View } from "react-native";
-
 import NotificationBadge from "./NotificationBadge";
 import NotificationPanel from "./NotificationPanel";
 
@@ -17,7 +16,11 @@ const NotificationNav = () => {
   const unreadCount = data?.count ?? 0;
 
   const handleOpen = () => {
-    open(<NotificationPanel />);
+    open(
+      <View style={{ flex: 1 }}>
+        <NotificationPanel />
+      </View>,
+    );
   };
 
   return (

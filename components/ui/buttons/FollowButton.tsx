@@ -4,6 +4,7 @@ import {
   useUnfollowUserMutation,
 } from "@/redux/api/followApi";
 import { useAppSelector } from "@/redux/hooks";
+import * as Haptics from "expo-haptics";
 import { Text, TouchableOpacity } from "react-native";
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 }
 
 const FollowButton = ({ targetUserId }: Props) => {
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   const currentUser = useAppSelector((state) => state.auth.user);
 
   const { data, isLoading: checkingFollow } =
@@ -48,6 +50,7 @@ const FollowButton = ({ targetUserId }: Props) => {
       onPress={handleToggle}
       disabled={isLoading}
       style={{ opacity: isLoading ? 0.6 : 1 }}
+      activeOpacity={0.5}
     >
       <Text
         className="font-semibold text-sm"

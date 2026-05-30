@@ -44,8 +44,17 @@ const QuestionCard = ({ post }: Props) => {
             <View className="h-20 rounded-xl bg-background-secondary dark:bg-dark-background-secondary" />
           </>
         ) : (
-          data?.answers.map((answer) => (
-            <AnswerCard key={answer._id} answer={answer} questionId={_id} />
+          data?.answers.map((answer, index) => (
+            <View
+              key={answer._id}
+              className={
+                index !== data.answers.length - 1
+                  ? "border-b border-border dark:border-dark-border"
+                  : ""
+              }
+            >
+              <AnswerCard answer={answer} questionId={_id} />
+            </View>
           ))
         )}
       </View>

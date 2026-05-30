@@ -87,6 +87,17 @@ const NotificationPanel = () => {
         ListFooterComponent={() =>
           isFetchingNextPage ? <ActivityIndicator className="py-4" /> : null
         }
+        ListEmptyComponent={() => (
+          <View className="items-center justify-center py-16 gap-3">
+            <Text className="text-4xl">🔔</Text>
+            <Text className="text-text dark:text-dark-text font-semibold text-base">
+              কোনো বিজ্ঞপ্তি নেই
+            </Text>
+            <Text className="text-text-secondary dark:text-dark-text-secondary text-sm text-center px-8">
+              নতুন কোনো কার্যক্রম হলে এখানে দেখাবে
+            </Text>
+          </View>
+        )}
       />
     </View>
   );

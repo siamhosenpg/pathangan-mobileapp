@@ -21,13 +21,15 @@ export default function SearchInput({
   const isDark = colorScheme === "dark";
 
   return (
-    <View className="flex-row items-center bg-background-secondary dark:bg-dark-background-secondary rounded-full px-3.5 py-2.5 gap-2">
+    <View className="flex-row items-center bg-background-secondary dark:bg-dark-background-secondary rounded-full px-4 py-3 gap-3">
+      {/* Search icon */}
       <Ionicons
         name="search-outline"
-        size={16}
+        size={20}
         color={isDark ? "#8a8a8a" : "#9CA3AF"}
       />
 
+      {/* Input */}
       <TextInput
         ref={inputRef}
         value={value}
@@ -36,10 +38,11 @@ export default function SearchInput({
         returnKeyType="search"
         placeholder="তথ্য অনুসন্ধান করুন"
         placeholderTextColor={isDark ? "#8a8a8a" : "#9CA3AF"}
-        className="flex-1 text-sm text-text dark:text-dark-text"
-        style={{ paddingVertical: 0 }}
+        className="flex-1 items-center  text-base text-text dark:text-dark-text"
+        style={{ paddingVertical: 0 }} // ✅ lineHeight সরিয়ে দিলাম
       />
 
+      {/* Clear button */}
       {value.length > 0 && (
         <TouchableOpacity
           onPress={onClear}
@@ -47,18 +50,19 @@ export default function SearchInput({
         >
           <Ionicons
             name="close-circle"
-            size={16}
+            size={20}
             color={isDark ? "#8a8a8a" : "#9CA3AF"}
           />
         </TouchableOpacity>
       )}
 
+      {/* Submit button */}
       {value.trim().length > 0 && (
         <TouchableOpacity
           onPress={onSubmit}
-          className="bg-accent rounded-full px-3 py-1.5"
+          className="bg-accent rounded-full px-3.5 py-1.5"
         >
-          <Text className="text-xs text-white font-semibold">খুঁজুন</Text>
+          <Text className="text-sm text-white font-semibold">খুঁজুন</Text>
         </TouchableOpacity>
       )}
     </View>
