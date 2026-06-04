@@ -103,7 +103,7 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
       renderItem={renderItem}
       // 👇 Create Post Card
       ListHeaderComponent={
-        <View className="mb-2">
+        <View className="mb-1">
           <CreatePostCard />
         </View>
       }
@@ -113,9 +113,9 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
       onEndReachedThreshold={0.5}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{
-        paddingBottom: 80,
+        paddingBottom: 10,
       }}
-      ItemSeparatorComponent={() => <View className="h-2" />}
+      ItemSeparatorComponent={() => <View className="h-1" />}
     />
   );
 }

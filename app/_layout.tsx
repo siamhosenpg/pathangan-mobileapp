@@ -8,6 +8,7 @@ import { Appearance } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Provider } from "react-redux";
 import "../global.css";
+import "../i18n";
 
 export default function RootLayout() {
   const { setColorScheme } = useColorScheme();

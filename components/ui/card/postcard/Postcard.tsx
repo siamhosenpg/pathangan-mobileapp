@@ -7,6 +7,7 @@ import PostProfileTop from "./PostProfileTop";
 import type { Post } from "@/types/postTypes";
 import { Ionicons } from "@expo/vector-icons";
 
+import { useTranslation } from "react-i18next";
 import BookmarkButton from "../../buttons/BookmarkButton";
 import CommentsButton from "../../buttons/CommentsButton";
 import LikeButton from "../../buttons/LikeButton";
@@ -32,6 +33,7 @@ const Postcard = ({ post }: Props) => {
     ? (content.media as string[])
     : [];
 
+  const { t } = useTranslation();
   return (
     <View className="bg-background dark:bg-dark-background pt-4">
       <PostProfileTop user={userid} createdAt={createdAt} postId={post._id} />
@@ -54,7 +56,7 @@ const Postcard = ({ post }: Props) => {
             {content.text.length > 200 && (
               <TouchableOpacity onPress={() => setExpanded((prev) => !prev)}>
                 <Text className="text-sm text-text-tertiary dark:text-dark-text-tertiary font-medium py-1 mt-1">
-                  {expanded ? "আগের অবস্থায় আসুন" : "আরো পড়ুন"}
+                  {expanded ? t("showLess") : t("readMore")}
                 </Text>
               </TouchableOpacity>
             )}

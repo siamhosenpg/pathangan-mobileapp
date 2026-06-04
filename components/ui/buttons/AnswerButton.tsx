@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
+import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity } from "react-native";
 
 interface Props {
@@ -10,6 +11,7 @@ const AnswerButton = ({ onClick }: Props) => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const iconColor = isDark ? "#f1f1f1" : "#1b1b1b";
+  const { t } = useTranslation();
   return (
     <TouchableOpacity
       onPress={onClick}
@@ -17,7 +19,7 @@ const AnswerButton = ({ onClick }: Props) => {
     >
       <Ionicons name="create-outline" size={20} color={iconColor} />
       <Text className="font-semibold text-base text-text dark:text-dark-text">
-        উত্তর
+        {t("answers")}
       </Text>
     </TouchableOpacity>
   );

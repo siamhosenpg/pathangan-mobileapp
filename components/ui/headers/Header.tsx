@@ -10,11 +10,13 @@ import { useBottomSheet } from "@/components/ui/bottom-sheet/useBottomSheet";
 import { useGetUnreadNotificationCountQuery } from "@/redux/api/notification/notificationApi";
 import { useAppSelector } from "@/redux/hooks";
 import { useColorScheme } from "nativewind";
+import { useTranslation } from "react-i18next";
 
 export function Header({ title }: { title?: string }) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const { colorScheme } = useColorScheme();
+  const { t } = useTranslation();
   const isDark = colorScheme === "dark";
   const iconColor = isDark ? "#f1f1f1" : "#1b1b1b";
 
@@ -29,7 +31,7 @@ export function Header({ title }: { title?: string }) {
       <View className="bg-background dark:bg-dark-background px-4 pt-14 pb-1 border-b border-border dark:border-dark-border">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-0.5">
-            <View className="flex-row items-center w-12 h-12 -ml-1">
+            <View className="flex-row items-center w-11 h-11 -ml-1 -mt-1">
               <Image
                 source={require("../../../assets/images/favicon.png")}
                 className="w-full object-cover h-full"
@@ -45,7 +47,7 @@ export function Header({ title }: { title?: string }) {
             ) : (
               <View>
                 <Text className="text-xl font-bold text-text dark:text-dark-text">
-                  পাঠাঙ্গান
+                  {t("pathangan")}
                 </Text>
               </View>
             )}

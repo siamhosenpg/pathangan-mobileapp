@@ -1,11 +1,26 @@
 import { Ionicons } from "@expo/vector-icons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import * as Haptics from "expo-haptics";
 import { Tabs } from "expo-router";
 import { useColorScheme } from "nativewind";
+import { Pressable } from "react-native-gesture-handler";
+
+import { useTranslation } from "react-i18next";
 
 export default function TabLayout() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
+  const hapticTabButton = (props: any) => (
+    <Pressable
+      {...props}
+      onPress={(e) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+        props.onPress?.(e);
+      }}
+    />
+  );
 
   return (
     <Tabs
@@ -44,7 +59,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="feed"
         options={{
-          title: "কমিউনিটি",
+          tabBarButton: hapticTabButton,
+          title: t("community"),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "home" : "home-outline"}
@@ -57,7 +73,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="question"
         options={{
-          title: "প্রশ্নসমূহ",
+          tabBarButton: hapticTabButton,
+          title: t("questions"),
           tabBarIcon: ({ color, focused }) => (
             <MaterialCommunityIcons
               name={focused ? "head-question" : "head-question-outline"}
@@ -70,7 +87,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="search"
         options={{
-          title: "তথ্য খুঁজুন",
+          tabBarButton: hapticTabButton,
+          title: t("search"),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "search" : "search-outline"}
@@ -81,9 +99,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="course"
+        name="courses"
         options={{
-          title: "কোর্সসমূহ",
+          tabBarButton: hapticTabButton,
+          title: t("courses"),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "book" : "book-outline"}
@@ -96,7 +115,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="people"
         options={{
-          title: "ব্যবহারকারী",
+          tabBarButton: hapticTabButton,
+          title: t("people"),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "people" : "people-outline"}
@@ -110,7 +130,6 @@ export default function TabLayout() {
       <Tabs.Screen name="[username]" options={{ href: null }} />
       // এখন
       <Tabs.Screen name="create" options={{ href: null }} />
-      <Tabs.Screen name="notifications" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />
       <Tabs.Screen name="saved" options={{ href: null }} />
     </Tabs>

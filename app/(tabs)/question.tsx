@@ -3,11 +3,13 @@ import { Header } from "@/components/ui/headers/Header";
 import { useGetAllQuestionsInfiniteQuery } from "@/redux/api/post/questionApi";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, FlatList, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function QuestionScreen() {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   const {
     data,
@@ -39,7 +41,7 @@ export default function QuestionScreen() {
   return (
     <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
       {/* Header */}
-      <Header title="প্রশ্নসমূহ" />
+      <Header title={t("questions")} />
 
       {/* Loading */}
       {isLoading ? (
@@ -52,7 +54,7 @@ export default function QuestionScreen() {
           <Ionicons name="alert-circle-outline" size={40} color="#9CA3AF" />
 
           <Text className="text-sm text-gray-500 dark:text-dark-gray-500">
-            প্রশ্ন লোড করা যায়নি
+            {t("failed_to_load_questions")}
           </Text>
         </View>
       ) : allQuestions.length === 0 ? (
@@ -61,7 +63,7 @@ export default function QuestionScreen() {
           <Ionicons name="help-circle-outline" size={48} color="#D1D5DB" />
 
           <Text className="text-sm text-gray-400 dark:text-dark-gray-400">
-            এখনো কোনো প্রশ্ন নেই
+            {t("noQuestions")}
           </Text>
         </View>
       ) : (
@@ -71,8 +73,8 @@ export default function QuestionScreen() {
           keyExtractor={(item) => item._id}
           renderItem={({ item }) => <QuestionCard post={item} />}
           contentContainerStyle={{
-            paddingBottom: insets.bottom + 90,
-            rowGap: 8,
+            paddingBottom: insets.bottom + 10,
+            rowGap: 4,
           }}
           showsVerticalScrollIndicator={false}
           onEndReached={handleEndReached}

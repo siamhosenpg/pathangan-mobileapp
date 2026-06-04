@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import GreenMark from "../../badges/GreenMark";
 import { useBottomSheet } from "../../bottom-sheet/BottomSheetProvider";
-import BanglaNumber from "../../extra/BanglaNumber";
+import TimeAgo from "../../datetime/TimeAgo";
 import PostThreeDotMenu from "../../threedotmenu/PostThreeDotMenu";
 
 interface Props {
@@ -86,11 +86,11 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
               <GreenMark mark={!!user.greenmarkVerified} size={14} />
             )}
           </View>
-          <Text
-            className="text-text-secondary dark:text-dark-text-secondary"
-            style={{ fontSize: 12 }}
-          >
-            <BanglaNumber value={getTimeAgo(createdAt)} />
+          <Text className="text-text-secondary dark:text-dark-text-secondary">
+            <TimeAgo
+              className="text-sm text-text-tertiary dark:text-dark-text-tertiary font-medium"
+              date={createdAt}
+            />
           </Text>
         </View>
       </View>

@@ -1,10 +1,12 @@
 import UserCardSuggestion from "@/components/ui/card/user/UserCardSuggestion";
 import { Header } from "@/components/ui/headers/Header";
 import { useGetSuggestedUsersQuery } from "@/redux/api/userApi";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, FlatList, Text, View } from "react-native";
 
 export default function PeopleScreen() {
   const { data, isLoading, isError } = useGetSuggestedUsersQuery();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
@@ -18,7 +20,7 @@ export default function PeopleScreen() {
     return (
       <View className="flex-1 items-center justify-center px-6">
         <Text className="text-red-500 text-sm text-center">
-          ইউজার লোড করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।
+          {t("failed_to_load_users")}
         </Text>
       </View>
     );
@@ -27,7 +29,7 @@ export default function PeopleScreen() {
   return (
     <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
       {/* Header */}
-      <Header title=" সাজেস্টেড ইউজার" />
+      <Header title={t("people")} />
 
       {/* List */}
       <FlatList

@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Animated, Text, TouchableOpacity } from "react-native";
 
 const LikeButton = ({
@@ -16,7 +17,7 @@ const LikeButton = ({
   const [toggleReaction, { isLoading }] = useToggleReactionMutation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-
+  const { t } = useTranslation();
   // liked হলে accent, না হলে dark/light text color
   const iconColor = isLiked ? "#00914d" : isDark ? "#f1f1f1" : "#1b1b1b";
 
@@ -55,7 +56,7 @@ const LikeButton = ({
     <TouchableOpacity
       onPress={handleLike}
       disabled={isLoading}
-      className="flex-row items-center gap-1.5 py-3"
+      className="flex-row items-center gap-1.5 py-3.5"
       style={{ opacity: isLoading ? 0.6 : 1 }}
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -73,7 +74,7 @@ const LikeButton = ({
             : "font-semibold text-base text-text dark:text-dark-text"
         }
       >
-        সমর্থন
+        {t("love")}
       </Text>
     </TouchableOpacity>
   );

@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import React, { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 interface Props {
@@ -19,6 +20,7 @@ export default function SearchInput({
   const inputRef = useRef<TextInput>(null);
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
 
   return (
     <View className="flex-row items-center bg-background-secondary dark:bg-dark-background-secondary rounded-full px-4 py-3 gap-3">
@@ -36,7 +38,7 @@ export default function SearchInput({
         onChangeText={onChangeText}
         onSubmitEditing={onSubmit}
         returnKeyType="search"
-        placeholder="তথ্য অনুসন্ধান করুন"
+        placeholder={t("searchPlaceholder")}
         placeholderTextColor={isDark ? "#8a8a8a" : "#9CA3AF"}
         className="flex-1 items-center  text-base text-text dark:text-dark-text"
         style={{ paddingVertical: 0 }} // ✅ lineHeight সরিয়ে দিলাম
@@ -62,7 +64,9 @@ export default function SearchInput({
           onPress={onSubmit}
           className="bg-accent rounded-full px-3.5 py-1.5"
         >
-          <Text className="text-sm text-white font-semibold">খুঁজুন</Text>
+          <Text className="text-sm text-white font-semibold">
+            {t("search")}
+          </Text>
         </TouchableOpacity>
       )}
     </View>

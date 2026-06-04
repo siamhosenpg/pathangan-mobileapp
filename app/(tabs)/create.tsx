@@ -95,6 +95,7 @@ export default function CreatePostScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsMultipleSelection: true,
       quality: 0.85,
+      exif: false, // ✅ iPhone HEIC এর বদলে JPEG দেবে
     });
     if (result.canceled) return;
     const selected: MediaPreview[] = result.assets.map((a) => ({
@@ -125,10 +126,23 @@ export default function CreatePostScreen() {
 
   const buildFormData = (items: MediaPreview[], formData: FormData) => {
     items.forEach((m) => {
+      // extension থেকে mimeType বের করো যদি না থাকে
+      const ext = m.uri.split(".").pop()?.toLowerCase();
+      const mimeType =
+        m.mimeType ||
+        (m.type === "video"
+          ? "video/mp4"
+          : ext === "png"
+            ? "image/png"
+            : "image/jpeg"); // default jpeg
+
+      const fileName =
+        m.fileName || `upload.${m.type === "video" ? "mp4" : ext || "jpg"}`;
+
       formData.append("media", {
         uri: m.uri,
-        name: m.fileName ?? `upload.${m.type === "video" ? "mp4" : "jpg"}`,
-        type: m.mimeType ?? (m.type === "video" ? "video/mp4" : "image/jpeg"),
+        name: fileName,
+        type: mimeType,
       } as any);
     });
   };
