@@ -1,4 +1,3 @@
-// PostThreeDotMenu.tsx
 import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
 import { useDeletePostMutation } from "@/redux/api/postApi";
 import { useAppSelector } from "@/redux/hooks";
@@ -21,8 +20,12 @@ interface MenuItem {
 
 const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
   const { close } = useBottomSheet();
-  const currentUserId = useAppSelector((state) => state.auth.user?.id);
-  const isOwnPost = currentUserId === postAuthorId;
+  const currentUser = useAppSelector((state) => state.auth.user);
+
+  // ✅ id এবং _id দুইটাই check
+  const isOwnPost =
+    currentUser?.id === postAuthorId ||
+    (currentUser as any)?._id === postAuthorId;
 
   const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
 
@@ -95,13 +98,11 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
             <TouchableOpacity
               onPress={item.onPress}
               activeOpacity={0.6}
-              // delete loading চলাকালে সব button disable
               disabled={isDeleting}
               className={`flex-row items-center gap-3 px-3 py-2.5 rounded-2xl mb-0.5 ${
                 item.danger ? "bg-red-500/5" : ""
               }`}
             >
-              {/* Icon circle */}
               <View
                 className={`w-11 h-11 rounded-full items-center justify-center ${
                   item.danger
@@ -109,7 +110,6 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
                     : "bg-background-secondary dark:bg-dark-background-secondary"
                 }`}
               >
-                {/* delete button এ loading spinner */}
                 {item.danger && isDeleting ? (
                   <ActivityIndicator size="small" color="#EF4444" />
                 ) : (
@@ -121,7 +121,6 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
                 )}
               </View>
 
-              {/* Text */}
               <View className="flex-1">
                 <Text
                   className={`text-sm font-semibold leading-5 ${

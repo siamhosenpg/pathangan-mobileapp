@@ -1,10 +1,11 @@
-import { ThemeToggle } from "@/components/ui/darkmood/ThemeToggle";
+import GreenMark from "@/components/ui/badges/GreenMark";
 import { useLogoutMutation } from "@/redux/api/authApi";
 import { clearUser } from "@/redux/features/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Animated,
   Dimensions,
@@ -33,6 +34,7 @@ interface MenuItem {
 
 export function MenuDrawer({ visible, onClose }: MenuDrawerProps) {
   const router = useRouter();
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const [logout] = useLogoutMutation();
@@ -107,24 +109,34 @@ export function MenuDrawer({ visible, onClose }: MenuDrawerProps) {
 
   const menuItems: MenuItem[] = [
     {
-      icon: "person-outline",
-      label: "প্রোফাইল",
-      route: `/(tabs)/profile/${user?.username}`,
-    },
-    {
       icon: "bookmark-outline",
-      label: "সেভ করা পোস্ট",
+      label: t("savedPosts"),
       route: "/(tabs)/saved",
     },
     {
       icon: "notifications-outline",
-      label: "নোটিফিকেশন",
+      label: t("notifications"),
       route: "/(tabs)/notifications",
     },
     {
       icon: "settings-outline",
-      label: "সেটিংস",
+      label: t("settings"),
       route: "/(tabs)/settings",
+    },
+    {
+      icon: "shield-checkmark-outline",
+      label: t("privacyPolicy"),
+      route: "/others/privacy-policy",
+    },
+    {
+      icon: "document-text-outline",
+      label: t("termsAndConditions"),
+      route: "/others/terms-and-conditions",
+    },
+    {
+      icon: "chatbubble-ellipses-outline",
+      label: t("helpSupport"),
+      route: "/others/support",
     },
   ];
 
@@ -154,32 +166,53 @@ export function MenuDrawer({ visible, onClose }: MenuDrawerProps) {
           className="absolute top-0 bottom-0 right-0 bg-background dark:bg-dark-background border-l border-border dark:border-dark-border"
         >
           {/* User Info */}
-          <View className="px-5 pt-16 pb-5 ">
-            {/* Profile Image or Avatar */}
-            {user?.profileImage ? (
-              <Image
-                source={{ uri: user.profileImage }}
-                className="w-14 h-14 rounded-full mb-3"
-              />
-            ) : (
-              <View className="w-14 h-14 rounded-full bg-accent items-center justify-center mb-3">
-                <Text className="text-white dark:text-dark-text font-bold text-xl">
-                  {user?.name?.charAt(0)?.toUpperCase() ?? "?"}
+          <View className="px-5 pt-20 pb-5">
+            <TouchableOpacity
+              className=" flex-row gap-2 items-center  px-4 py-3 rounded-2xl bg-background-secondary dark:bg-dark-background-secondary"
+              onPress={() => {
+                closeDrawer();
+                setTimeout(() => {
+                  if (user?.username) {
+                    router.push(`/(tabs)/profile`);
+                  }
+                }, 280);
+              }}
+            >
+              {/* Profile Image or Avatar */}
+              {user?.profileImage ? (
+                <Image
+                  source={{ uri: user.profileImage }}
+                  className="w-14 h-14 rounded-full "
+                />
+              ) : (
+                <View className="w-14 h-14 rounded-full bg-accent items-center justify-center mb-3">
+                  <Text className="text-white dark:text-dark-text font-bold text-xl">
+                    {user?.name?.charAt(0)?.toUpperCase() ?? "?"}
+                  </Text>
+                </View>
+              )}
+
+              <View>
+                <View className="flex-row items-center gap-1">
+                  <Text className="text-text dark:text-dark-text font-semibold text-base ">
+                    {user?.name ?? t("unknownUser")}
+                  </Text>
+                  <GreenMark
+                    mark={user?.greenmarkVerified || false}
+                    size={14}
+                  />
+                </View>
+                <Text className="text-text-tertiary dark:text-dark-text-tertiary text-sm mt-0.5">
+                  @{user?.username ?? " unknown"}
                 </Text>
               </View>
-            )}
-
-            <Text className="text-text dark:text-dark-text font-semibold text-base">
-              {user?.name ?? ""}
-            </Text>
-            <Text className="text-text-tertiary dark:text-dark-text-tertiary text-sm mt-0.5">
-              @{user?.username ?? ""}
-            </Text>
+            </TouchableOpacity>
           </View>
-
+          {/*
           <View className="px-5  ">
             <ThemeToggle />
           </View>
+            */}
 
           {/* Menu Items — কোনো animation নেই, static */}
           <View className="flex-1 py-4">
@@ -217,7 +250,7 @@ export function MenuDrawer({ visible, onClose }: MenuDrawerProps) {
                 <Ionicons name="log-out-outline" size={18} color="#ef4444" />
               </View>
               <Text className="text-red-500 dark:text-red-400 text-[15px]">
-                লগআউট
+                {t("logout")}
               </Text>
             </TouchableOpacity>
           </View>

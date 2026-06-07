@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import PostCountLeft from "../postcard/PostCountLeft";
 import PostProfileTop from "../postcard/PostProfileTop";
@@ -9,11 +8,13 @@ import PostProfileTop from "../postcard/PostProfileTop";
 // import AnswerPopup from "./AnswerPopup";
 import { useGetAnswersByQuestionQuery } from "@/redux/api/answer/answersApi";
 import type { Post } from "@/types/postTypes";
+import { useBottomSheet } from "../../bottom-sheet/useBottomSheet";
 import AnswerButton from "../../buttons/AnswerButton";
 import BookmarkButton from "../../buttons/BookmarkButton";
 import LikeButton from "../../buttons/LikeButton";
 import ShareButton from "../../buttons/ShareButton";
 import AnswerCard from "./AnswerCard";
+import AnswerPopupContent from "./AnswerPopupContent";
 
 interface Props {
   post: Post;
@@ -21,12 +22,20 @@ interface Props {
 
 const QuestionCard = ({ post }: Props) => {
   const { userid, question, createdAt, _id } = post;
-  const [showAnswerPopup, setShowAnswerPopup] = useState(false);
-
+  const { open } = useBottomSheet();
   const { data, isLoading } = useGetAnswersByQuestionQuery({
     questionId: _id,
     limit: 2,
   });
+
+  const handleAnswerOpen = () => {
+    open(
+      <AnswerPopupContent
+        questionId={_id}
+        questionText={question?.questionText ?? ""}
+      />,
+    );
+  };
 
   return (
     <View className="bg-background dark:bg-dark-background pt-4">
@@ -78,7 +87,7 @@ const QuestionCard = ({ post }: Props) => {
         <View className="flex-row items-center gap-6">
           <LikeButton postId={_id} initialLiked={post.isReacted} />
 
-          <AnswerButton onClick={() => setShowAnswerPopup(true)} />
+          <AnswerButton onClick={handleAnswerOpen} />
 
           <ShareButton />
         </View>

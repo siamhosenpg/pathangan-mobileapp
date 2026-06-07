@@ -1,4 +1,5 @@
 import CourseCard from "@/components/ui/card/course/CourseCard";
+import CourseCardSkeleton from "@/components/ui/card/course/CourseCardSkeleton";
 import { Header } from "@/components/ui/headers/Header";
 import type { Course } from "@/redux/api/post/courseApi";
 import { useGetAllCoursesInfiniteQuery } from "@/redux/api/post/courseApi";
@@ -14,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 export default function CoursesPage() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -44,18 +46,12 @@ export default function CoursesPage() {
     if (!isFetchingNextPage) return null;
     return (
       <View className="py-4 items-center justify-center">
-        <ActivityIndicator
-          size="small"
-          color={isDark ? "#f1f1f1" : "#1b1b1b"}
-        />
+        <ActivityIndicator size="small" color="#00914d" />
       </View>
     );
-  }, [isFetchingNextPage, isDark]);
+  }, [isFetchingNextPage]);
 
-  const renderSeparator = useCallback(
-    () => <View className="h-[1px] bg-border dark:bg-dark-border mx-4" />,
-    [],
-  );
+  const renderSeparator = useCallback(() => <View className="h-2" />, []);
 
   const handleEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -63,24 +59,22 @@ export default function CoursesPage() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 bg-background dark:bg-dark-background">
-        <Header title={t("courses")} />
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator
-            size="large"
-            color={isDark ? "#f1f1f1" : "#1b1b1b"}
-          />
-        </View>
-      </View>
-    );
-  }
+  return (
+    <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
+      <Header title={t("courses")} />
 
-  if (isError) {
-    return (
-      <View className="flex-1 bg-background dark:bg-dark-background">
-        <Header title={t("courses")} />
+      {/* Loading */}
+      {isLoading && (
+        <View className="px-2 pt-2 gap-2">
+          <CourseCardSkeleton />
+          <CourseCardSkeleton />
+          <CourseCardSkeleton />
+          <CourseCardSkeleton />
+        </View>
+      )}
+
+      {/* Error */}
+      {!isLoading && isError && (
         <View className="flex-1 items-center justify-center gap-4 px-6">
           <Ionicons
             name="alert-circle-outline"
@@ -99,14 +93,10 @@ export default function CoursesPage() {
             </Text>
           </TouchableOpacity>
         </View>
-      </View>
-    );
-  }
+      )}
 
-  if (courses.length === 0) {
-    return (
-      <View className="flex-1 bg-background dark:bg-dark-background">
-        <Header title={t("courses")} />
+      {/* Empty */}
+      {!isLoading && !isError && courses.length === 0 && (
         <View className="flex-1 items-center justify-center gap-3 px-6">
           <Ionicons
             name="book-outline"
@@ -117,25 +107,26 @@ export default function CoursesPage() {
             {t("noCourses")}
           </Text>
         </View>
-      </View>
-    );
-  }
+      )}
 
-  return (
-    <View className="flex-1 bg-background dark:bg-dark-background">
-      <Header title={t("courses")} />
-
-      <FlatList
-        data={courses}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        ItemSeparatorComponent={renderSeparator}
-        ListFooterComponent={renderFooter}
-        onEndReached={handleEndReached}
-        onEndReachedThreshold={0.4}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 80 }}
-      />
+      {/* List */}
+      {!isLoading && !isError && courses.length > 0 && (
+        <FlatList
+          data={courses}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          ItemSeparatorComponent={renderSeparator}
+          ListFooterComponent={renderFooter}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.4}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: 10,
+            paddingHorizontal: 8,
+            paddingTop: 8,
+          }}
+        />
+      )}
     </View>
   );
 }

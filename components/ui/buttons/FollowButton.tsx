@@ -5,6 +5,8 @@ import {
 } from "@/redux/api/followApi";
 import { useAppSelector } from "@/redux/hooks";
 import * as Haptics from "expo-haptics";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity } from "react-native";
 
 interface Props {
@@ -12,18 +14,28 @@ interface Props {
 }
 
 const FollowButton = ({ targetUserId }: Props) => {
-  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const { t } = useTranslation();
   const currentUser = useAppSelector((state) => state.auth.user);
 
   const { data, isLoading: checkingFollow } =
     useGetFollowersQuery(targetUserId);
 
   const followers = data?.followers ?? [];
-  const isFollowing = followers.some((f: any) =>
-    typeof f.followerId === "object"
-      ? f.followerId._id === currentUser?.id
-      : f.followerId === currentUser?.id,
-  );
+
+  // ✅ id এবং _id দুইটাই check
+  const serverFollowing = followers.some((f: any) => {
+    const followerId =
+      typeof f.followerId === "object" ? f.followerId._id : f.followerId;
+    return (
+      followerId === currentUser?.id || followerId === (currentUser as any)?._id
+    );
+  });
+
+  const [localFollowing, setLocalFollowing] = useState(false);
+
+  useEffect(() => {
+    setLocalFollowing(serverFollowing);
+  }, [serverFollowing]);
 
   const [followUser, { isLoading: following }] = useFollowUserMutation();
   const [unfollowUser, { isLoading: unfollowing }] = useUnfollowUserMutation();
@@ -31,14 +43,22 @@ const FollowButton = ({ targetUserId }: Props) => {
   const isLoading = checkingFollow || following || unfollowing;
 
   const handleToggle = async () => {
-    if (!currentUser) return;
+    if (!currentUser || isLoading) return;
+
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    // Optimistic update
+    setLocalFollowing((prev) => !prev);
+
     try {
-      if (isFollowing) {
+      if (localFollowing) {
         await unfollowUser(targetUserId).unwrap();
       } else {
         await followUser(targetUserId).unwrap();
       }
     } catch (err) {
+      // rollback
+      setLocalFollowing((prev) => !prev);
       console.error("Follow toggle failed:", err);
     }
   };
@@ -54,9 +74,9 @@ const FollowButton = ({ targetUserId }: Props) => {
     >
       <Text
         className="font-semibold text-sm"
-        style={{ color: isFollowing ? "#9CA3AF" : "#00914d" }}
+        style={{ color: localFollowing ? "#9CA3AF" : "#00914d" }}
       >
-        {isLoading ? "..." : isFollowing ? "অনুসরণ করা হচ্ছে" : "অনুসরণ করুন"}
+        {isLoading ? "..." : localFollowing ? t("unfollow") : t("follow")}
       </Text>
     </TouchableOpacity>
   );

@@ -1,4 +1,5 @@
 import type { ActivityStats } from "@/types/userTypes";
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import BanglaNumber from "../extra/BanglaNumber";
 
@@ -7,6 +8,7 @@ interface Props {
 }
 
 const FollowStats = ({ activityStats }: Props) => {
+  const { t } = useTranslation();
   return (
     <View className="flex-row items-center gap-2 ">
       <View className="flex-row items-center gap-2">
@@ -14,7 +16,7 @@ const FollowStats = ({ activityStats }: Props) => {
           <BanglaNumber value={activityStats?.totalFollowers ?? 0} />
         </Text>
         <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
-          অনুসরণকারী
+          {t("followers")}
         </Text>
       </View>
 
@@ -25,7 +27,7 @@ const FollowStats = ({ activityStats }: Props) => {
           <BanglaNumber value={activityStats?.totalFollowing ?? 0} />
         </Text>
         <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
-          অনুসরণ করছি
+          {t("following")}
         </Text>
       </View>
     </View>

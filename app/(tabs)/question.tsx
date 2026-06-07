@@ -1,4 +1,5 @@
 import QuestionCard from "@/components/ui/card/questioncard/QuestionCard";
+import QuestionCardSkeleton from "@/components/ui/card/questioncard/QuestionCardSkeleton";
 import { Header } from "@/components/ui/headers/Header";
 import { useGetAllQuestionsInfiniteQuery } from "@/redux/api/post/questionApi";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,7 +31,6 @@ export default function QuestionScreen() {
 
   const renderFooter = () => {
     if (!isFetchingNextPage) return null;
-
     return (
       <View className="py-4 items-center">
         <ActivityIndicator size="small" color="#00914d" />
@@ -40,34 +40,39 @@ export default function QuestionScreen() {
 
   return (
     <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
-      {/* Header */}
       <Header title={t("questions")} />
 
       {/* Loading */}
-      {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#00914d" />
+      {isLoading && (
+        <View style={{ rowGap: 4 }}>
+          <QuestionCardSkeleton />
+          <QuestionCardSkeleton />
+          <QuestionCardSkeleton />
         </View>
-      ) : isError ? (
-        /* Error */
+      )}
+
+      {/* Error */}
+      {!isLoading && isError && (
         <View className="flex-1 items-center justify-center gap-y-2">
           <Ionicons name="alert-circle-outline" size={40} color="#9CA3AF" />
-
-          <Text className="text-sm text-gray-500 dark:text-dark-gray-500">
+          <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
             {t("failed_to_load_questions")}
           </Text>
         </View>
-      ) : allQuestions.length === 0 ? (
-        /* Empty */
+      )}
+
+      {/* Empty */}
+      {!isLoading && !isError && allQuestions.length === 0 && (
         <View className="flex-1 items-center justify-center gap-y-2">
           <Ionicons name="help-circle-outline" size={48} color="#D1D5DB" />
-
-          <Text className="text-sm text-gray-400 dark:text-dark-gray-400">
+          <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
             {t("noQuestions")}
           </Text>
         </View>
-      ) : (
-        /* List */
+      )}
+
+      {/* List */}
+      {!isLoading && !isError && allQuestions.length > 0 && (
         <FlatList
           data={allQuestions}
           keyExtractor={(item) => item._id}

@@ -1,19 +1,28 @@
+import GreenMark from "@/components/ui/badges/GreenMark";
 import LanguageSwitcher from "@/components/ui/setting/LanguageSwitcher";
 import SettingsCard from "@/components/ui/setting/SettingsCard";
 import SettingsRow from "@/components/ui/setting/SettingsRow";
+import { useAppSelector } from "@/redux/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Switch, Text, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  ScrollView,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-
+  const currentUser = useAppSelector((state) => state.auth.user);
   const [notifEnabled, setNotifEnabled] = useState(true);
 
   // Prosongo brand color
@@ -48,15 +57,31 @@ export default function SettingsScreen() {
           activeOpacity={0.7}
           className="flex-row items-center gap-4 mx-5 mt-5 mb-5 p-4 rounded-2xl bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border"
         >
-          <View className="w-14 h-14 rounded-full bg-accent items-center justify-center">
-            <Text className="text-white text-xl font-semibold">শি</Text>
+          <View className="w-16 h-16 rounded-full border border-border dark:border-dark-border overflow-hidden bg-accent/20">
+            {currentUser?.profileImage ? (
+              <Image
+                source={{ uri: currentUser.profileImage }}
+                className="w-full h-full"
+                resizeMode="cover"
+              />
+            ) : (
+              <View className="w-full h-full items-center justify-center bg-accent-secondary">
+                <Text className="text-4xl font-bold text-accent uppercase mt-1">
+                  {currentUser?.name?.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
           </View>
           <View className="flex-1">
-            <Text className="text-base font-semibold text-text dark:text-dark-text">
-              Shium Hossen
-            </Text>
+            <View className="flex-row items-center gap-1">
+              <Text className="text-base font-semibold text-text dark:text-dark-text">
+                {currentUser?.name || "Shium Hossen"}
+              </Text>
+              <GreenMark mark={!!currentUser?.greenmarkVerified} size={16} />
+            </View>
+
             <Text className="text-sm text-text-tertiary dark:text-dark-text-tertiary mt-[2px]">
-              @shium · Kushtia
+              @{currentUser?.username || "shium"}
             </Text>
           </View>
           <View className="px-3 py-1 rounded-full border border-accent">

@@ -25,6 +25,8 @@ export const baseApi = createApi({
     "Follow",
     "Rating",
     "Notification",
+    "PrivateQuestion",
+    "PrivateAnswer",
   ],
   endpoints: () => ({}),
 });

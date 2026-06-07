@@ -6,7 +6,9 @@ import {
 import { useAppSelector } from "@/redux/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity, View } from "react-native";
 
 type OwnProfileProps = {
@@ -63,20 +65,24 @@ function OtherProfileHeader({
   router: ReturnType<typeof useRouter>;
 }) {
   const currentUser = useAppSelector((state) => state.auth.user);
-
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const { t } = useTranslation();
   const { data, isLoading: checkingFollow } = useGetFollowersQuery(userId);
   const [followUser, { isLoading: following }] = useFollowUserMutation();
   const [unfollowUser, { isLoading: unfollowing }] = useUnfollowUserMutation();
 
   const isLoading = checkingFollow || following || unfollowing;
 
-  // FollowButton এর মতো একই check
   const followers = data?.followers ?? [];
-  const serverIsFollowing = followers.some((f: any) =>
-    typeof f.followerId === "object"
-      ? f.followerId._id === currentUser?.id
-      : f.followerId === currentUser?.id,
-  );
+  const serverIsFollowing = followers.some((f: any) => {
+    const followerId =
+      typeof f.followerId === "object" ? f.followerId._id : f.followerId;
+    // id এবং _id দুইটাই check করো
+    return (
+      followerId === currentUser?.id || followerId === (currentUser as any)?._id
+    );
+  });
 
   const [isFollowing, setIsFollowing] = useState(serverIsFollowing);
 
@@ -87,7 +93,6 @@ function OtherProfileHeader({
   const handleFollowPress = async () => {
     if (!currentUser || isLoading) return;
 
-    // Optimistic update
     setIsFollowing((prev) => !prev);
 
     try {
@@ -97,7 +102,6 @@ function OtherProfileHeader({
         await followUser(userId).unwrap();
       }
     } catch (err: any) {
-      // Error হলে rollback
       setIsFollowing((prev) => !prev);
       console.error("Follow error:", err?.data?.message ?? err);
     }
@@ -108,7 +112,11 @@ function OtherProfileHeader({
       {/* Left: Back + Name */}
       <View className="flex-row items-center gap-3 flex-1 mr-3">
         <TouchableOpacity onPress={() => router.back()} className="p-1">
-          <Ionicons name="arrow-back" size={22} color="#3a3a3a" />
+          <Ionicons
+            name="arrow-back"
+            size={22}
+            color={isDark ? "#c4c4c4" : "#3a3a3a"}
+          />
         </TouchableOpacity>
         <Text
           className="text-xl font-bold text-text dark:text-dark-text"
@@ -125,22 +133,22 @@ function OtherProfileHeader({
         className={`flex-row items-center gap-1.5 rounded-full px-3 py-1.5 border ${
           isFollowing
             ? "bg-background-secondary dark:bg-dark-background-secondary border-border dark:border-dark-border"
-            : "bg-primary border-primary"
+            : "bg-accent border-accent"
         }`}
       >
         <Ionicons
           name={isFollowing ? "person-remove-outline" : "person-add-outline"}
           size={14}
-          color={isFollowing ? "#6b7280" : "#ffffff"}
+          color={isFollowing ? (isDark ? "#8a8a8a" : "#6b7280") : "#ffffff"}
         />
         <Text
           className={`text-xs font-semibold ${
             isFollowing
               ? "text-text-secondary dark:text-dark-text-secondary"
-              : "text-text dark:text-dark-text"
+              : "text-white"
           }`}
         >
-          {isLoading ? "..." : isFollowing ? "আনফলো" : "ফলো করুন"}
+          {isLoading ? "..." : isFollowing ? t("unfollow") : t("follow")}
         </Text>
       </TouchableOpacity>
     </View>

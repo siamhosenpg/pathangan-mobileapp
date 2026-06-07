@@ -1,11 +1,14 @@
+import PostCardSkeleton from "@/components/ui/card/postcard/PostCardSkeleton";
 import ProfileHeader from "@/components/ui/headers/ProfileHeader";
+import ProfileHeaderSkeleton from "@/components/ui/headers/ProfileHeaderSkeleton";
 import ProfileAbout from "@/components/ui/profilepage/ProfileAbout";
 import ProfilePosts from "@/components/ui/profilepage/ProfilePosts";
 import ProfileTopSection from "@/components/ui/profilepage/ProfileTopSection";
+import ProfileTopSectionSkeleton from "@/components/ui/profilepage/ProfileTopSectionSkeleton";
 import { useGetUserByUsernameQuery } from "@/redux/api/userApi";
 import { useAppSelector } from "@/redux/hooks";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 export default function UserProfileScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
@@ -14,19 +17,26 @@ export default function UserProfileScreen() {
   const {
     data: user,
     isLoading,
+    isFetching,
     isError,
-  } = useGetUserByUsernameQuery(username ?? "", { skip: !username });
+  } = useGetUserByUsernameQuery(username ?? "", {
+    skip: !username,
+    refetchOnMountOrArgChange: true,
+  });
 
   const currentUser = useAppSelector((state) => state.auth.user);
+  // ✅ username দিয়ে match — id mismatch সমস্যা নেই
+  const isOwnProfile = currentUser?.username === user?.username;
 
-  if (isLoading) {
+  if (isLoading || isFetching) {
     return (
-      <View className="flex-1 items-center justify-center bg-background dark:bg-dark-background">
-        <ActivityIndicator size="large" color="#00914d" />
+      <View className="flex-1 bg-background dark:bg-dark-background">
+        <ProfileHeaderSkeleton />
+        <ProfileTopSectionSkeleton />
+        <PostCardSkeleton />
       </View>
     );
   }
-
   if (isError || !user) {
     return (
       <View className="flex-1 items-center justify-center bg-background dark:bg-dark-background">
@@ -36,15 +46,14 @@ export default function UserProfileScreen() {
       </View>
     );
   }
-
   return (
     <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
       {/* Header */}
 
-      {currentUser?.id === user._id ? (
+      {isOwnProfile ? (
         <ProfileHeader
           mode="own"
-          onEditPress={() => router.push("/editprofile" as any)}
+          onEditPress={() => router.push("/profile/editprofile" as any)}
         />
       ) : (
         <ProfileHeader mode="other" userId={user._id} name={user.name} />
@@ -52,17 +61,18 @@ export default function UserProfileScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 80 }}
+        contentContainerStyle={{ paddingBottom: 10 }}
       >
         <ProfileTopSection data={user} />
         {user.educations?.length || user.work?.length ? (
-          <View className="h-2" />
+          <View className="h-1" />
         ) : null}
         <ProfileAbout
           educations={user.educations ?? []}
           work={user.work ?? []}
+          user={user} // ← এইটা যোগ করো
         />
-        <View className="h-2" />
+        <View className="h-1" />
         <ProfilePosts userid={user._id} />
       </ScrollView>
     </View>

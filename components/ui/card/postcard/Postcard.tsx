@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dimensions, Image, Text, TouchableOpacity, View } from "react-native";
 import PostCountLeft from "./PostCountLeft";
 import PostProfileTop from "./PostProfileTop";
@@ -8,10 +8,12 @@ import type { Post } from "@/types/postTypes";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useTranslation } from "react-i18next";
+import { useBottomSheet } from "../../bottom-sheet/useBottomSheet";
 import BookmarkButton from "../../buttons/BookmarkButton";
 import CommentsButton from "../../buttons/CommentsButton";
 import LikeButton from "../../buttons/LikeButton";
 import ShareButton from "../../buttons/ShareButton";
+import CommentSheet from "../../comments/CommentSheet";
 
 interface Props {
   post: Post;
@@ -20,11 +22,47 @@ interface Props {
 const screenWidth = Dimensions.get("window").width;
 const maxImageSize = screenWidth - 0;
 
+const DynamicImage = ({
+  uri,
+  onPress,
+}: {
+  uri: string;
+  onPress: () => void;
+}) => {
+  const [imageHeight, setImageHeight] = useState<number>(screenWidth);
+
+  useEffect(() => {
+    Image.getSize(
+      uri,
+      (width, height) => {
+        const aspectRatio = height / width;
+        const calculatedHeight = screenWidth * aspectRatio;
+        const clampedHeight = Math.min(
+          Math.max(calculatedHeight, screenWidth * 0.5),
+          screenWidth * 1.5,
+        );
+        setImageHeight(clampedHeight);
+      },
+      () => {},
+    );
+  }, [uri]);
+
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
+      <Image
+        source={{ uri }}
+        style={{ width: screenWidth, height: imageHeight, borderRadius: 0 }}
+        resizeMode="cover"
+      />
+    </TouchableOpacity>
+  );
+};
+
 const Postcard = ({ post }: Props) => {
   const router = useRouter();
   const { userid, content, createdAt } = post;
   const [expanded, setExpanded] = useState(false);
-
+  const { open } = useBottomSheet();
   const handleGoToPost = () => {
     router.push(`/post/${post._id}` as any);
   };
@@ -78,17 +116,7 @@ const Postcard = ({ post }: Props) => {
                 />
               </View>
             ) : mediaList.length === 1 ? (
-              <TouchableOpacity onPress={handleGoToPost} activeOpacity={0.9}>
-                <Image
-                  source={{ uri: mediaList[0] }}
-                  style={{
-                    width: maxImageSize,
-                    height: maxImageSize,
-                    borderRadius: 0,
-                  }}
-                  resizeMode="cover"
-                />
-              </TouchableOpacity>
+              <DynamicImage uri={mediaList[0]} onPress={handleGoToPost} />
             ) : (
               <TouchableOpacity
                 onPress={handleGoToPost}
@@ -132,7 +160,9 @@ const Postcard = ({ post }: Props) => {
         <View className="px-4 flex-row items-center justify-between">
           <View className="flex-row items-center gap-6">
             <LikeButton postId={post._id} initialLiked={post.isReacted} />
-            <CommentsButton onClick={handleGoToPost} />
+            <CommentsButton
+              onClick={() => open(<CommentSheet postId={post._id} />)}
+            />
             <ShareButton />
           </View>
           <BookmarkButton postId={post._id} />

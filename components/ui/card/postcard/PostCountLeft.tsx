@@ -18,7 +18,7 @@ const PostCountLeft = ({
   return (
     <View className="flex-row items-center gap-3">
       <View className="flex-row items-center gap-1">
-        <Text className="text-sm font-medium  text-text-tertiary dark:text-dark-text-tertiary">
+        <Text className="text-sm font-semibold  text-text-tertiary dark:text-dark-text-tertiary">
           {t("countLove", { count: n(likesCount) })}
         </Text>
       </View>

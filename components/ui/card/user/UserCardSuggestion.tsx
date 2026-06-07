@@ -41,7 +41,7 @@ export default function UserCardSuggestion({ user }: Props) {
             {user.name}
           </Text>
           {user.greenmarkVerified && (
-            <GreenMark mark={user.greenmarkVerified} />
+            <GreenMark mark={user.greenmarkVerified} size={14} />
           )}
         </View>
         {!user.bio && (

@@ -21,11 +21,11 @@ const CourseCard = ({ post }: Props) => {
     <TouchableOpacity
       activeOpacity={0.9}
       onPress={() => router.push(`/course/${post._id}`)}
-      className="bg-background dark:bg-dark-background px-4 py-3"
+      className="bg-background dark:bg-dark-background px-4 py-3 rounded-xl "
     >
       <View className="flex-row gap-3">
         {/* LEFT IMAGE */}
-        <View className="w-[110px] h-[110px] rounded-2xl overflow-hidden bg-background-secondary dark:bg-dark-background-secondary">
+        <View className="w-[105px] h-[105px] rounded-xl overflow-hidden bg-background-secondary dark:bg-dark-background-secondary">
           {thumbnail ? (
             <Image
               source={{ uri: thumbnail }}
@@ -54,52 +54,51 @@ const CourseCard = ({ post }: Props) => {
               >
                 {course?.title}
               </Text>
+            </View>
+            <View className="flex-row items-center gap-1 flex-1">
+              {/* AVATAR */}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => router.push(`/(tabs)/${userid.username}`)}
+                className="w-7 h-7 rounded-full overflow-hidden bg-accent/15 items-center justify-center"
+              >
+                {userid.profileImage ? (
+                  <Image
+                    source={{ uri: userid.profileImage }}
+                    className="w-full h-full"
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Text className="text-accent font-bold text-sm">
+                    {userid?.name?.charAt(0)?.toUpperCase()}
+                  </Text>
+                )}
+              </TouchableOpacity>
 
-              <Text className="text-sm font-semibold mt-1 text-text-secondary dark:text-dark-text-secondary">
-                {course?.price === 0 ? "বিনামূল্যে" : `৳${course?.price}`}
-              </Text>
+              {/* NAME */}
+              <View className="flex-1">
+                <View className="flex-row items-center gap-1">
+                  <Text
+                    numberOfLines={1}
+                    className="text-sm font-semibold text-text dark:text-dark-text"
+                  >
+                    {userid.name}
+                  </Text>
+
+                  {userid.greenmarkVerified && (
+                    <GreenMark size={15} mark={userid.greenmarkVerified} />
+                  )}
+                </View>
+              </View>
             </View>
 
             {/* USER */}
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center gap-1 flex-1">
-                {/* AVATAR */}
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => router.push(`/(tabs)/${userid.username}`)}
-                  className="w-7 h-7 rounded-full overflow-hidden bg-accent/15 items-center justify-center"
-                >
-                  {userid.profileImage ? (
-                    <Image
-                      source={{ uri: userid.profileImage }}
-                      className="w-full h-full"
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <Text className="text-accent font-bold text-sm">
-                      {userid?.name?.charAt(0)?.toUpperCase()}
-                    </Text>
-                  )}
-                </TouchableOpacity>
-
-                {/* NAME */}
-                <View className="flex-1">
-                  <View className="flex-row items-center gap-1">
-                    <Text
-                      numberOfLines={1}
-                      className="text-sm font-semibold text-text dark:text-dark-text"
-                    >
-                      {userid.name}
-                    </Text>
-
-                    {userid.greenmarkVerified && (
-                      <GreenMark size={15} mark={userid.greenmarkVerified} />
-                    )}
-                  </View>
-                </View>
-              </View>
+            <View className="flex-row w-full items-center justify-between">
+              <Text className=" font-bold  text-accent ">
+                {course?.price === 0 ? "বিনামূল্যে" : `৳${course?.price}`}
+              </Text>
               <View>
-                <View className="flex-row items-center gap-3 mt-1">
+                <View className="flex-row items-center gap-3">
                   <View className="flex-row items-center gap-1">
                     <Ionicons name="heart" size={12} color="#EF4444" />
 

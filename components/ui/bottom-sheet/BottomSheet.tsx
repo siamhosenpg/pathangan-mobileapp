@@ -1,5 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { Dimensions, Pressable, Text, View } from "react-native";
+import React, { useState } from "react";
+import {
+  Dimensions,
+  Keyboard,
+  Platform,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   Easing,
@@ -35,13 +42,33 @@ const SNAP_SPRING = {
 
 const BottomSheet = ({ visible, onClose, children }: Props) => {
   const [mounted, setMounted] = useState(false);
-  // content আছে কিনা বোঝার জন্য
-  const [hasContent, setHasContent] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const backdropOpacity = useSharedValue(0);
 
-  useEffect(() => {
+  // ✅ keyboard height track করো — sheet manually উপরে উঠবে
+  React.useEffect(() => {
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  React.useEffect(() => {
     if (visible) {
       setMounted(true);
       requestAnimationFrame(() => {
@@ -49,6 +76,8 @@ const BottomSheet = ({ visible, onClose, children }: Props) => {
         backdropOpacity.value = withTiming(1, { duration: 250 });
       });
     } else {
+      // close হলে keyboard dismiss করো
+      Keyboard.dismiss();
       translateY.value = withTiming(SCREEN_HEIGHT, {
         duration: 180,
         easing: Easing.in(Easing.ease),
@@ -91,7 +120,6 @@ const BottomSheet = ({ visible, onClose, children }: Props) => {
 
   if (!mounted) return null;
 
-  // children আছে কিনা check
   const isEmpty =
     !children || (Array.isArray(children) && children.length === 0);
 
@@ -105,15 +133,16 @@ const BottomSheet = ({ visible, onClose, children }: Props) => {
         />
       </Pressable>
 
-      {/* Sheet */}
+      {/* Sheet — keyboard height অনুযায়ী marginBottom */}
       <Animated.View
         style={[
           sheetStyle,
           {
             flex: 1,
             maxHeight: SCREEN_HEIGHT * 0.8,
-            // empty হলে minimum 30% height
             minHeight: isEmpty ? SCREEN_HEIGHT * 0.3 : undefined,
+            // ✅ এটাই আসল trick — sheet নিচ থেকে keyboard height সরে যায়
+            marginBottom: keyboardHeight,
           },
         ]}
         className="bg-background dark:bg-dark-background rounded-t-3xl pb-8"
@@ -125,7 +154,6 @@ const BottomSheet = ({ visible, onClose, children }: Props) => {
           </View>
         </GestureDetector>
 
-        {/* Empty state */}
         {isEmpty ? (
           <View className="flex-1 items-center justify-center gap-2">
             <Text className="text-3xl">📭</Text>
@@ -134,8 +162,6 @@ const BottomSheet = ({ visible, onClose, children }: Props) => {
             </Text>
           </View>
         ) : (
-          // ✅ ScrollView নেই — VirtualizedList conflict হবে না
-          // content নিজেই layout নেবে, max-height এ overflow হলে sheet বড় হবে না
           <View className="flex-1">{children}</View>
         )}
       </Animated.View>

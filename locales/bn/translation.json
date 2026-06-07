@@ -2,6 +2,7 @@
   "pathangan": "পাঠাঙ্গান",
   "settings": "সেটিংস",
   "edit": "সম্পাদনা",
+  "taka": " টাকা",
   "account": "অ্যাকাউন্ট",
   "profileInfo": "প্রোফাইল তথ্য",
   "profileInfoSub": "নাম, বায়ো, ছবি",
@@ -22,17 +23,20 @@
   "logout": "লগআউট",
   "love": "সমর্থন",
   "countLove": "{{count}} সমর্থন",
-
+  "unknownUser": "অজানা ব্যবহারকারী",
   "support": "সমর্থন",
   "share": "প্রচার",
   "countShare": "{{count}} প্রচার",
   "shared": "শেয়ার করা হয়েছে",
   "saved": "সংরক্ষিত",
+  "savedPosts": "সংরক্ষিত পোস্ট",
   "comments": "মতামত",
   "countComments": "{{count}} মতামত",
   "answers": "উত্তর",
   "countAnswers": "{{count}} উত্তর",
   "reactions": "প্রতিক্রিয়া",
+  "follow": "অনুসরণ করুন",
+  "unfollow": "অনুসরণ বন্ধ করুন",
   "followers": "অনুসারী",
   "following": "অনুসরণ করা হচ্ছে",
   "posts": "পোস্ট",
@@ -53,6 +57,9 @@
   "profile": "প্রোফাইল",
   "notificationsTab": "নোটিফিকেশন",
   "messages": "বার্তা",
+
+  "privateQuestions": "প্রাইভেট প্রশ্ন",
+  "askQuestion": "প্রশ্ন করুন",
   "noMessages": "এখনও কোন বার্তা নেই",
   "sendMessage": "বার্তা পাঠান",
   "typeMessage": "আপনার বার্তা টাইপ করুন...",
@@ -76,5 +83,8 @@
   "failed_to_load_users": "ব্যবহারকারী লোড করা যায়নি",
   "try_again": "আবার চেষ্টা করুন",
   "noCourses": "কোনো কোর্স পাওয়া যায়নি",
-  "noQuestions": "এখনও কোন প্রশ্ন নেই"
+  "noQuestions": "এখনও কোন প্রশ্ন নেই",
+
+  "privacyPolicy": "গোপনীয়তা নীতি",
+  "termsAndConditions": "শর্তাবলী"
 }

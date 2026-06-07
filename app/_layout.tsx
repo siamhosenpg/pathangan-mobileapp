@@ -39,6 +39,11 @@ export default function RootLayout() {
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="user/[username]" />
             <Stack.Screen name="post/[id]" />
+            <Stack.Screen name="answer/[answerId]" />
+            <Stack.Screen name="course/[id]" />
+            <Stack.Screen name="profile/editprofile" />
+            <Stack.Screen name="private-questions" />
+            <Stack.Screen name="private-questions/[id]" />
           </Stack>
         </BottomSheetProvider>
       </GestureHandlerRootView>

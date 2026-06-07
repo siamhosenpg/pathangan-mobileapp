@@ -4,6 +4,7 @@ import QuestionCard from "@/components/ui/card/questioncard/QuestionCard";
 import { useGetPostsByUserIdInfiniteQuery } from "@/redux/api/postApi";
 import type { Post } from "@/types/postTypes";
 import { ActivityIndicator, FlatList, Text, View } from "react-native";
+import PostCardSkeleton from "../card/postcard/PostCardSkeleton";
 
 interface Props {
   userid: string;
@@ -32,8 +33,8 @@ export default function ProfilePosts({ userid }: Props) {
 
   if (isLoading) {
     return (
-      <View className="py-6 items-center">
-        <ActivityIndicator size="large" color="#00914d" />
+      <View className=" ">
+        <PostCardSkeleton />
       </View>
     );
   }
