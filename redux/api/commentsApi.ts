@@ -12,15 +12,29 @@ import type {
 const commentApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // ===================== GET COMMENTS =====================
+    // ===================== GET COMMENTS — Infinite =====================
     getCommentsByPost: builder.query<
       GetCommentsResponse,
       { postId: string; page?: number; limit?: number }
     >({
-      query: ({ postId, page = 1, limit = 20 }) => ({
+      query: ({ postId, page = 1, limit = 10 }) => ({
         url: `/comments/${postId}`,
         params: { page, limit },
       }),
-
+      // pages merge করো
+      serializeQueryArgs: ({ queryArgs }) => queryArgs.postId,
+      merge: (currentCache, newItems, { arg }) => {
+        if (arg.page === 1) {
+          return newItems;
+        }
+        return {
+          ...newItems,
+          data: [...currentCache.data, ...newItems.data],
+        };
+      },
+      forceRefetch: ({ currentArg, previousArg }) => {
+        return currentArg?.page !== previousArg?.page;
+      },
       providesTags: (result, error, { postId }) => [
         { type: "Comment", id: postId },
       ],
@@ -64,7 +78,7 @@ const commentApi = baseApi.injectEndpoints({
             dispatch(
               commentApi.util.updateQueryData(
                 "getCommentsByPost",
-                { postId, page: 1, limit: 20 },
+                { postId, page: 1, limit: 10 },
                 (draft) => {
                   draft.data.unshift(data.data);
                   draft.total += 1;
@@ -167,7 +181,7 @@ const commentApi = baseApi.injectEndpoints({
             dispatch(
               commentApi.util.updateQueryData(
                 "getCommentsByPost",
-                { postId, page: 1, limit: 20 },
+                { postId, page: 1, limit: 10 },
                 (draft) => {
                   draft.data = draft.data.filter((c) => c._id !== commentId);
                   draft.total = Math.max(0, draft.total - 1);
@@ -200,7 +214,7 @@ const commentApi = baseApi.injectEndpoints({
             dispatch(
               commentApi.util.updateQueryData(
                 "getRepliesByComment",
-                { commentId: parentCommentId, page: 1, limit: 20 },
+                { commentId: parentCommentId, page: 1, limit: 10 },
                 (draft) => {
                   draft.data = draft.data.filter((c) => c._id !== commentId);
                   draft.totalReplies = Math.max(0, draft.totalReplies - 1);

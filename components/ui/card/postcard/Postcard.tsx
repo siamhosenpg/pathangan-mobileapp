@@ -5,7 +5,6 @@ import PostCountLeft from "./PostCountLeft";
 import PostProfileTop from "./PostProfileTop";
 
 import type { Post } from "@/types/postTypes";
-import { Ionicons } from "@expo/vector-icons";
 
 import { useTranslation } from "react-i18next";
 import { useBottomSheet } from "../../bottom-sheet/useBottomSheet";
@@ -14,9 +13,13 @@ import CommentsButton from "../../buttons/CommentsButton";
 import LikeButton from "../../buttons/LikeButton";
 import ShareButton from "../../buttons/ShareButton";
 import CommentSheet from "../../comments/CommentSheet";
+import ImageSlider from "./ImageSlider";
+import PostVideo from "./PostVideo";
 
 interface Props {
   post: Post;
+  isVideoVisible?: boolean;
+  isVideoNearVisible?: boolean; // নতুন
 }
 
 const screenWidth = Dimensions.get("window").width;
@@ -39,7 +42,7 @@ const DynamicImage = ({
         const calculatedHeight = screenWidth * aspectRatio;
         const clampedHeight = Math.min(
           Math.max(calculatedHeight, screenWidth * 0.5),
-          screenWidth * 1.5,
+          500,
         );
         setImageHeight(clampedHeight);
       },
@@ -58,11 +61,16 @@ const DynamicImage = ({
   );
 };
 
-const Postcard = ({ post }: Props) => {
+const Postcard = ({
+  post,
+  isVideoVisible = false,
+  isVideoNearVisible = false,
+}: Props) => {
   const router = useRouter();
   const { userid, content, createdAt } = post;
   const [expanded, setExpanded] = useState(false);
   const { open } = useBottomSheet();
+
   const handleGoToPost = () => {
     router.push(`/post/${post._id}` as any);
   };
@@ -72,6 +80,26 @@ const Postcard = ({ post }: Props) => {
     : [];
 
   const { t } = useTranslation();
+
+  const renderMedia = () => {
+    if ((content as any)?.type === "video" && mediaList.length > 0) {
+      return (
+        <PostVideo
+          uri={mediaList[0]}
+          isVisible={isVideoVisible}
+          isNearVisible={isVideoNearVisible} // পাঠাও
+          videoMeta={(content as any)?.videoMeta}
+        />
+      );
+    }
+
+    if (mediaList.length === 1) {
+      return <DynamicImage uri={mediaList[0]} onPress={handleGoToPost} />;
+    }
+
+    return <ImageSlider images={mediaList} />;
+  };
+
   return (
     <View className="bg-background dark:bg-dark-background pt-4">
       <PostProfileTop user={userid} createdAt={createdAt} postId={post._id} />
@@ -87,7 +115,7 @@ const Postcard = ({ post }: Props) => {
           <View className="mt-1.5 px-4">
             <Text
               className="text-text dark:text-dark-text text-base leading-6"
-              numberOfLines={expanded ? undefined : 4}
+              numberOfLines={expanded ? undefined : 3}
             >
               {content.text}
             </Text>
@@ -101,50 +129,8 @@ const Postcard = ({ post }: Props) => {
           </View>
         )}
 
-        {/* media */}
         {mediaList.length > 0 && (
-          <View className="w-full mt-2">
-            {(content as any)?.type === "video" ? (
-              <View
-                style={{ width: maxImageSize, height: maxImageSize }}
-                className="bg-dark-background-secondary items-center justify-center rounded-xl"
-              >
-                <Ionicons
-                  name="play-circle-outline"
-                  size={48}
-                  color="#9CA3AF"
-                />
-              </View>
-            ) : mediaList.length === 1 ? (
-              <DynamicImage uri={mediaList[0]} onPress={handleGoToPost} />
-            ) : (
-              <TouchableOpacity
-                onPress={handleGoToPost}
-                activeOpacity={0.9}
-                style={{ gap: 2 }}
-              >
-                <View
-                  style={{ flexDirection: "row", flexWrap: "wrap", gap: 2 }}
-                >
-                  {mediaList.map((url, i) => {
-                    const itemSize = (maxImageSize - 2) / 2;
-                    return (
-                      <Image
-                        key={i}
-                        source={{ uri: url }}
-                        style={{
-                          width: itemSize,
-                          height: itemSize,
-                          borderRadius: 8,
-                        }}
-                        resizeMode="cover"
-                      />
-                    );
-                  })}
-                </View>
-              </TouchableOpacity>
-            )}
-          </View>
+          <View className="w-full mt-2">{renderMedia()}</View>
         )}
 
         {/* counts */}

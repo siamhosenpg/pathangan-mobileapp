@@ -45,11 +45,11 @@
         }
       ],
       "expo-secure-store",
-      "expo-localization"
+      "expo-localization",
+      "expo-video"
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     },
     "extra": {
       "router": {},

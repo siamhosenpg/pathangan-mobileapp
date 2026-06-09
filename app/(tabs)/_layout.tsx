@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import * as Haptics from "expo-haptics";
 import { Tabs } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "nativewind";
 import { Pressable } from "react-native-gesture-handler";
 
@@ -25,6 +26,7 @@ export default function TabLayout() {
 
   return (
     <AuthGuard>
+      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
       <Tabs
         screenOptions={{
           headerShown: false,
@@ -130,7 +132,7 @@ export default function TabLayout() {
         />
         <Tabs.Screen name="profile" options={{ href: null }} />
         <Tabs.Screen name="[username]" options={{ href: null }} />
-        // এখন
+
         <Tabs.Screen name="create" options={{ href: null }} />
         <Tabs.Screen name="settings" options={{ href: null }} />
         <Tabs.Screen name="saved" options={{ href: null }} />

@@ -6,6 +6,7 @@ export interface CommentUser {
   profileImage?: string;
   gender?: string;
   badges?: string[];
+  greenmarkVerified?: boolean;
 }
 
 export interface Comment {
