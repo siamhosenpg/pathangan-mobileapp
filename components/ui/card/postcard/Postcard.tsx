@@ -56,6 +56,7 @@ const DynamicImage = ({
         source={{ uri }}
         style={{ width: screenWidth, height: imageHeight, borderRadius: 0 }}
         resizeMode="cover"
+        className=" border-t border-b border-border/60 dark:border-dark-border/70"
       />
     </TouchableOpacity>
   );
@@ -85,6 +86,7 @@ const Postcard = ({
     if ((content as any)?.type === "video" && mediaList.length > 0) {
       return (
         <PostVideo
+          postId={post._id}
           uri={mediaList[0]}
           isVisible={isVideoVisible}
           isNearVisible={isVideoNearVisible} // পাঠাও
@@ -101,12 +103,14 @@ const Postcard = ({
   };
 
   return (
-    <View className="bg-background dark:bg-dark-background pt-4">
+    <View className="bg-background dark:bg-dark-background pt-4  border-b border-border dark:border-dark-border">
       <PostProfileTop user={userid} createdAt={createdAt} postId={post._id} />
 
       <View>
         {content?.title && (
-          <Text className="mt-2 px-4 text-text dark:text-dark-text font-semibold text-base">
+          <Text
+            className={`mt-2 px-4 text-text dark:text-dark-text  text-base ${content.text ? "font-semibold" : " font-normal"}`}
+          >
             {content.title}
           </Text>
         )}
@@ -115,7 +119,7 @@ const Postcard = ({
           <View className="mt-1.5 px-4">
             <Text
               className="text-text dark:text-dark-text text-base leading-6"
-              numberOfLines={expanded ? undefined : 3}
+              numberOfLines={expanded ? undefined : 2}
             >
               {content.text}
             </Text>
@@ -134,11 +138,12 @@ const Postcard = ({
         )}
 
         {/* counts */}
-        <View className="flex-row items-center justify-between px-4 py-1.5 border-b border-border dark:border-dark-border">
+        <View className="flex-row items-center justify-between px-4 py-1.5 border-b  border-border/50 dark:border-dark-border/50">
           <PostCountLeft
             likesCount={post.likesCount}
             commentsCount={post.commentsCount}
             sharesCount={post.sharesCount}
+            viewsCount={post.viewsCount}
           />
         </View>
 

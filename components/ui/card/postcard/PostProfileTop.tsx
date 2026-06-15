@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import GreenMark from "../../badges/GreenMark";
 import { useBottomSheet } from "../../bottom-sheet/BottomSheetProvider";
+import FollowButtonPost from "../../buttons/FollowButtonPost";
 import TimeAgo from "../../datetime/TimeAgo";
 import PostThreeDotMenu from "../../threedotmenu/PostThreeDotMenu";
 
@@ -34,7 +35,7 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
 
   return (
     <View className="px-4 pb-1 flex-row items-center justify-between">
-      <View className="flex-row items-center gap-2 flex-1">
+      <View className="flex-row items-center justify-start gap-2 flex-1">
         <TouchableOpacity
           className="border border-border dark:border-dark-border"
           onPress={() => router.push(`/${user.username}` as any)}
@@ -75,7 +76,7 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
         </TouchableOpacity>
 
         <View style={{ flex: 1 }}>
-          <View className="flex-row items-center gap-1">
+          <View className="flex-row  items-center gap-1">
             <Text
               className="flex-row items-center gap-1 text-text dark:text-dark-text"
               style={{ fontWeight: "600", fontSize: 14 }}
@@ -85,6 +86,9 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
             {user?.greenmarkVerified && (
               <GreenMark mark={!!user.greenmarkVerified} size={14} />
             )}
+            <View className="ml-1">
+              <FollowButtonPost targetUserId={user._id} />
+            </View>
           </View>
           <Text className="text-text-secondary dark:text-dark-text-secondary">
             <TimeAgo

@@ -4,6 +4,7 @@ import Postcard from "@/components/ui/card/postcard/Postcard";
 import PostCardSkeleton from "@/components/ui/card/postcard/PostCardSkeleton";
 import QuestionCard from "@/components/ui/card/questioncard/QuestionCard";
 import UploadProgressBar from "@/components/ui/upload/UploadProgressBar";
+import usePostViewTracker from "@/hooks/viewcount/usePostViewTracker";
 import { useGetPostsInfiniteQuery } from "@/redux/api/postApi";
 import type { Post } from "@/types/postTypes";
 import { FlashList } from "@shopify/flash-list";
@@ -15,7 +16,7 @@ interface HomeFeedProps {
   onScroll?: (scrollY: number) => void;
 }
 
-const ItemSeparator = () => <View style={{ height: 4 }} />;
+const ItemSeparator = () => <View style={{ height: 0 }} />;
 
 const ListEmpty = () => (
   <View className="py-10 items-center">
@@ -40,23 +41,39 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
 
   const posts = data?.pages.flatMap((page) => page.posts) ?? [];
 
+  // ── View tracker hook ──
+  const { onViewableItemsChanged: trackViews, clearAllTimers } =
+    usePostViewTracker();
+
+  // ── Tab change এ timers clear করো ──
   useFocusEffect(
     useCallback(() => {
       setVisibleIndex(lastVisibleIndexRef.current);
-      return () => setVisibleIndex(null);
-    }, []),
+      return () => {
+        setVisibleIndex(null);
+        clearAllTimers(); // ← tab থেকে চলে গেলে pending timers clear
+      };
+    }, [clearAllTimers]),
   );
 
   const handleEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) fetchNextPage();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const onViewableItemsChanged = useCallback(({ viewableItems }: any) => {
-    const visible = viewableItems.find((v: any) => v.isViewable);
-    const index = visible?.index ?? null;
-    lastVisibleIndexRef.current = index;
-    setVisibleIndex(index);
-  }, []);
+  // ── Existing + view tracker একসাথে ──
+  const handleViewableItemsChanged = useCallback(
+    (info: any) => {
+      // Existing video visibility logic
+      const visible = info.viewableItems.find((v: any) => v.isViewable);
+      const index = visible?.index ?? null;
+      lastVisibleIndexRef.current = index;
+      setVisibleIndex(index);
+
+      // View tracker — image/text post এর 3 সেকেন্ড timer
+      trackViews(info);
+    },
+    [trackViews],
+  );
 
   const renderItem = useCallback(
     ({ item: post, index }: { item: Post; index: number }) => {
@@ -66,7 +83,7 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
 
       const isVideoVisible = visibleIndex === index;
       const isNearVisible =
-        visibleIndex !== null && Math.abs(index - visibleIndex) <= 2; // ±2
+        visibleIndex !== null && Math.abs(index - visibleIndex) <= 3; // ±2
 
       return (
         <Postcard
@@ -82,7 +99,7 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
   const renderFooter = useCallback(() => {
     if (isFetchingNextPage) {
       return (
-        <View className="py-4">
+        <View className="">
           <PostCardSkeleton />
         </View>
       );
@@ -122,13 +139,13 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
     <FlashList
       onScroll={(e) => onScroll?.(e.nativeEvent.contentOffset.y)}
       scrollEventThrottle={16}
+      onViewableItemsChanged={handleViewableItemsChanged}
       data={posts}
       keyExtractor={(item) => item._id}
       renderItem={renderItem}
-      onViewableItemsChanged={onViewableItemsChanged}
       viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
       ListHeaderComponent={
-        <View className="mb-1">
+        <View className="">
           <CreatePostCard />
           <UploadProgressBar />
         </View>

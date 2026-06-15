@@ -79,7 +79,7 @@ export default function QuestionScreen() {
           renderItem={({ item }) => <QuestionCard post={item} />}
           contentContainerStyle={{
             paddingBottom: insets.bottom + 10,
-            rowGap: 4,
+            rowGap: 0,
           }}
           showsVerticalScrollIndicator={false}
           onEndReached={handleEndReached}

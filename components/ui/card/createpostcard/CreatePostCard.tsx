@@ -18,7 +18,7 @@ const CreatePostCard = () => {
     <TouchableOpacity
       onPress={handleCreatePost}
       activeOpacity={0.8}
-      className="bg-background dark:bg-dark-background px-4 pt-3 pb-2"
+      className="bg-background dark:bg-dark-background px-4 pt-3 pb-3 border-b border-border dark:border-dark-border"
     >
       {/* Main row */}
       <View className="flex-row items-center gap-3">
@@ -38,7 +38,7 @@ const CreatePostCard = () => {
         </View>
 
         {/* Input placeholder box */}
-        <View className="flex-1 flex-row items-center bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border rounded-full px-4 py-2.5 gap-2">
+        <View className="flex-1 flex-row items-center bg-background-secondary dark:bg-dark-background-secondary rounded-full px-4 py-3 gap-2">
           <Text className="text-text-tertiary dark:text-dark-text-tertiary text-sm flex-1">
             কিছু শেয়ার করুন...
           </Text>

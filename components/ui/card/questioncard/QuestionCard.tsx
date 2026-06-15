@@ -38,7 +38,7 @@ const QuestionCard = ({ post }: Props) => {
   };
 
   return (
-    <View className="bg-background dark:bg-dark-background pt-4">
+    <View className="bg-background dark:bg-dark-background pt-4 border-b border-border dark:border-dark-border">
       <PostProfileTop user={userid} createdAt={createdAt} postId={_id} />
 
       <Text className="mt-2 px-4 text-text dark:text-dark-text  font-semibold text-base leading-6">
@@ -58,7 +58,7 @@ const QuestionCard = ({ post }: Props) => {
               key={answer._id}
               className={
                 index !== data.answers.length - 1
-                  ? "border-b border-border dark:border-dark-border"
+                  ? "border-b border-border/50 dark:border-dark-border/50"
                   : ""
               }
             >
@@ -69,14 +69,15 @@ const QuestionCard = ({ post }: Props) => {
       </View>
 
       {/* counts */}
-      <View className="px-4 py-2 mt-2 border-b border-border dark:border-dark-border flex-row items-center justify-between">
+      <View className="px-4 py-2 mt-2 border-b  border-border/50 dark:border-dark-border/50 flex-row items-center justify-between">
         <PostCountLeft
           likesCount={post.likesCount}
           commentsCount={post.commentsCount}
           sharesCount={post.sharesCount}
+          viewsCount={post.viewsCount}
         />
         <TouchableOpacity>
-          <Text className="text-sm font-semibold text-accent">
+          <Text className="text-sm font-semibold text-accent-secondary dark:text-dark-accent-secondary">
             আরো উত্তর দেখুন
           </Text>
         </TouchableOpacity>

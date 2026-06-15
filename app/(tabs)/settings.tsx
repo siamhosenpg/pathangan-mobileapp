@@ -2,10 +2,11 @@ import GreenMark from "@/components/ui/badges/GreenMark";
 import LanguageSwitcher from "@/components/ui/setting/LanguageSwitcher";
 import SettingsCard from "@/components/ui/setting/SettingsCard";
 import SettingsRow from "@/components/ui/setting/SettingsRow";
+import VideoAutoplay from "@/components/ui/setting/VideoAutoplay";
+import { useTheme } from "@/hooks/useTheme";
 import { useAppSelector } from "@/redux/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useColorScheme } from "nativewind";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -20,8 +21,7 @@ import {
 export default function SettingsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { colorScheme, toggleColorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark, toggleTheme } = useTheme();
   const currentUser = useAppSelector((state) => state.auth.user);
   const [notifEnabled, setNotifEnabled] = useState(true);
 
@@ -53,7 +53,7 @@ export default function SettingsScreen() {
       >
         {/* ── Profile Card ── */}
         <TouchableOpacity
-          onPress={() => router.push("/edit-profile")}
+          onPress={() => router.push("/profile")}
           activeOpacity={0.7}
           className="flex-row items-center gap-4 mx-5 mt-5 mb-5 p-4 rounded-2xl bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border"
         >
@@ -152,7 +152,7 @@ export default function SettingsScreen() {
               right={
                 <Switch
                   value={isDark}
-                  onValueChange={toggleColorScheme}
+                  onValueChange={toggleTheme}
                   trackColor={{ false: "#dddddd", true: accent }}
                   thumbColor="white"
                 />
@@ -167,6 +167,9 @@ export default function SettingsScreen() {
               onPress={() => router.push("/privacy")}
             />
           </SettingsCard>
+        </View>
+        <View className="px-5 pb-4">
+          <VideoAutoplay />
         </View>
 
         {/* ── More Section ── */}

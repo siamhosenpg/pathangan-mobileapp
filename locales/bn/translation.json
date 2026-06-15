@@ -32,9 +32,11 @@
   "savedPosts": "সংরক্ষিত পোস্ট",
   "comments": "মতামত",
   "countComments": "{{count}} মতামত",
+  "countViews": "{{count}} ভিউ",
   "answers": "উত্তর",
   "countAnswers": "{{count}} উত্তর",
   "reactions": "প্রতিক্রিয়া",
+
   "follow": "অনুসরণ করুন",
   "unfollow": "অনুসরণ বন্ধ করুন",
   "followers": "অনুসারী",

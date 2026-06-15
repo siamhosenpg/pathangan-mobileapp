@@ -15,7 +15,7 @@ export default function UserCardSuggestion({ user }: Props) {
     <TouchableOpacity
       activeOpacity={0.5}
       onPress={() => router.push(`/${user.username}`)}
-      className="flex-row bg-background dark:bg-dark-background items-center gap-3 px-4 py-4 rounded-xl"
+      className="flex-row bg-background dark:bg-dark-background items-center gap-3 px-4 py-4 border-b border-border/50 dark:border-dark-border/50"
     >
       {/* Avatar */}
       <View className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">

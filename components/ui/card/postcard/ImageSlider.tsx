@@ -1,5 +1,5 @@
 // ImageSlider.tsx
-import React, { memo, useCallback, useState } from "react";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -35,13 +35,14 @@ const ImageItem = memo(
     <TouchableOpacity
       activeOpacity={0.92}
       onPress={() => onPress(index)}
-      className="rounded-lg overflow-hidden"
+      className="rounded-xl overflow-hidden"
       style={{ width: ITEM_WIDTH, height: ITEM_HEIGHT }}
     >
       <Image
         source={{ uri }}
         style={{ width: "100%", height: "100%" }}
         resizeMode="cover"
+        className="border-border/50 border dark:border-dark-border/50"
       />
     </TouchableOpacity>
   ),
@@ -51,6 +52,25 @@ const ImageSlider = memo(({ images }: Props) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [fullScreenVisible, setFullScreenVisible] = useState(false);
   const [fullScreenIndex, setFullScreenIndex] = useState(0);
+
+  // ✅ Prefetch: activeIndex এর আগে 1টা, পরে 3টা preload করবে
+  useEffect(() => {
+    const start = Math.max(activeIndex - 1, 0);
+    const end = Math.min(activeIndex + 4, images.length);
+    images.slice(start, end).forEach((uri) => {
+      Image.prefetch(uri);
+    });
+  }, [activeIndex, images]);
+
+  const handleViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: any[] }) => {
+      const idx = viewableItems[0]?.index;
+      if (idx != null) setActiveIndex(idx);
+    },
+    [],
+  );
+
+  const viewabilityConfig = { itemVisiblePercentThreshold: 50 };
 
   const handleImagePress = useCallback((index: number) => {
     setFullScreenIndex(index);
@@ -71,6 +91,10 @@ const ImageSlider = memo(({ images }: Props) => {
         snapToInterval={ITEM_WIDTH + ITEM_GAP}
         snapToAlignment="start"
         decelerationRate="fast"
+        // ✅ এই দুটো key fix — শুরুতে বেশি render, window বড়
+        initialNumToRender={3}
+        windowSize={5}
+        maxToRenderPerBatch={3}
         contentContainerStyle={{
           paddingLeft: PADDING,
           paddingRight: PADDING,
@@ -81,11 +105,9 @@ const ImageSlider = memo(({ images }: Props) => {
           offset: (ITEM_WIDTH + ITEM_GAP) * index,
           index,
         })}
-        onViewableItemsChanged={({ viewableItems }) => {
-          const idx = viewableItems[0]?.index;
-          if (idx != null) setActiveIndex(idx);
-        }}
-        viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
+        // ✅ inline function সরিয়ে useCallback এ নেওয়া হয়েছে
+        onViewableItemsChanged={handleViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
         ItemSeparatorComponent={() => <View style={{ width: ITEM_GAP }} />}
         renderItem={({ item, index }) => (
           <ImageItem uri={item} index={index} onPress={handleImagePress} />

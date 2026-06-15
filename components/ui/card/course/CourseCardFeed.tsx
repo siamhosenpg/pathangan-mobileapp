@@ -27,7 +27,7 @@ const CourseCardFeed = ({ post }: Props) => {
   const { open } = useBottomSheet(); // ✅ add
 
   return (
-    <View className="bg-background dark:bg-dark-background ">
+    <View className="bg-background dark:bg-dark-background  border-b border-border dark:border-dark-border ">
       {/* thumbnail */}
       <View className="">
         <TouchableOpacity
@@ -94,11 +94,11 @@ const CourseCardFeed = ({ post }: Props) => {
 
         <View className="flex-row items-center gap-2 ">
           <View className="flex-row items-center justify-start  gap-0.5 bg-accent/10 px-2 py-1 rounded-full border border-accent/30">
-            <Text className="text-accent  font-semibold ">
+            <Text className="text-accent-secondary dark:text-dark-accent-secondary  font-semibold ">
               {course?.price === 0 ? "বিনামূল্যে" : `${course?.price}`}
             </Text>
             {course?.price !== 0 && (
-              <Text className="text-accent  font-semibold text-sm">
+              <Text className="text-accent dark:text-dark-accent-secondary font-semibold text-sm">
                 {t("taka")}
               </Text>
             )}
@@ -108,11 +108,12 @@ const CourseCardFeed = ({ post }: Props) => {
 
       {/* counts + actions */}
       <View className="mt-3">
-        <View className="px-4 py-2 border-b border-border dark:border-dark-border">
+        <View className="px-4 py-2 border-b border-border/50 dark:border-dark-border/50">
           <PostCountLeft
             likesCount={post.likesCount}
             commentsCount={post.commentsCount}
             sharesCount={post.sharesCount}
+            viewsCount={post.viewsCount}
           />
         </View>
 

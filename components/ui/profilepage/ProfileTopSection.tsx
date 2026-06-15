@@ -60,7 +60,7 @@ const ProfileTopSection = ({ data }: Props) => {
                 resizeMode="cover"
               />
             ) : (
-              <View className="w-full h-full items-center justify-center bg-accent-secondary">
+              <View className="w-full h-full items-center justify-center bg-accent/20">
                 <Text className="text-4xl font-bold text-accent uppercase mt-1">
                   {data.name?.charAt(0).toUpperCase()}
                 </Text>

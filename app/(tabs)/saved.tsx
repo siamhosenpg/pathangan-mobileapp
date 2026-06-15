@@ -13,8 +13,11 @@ export default function SavedScreen() {
   const resolvedId = activeCollectionId || defaultCol?._id || "";
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
-      <View className="flex-1 bg-background-secondary">
+    <SafeAreaView
+      className="flex-1 bg-background dark:bg-dark-background"
+      edges={["top"]}
+    >
+      <View className="flex-1 bg-background-secondary  dark:bg-dark-background-secondary">
         {/* Collection panel — সবসময় উপরে */}
         <SavedCollectionPanel
           activeId={resolvedId}
@@ -28,9 +31,9 @@ export default function SavedScreen() {
         >
           {isDefaultColLoading ? (
             <View className="items-center py-16">
-              <View className="w-full h-32 rounded-2xl bg-background mb-3" />
-              <View className="w-full h-32 rounded-2xl bg-background mb-3" />
-              <View className="w-full h-32 rounded-2xl bg-background" />
+              <View className="w-full h-32 rounded-2xl bg-background dark:bg-dark-background  mb-3" />
+              <View className="w-full h-32 rounded-2xl bg-background dark:bg-dark-background mb-3" />
+              <View className="w-full h-32 rounded-2xl bg-background dark:bg-dark-background" />
             </View>
           ) : resolvedId ? (
             <SavedPostsList collectionId={resolvedId} />

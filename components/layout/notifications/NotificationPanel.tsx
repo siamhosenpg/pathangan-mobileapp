@@ -39,9 +39,9 @@ const NotificationPanel = () => {
   }
 
   return (
-    <View className="flex-1 bg-background dark:bg-dark-background pt-4">
+    <View className="flex-1 bg-background dark:bg-dark-background pt-2 ">
       {/* HEADER */}
-      <View className="flex-row items-center justify-between px-4 mb-3">
+      <View className="flex-row items-center justify-between px-4  pb-4 border-border/60 border-b dark:border-dark-border/60">
         <Text className="text-lg font-bold text-text-primary dark:text-dark-text">
           Notifications
         </Text>
@@ -49,8 +49,11 @@ const NotificationPanel = () => {
         <View className="flex-row gap-3 items-center">
           {/* mark all read */}
           {unreadCount > 0 && (
-            <TouchableOpacity onPress={() => markAllAsRead()}>
-              <Text className="text-accent text-xs font-semibold">
+            <TouchableOpacity
+              onPress={() => markAllAsRead()}
+              className="border border-accent rounded-full px-2 py-1"
+            >
+              <Text className="text-accent text-sm font-semibold">
                 Read all
               </Text>
             </TouchableOpacity>
@@ -58,8 +61,11 @@ const NotificationPanel = () => {
 
           {/* delete all */}
           {notifications.length > 0 && (
-            <TouchableOpacity onPress={() => deleteAllNotifications()}>
-              <Text className="text-red-500 text-xs font-semibold">Clear</Text>
+            <TouchableOpacity
+              onPress={() => deleteAllNotifications()}
+              className="border border-red-500 rounded-full px-2 py-1"
+            >
+              <Text className="text-red-500 text-sm font-semibold">Clear</Text>
             </TouchableOpacity>
           )}
         </View>

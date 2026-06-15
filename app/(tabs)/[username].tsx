@@ -8,7 +8,7 @@ import ProfileTopSectionSkeleton from "@/components/ui/profilepage/ProfileTopSec
 import { useGetUserByUsernameQuery } from "@/redux/api/userApi";
 import { useAppSelector } from "@/redux/hooks";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 export default function UserProfileScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
@@ -25,7 +25,6 @@ export default function UserProfileScreen() {
   });
 
   const currentUser = useAppSelector((state) => state.auth.user);
-  // ✅ username দিয়ে match — id mismatch সমস্যা নেই
   const isOwnProfile = currentUser?.username === user?.username;
 
   if (isLoading || isFetching) {
@@ -37,6 +36,7 @@ export default function UserProfileScreen() {
       </View>
     );
   }
+
   if (isError || !user) {
     return (
       <View className="flex-1 items-center justify-center bg-background dark:bg-dark-background">
@@ -46,10 +46,27 @@ export default function UserProfileScreen() {
       </View>
     );
   }
+
+  // ProfilePosts এর ListHeaderComponent হিসেবে পাঠাবো
+  // এতে ScrollView + FlatList nesting সমস্যা থাকবে না
+  // আর FlatList নিজেই scroll করবে — onViewableItemsChanged কাজ করবে
+  const profileHeader = (
+    <View>
+      <ProfileTopSection data={user} />
+      {user.educations?.length || user.work?.length ? (
+        <View className="h-1" />
+      ) : null}
+      <ProfileAbout
+        educations={user.educations ?? []}
+        work={user.work ?? []}
+        user={user}
+      />
+      <View className="h-1" />
+    </View>
+  );
+
   return (
     <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
-      {/* Header */}
-
       {isOwnProfile ? (
         <ProfileHeader
           mode="own"
@@ -59,22 +76,7 @@ export default function UserProfileScreen() {
         <ProfileHeader mode="other" userId={user._id} name={user.name} />
       )}
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 10 }}
-      >
-        <ProfileTopSection data={user} />
-        {user.educations?.length || user.work?.length ? (
-          <View className="h-1" />
-        ) : null}
-        <ProfileAbout
-          educations={user.educations ?? []}
-          work={user.work ?? []}
-          user={user} // ← এইটা যোগ করো
-        />
-        <View className="h-1" />
-        <ProfilePosts userid={user._id} />
-      </ScrollView>
+      <ProfilePosts userid={user._id} listHeader={profileHeader} />
     </View>
   );
 }

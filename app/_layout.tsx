@@ -1,6 +1,7 @@
 import AuthInitializer from "@/components/ui/AuthInitializer";
 import { BottomSheetProvider } from "@/components/ui/bottom-sheet/BottomSheetProvider";
 import { store } from "@/redux/store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useEffect } from "react";
@@ -10,21 +11,31 @@ import { Provider } from "react-redux";
 import "../global.css";
 import "../i18n";
 
+const THEME_KEY = "app_color_scheme";
+
 export default function RootLayout() {
   const { setColorScheme } = useColorScheme();
 
   useEffect(() => {
-    // ✅ App open হলে system theme ধরবে
-    const scheme = Appearance.getColorScheme();
-    setColorScheme(scheme ?? "light");
+    AsyncStorage.getItem(THEME_KEY).then((saved) => {
+      if (saved === "dark" || saved === "light") {
+        // ✅ User manually set করেছে — এটাই final, system ignore
+        setColorScheme(saved);
+      } else {
+        // ✅ "system" বা কিছু save নেই — system theme follow করো
+        const scheme = Appearance.getColorScheme();
+        setColorScheme(scheme ?? "light");
 
-    // ✅ System theme change হলে automatically আপডেট হবে
-    const sub = Appearance.addChangeListener(({ colorScheme }) => {
-      setColorScheme(colorScheme ?? "light");
+        // system change listener শুধু "system" mode এ দরকার
+        const sub = Appearance.addChangeListener(({ colorScheme }) => {
+          setColorScheme("light");
+        });
+
+        return () => sub.remove();
+      }
     });
-
-    return () => sub.remove();
   }, []);
+
   return (
     <Provider store={store}>
       <GestureHandlerRootView style={{ flex: 1 }}>

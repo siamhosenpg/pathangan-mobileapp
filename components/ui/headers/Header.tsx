@@ -28,7 +28,7 @@ export function Header({ title }: { title?: string }) {
 
   return (
     <>
-      <View className="bg-background dark:bg-dark-background px-4 pt-14 pb-1 border-b border-border dark:border-dark-border">
+      <View className="bg-background dark:bg-dark-background px-4 pt-14 pb-2 ">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-0.5">
             <View className="flex-row items-center w-11 h-11 -ml-1 -mt-1">

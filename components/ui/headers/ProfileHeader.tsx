@@ -108,7 +108,7 @@ function OtherProfileHeader({
   };
 
   return (
-    <View className="bg-background dark:bg-dark-background px-4 pt-16 pb-3 border-b border-border dark:border-dark-border flex-row items-center justify-between">
+    <View className="bg-background dark:bg-dark-background px-4 pt-16 pb-3  flex-row items-center justify-between">
       {/* Left: Back + Name */}
       <View className="flex-row items-center gap-3 flex-1 mr-3">
         <TouchableOpacity onPress={() => router.back()} className="p-1">

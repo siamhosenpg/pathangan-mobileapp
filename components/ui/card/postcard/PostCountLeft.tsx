@@ -6,12 +6,14 @@ interface Props {
   likesCount?: number;
   commentsCount?: number;
   sharesCount?: number;
+  viewsCount?: number; // ← add
 }
 
 const PostCountLeft = ({
   likesCount = 0,
   commentsCount = 0,
   sharesCount = 0,
+  viewsCount = 0, // ← add
 }: Props) => {
   const { t } = useTranslation();
   const n = useNumber();
@@ -36,6 +38,14 @@ const PostCountLeft = ({
           {t("countShare", { count: n(sharesCount) })}
         </Text>
       </View>
+      {/* ← views add */}
+      {viewsCount > 0 && (
+        <View className="flex-row items-center gap-1">
+          <Text className="font-semibold text-sm text-text-tertiary dark:text-dark-text-tertiary">
+            {t("countViews", { count: n(viewsCount) })}
+          </Text>
+        </View>
+      )}
     </View>
   );
 };

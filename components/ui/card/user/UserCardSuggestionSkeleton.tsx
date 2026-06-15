@@ -30,7 +30,7 @@ export default function UserCardSuggestionSkeleton() {
   return (
     <Animated.View
       style={{ opacity }}
-      className="flex-row items-center gap-3 px-4 py-4 rounded-xl bg-background dark:bg-dark-background"
+      className="flex-row items-center gap-3 px-4 py-4  bg-background dark:bg-dark-background"
     >
       {/* Avatar skeleton */}
       <View

@@ -60,6 +60,7 @@ export interface Post {
   course?: CoursePost;
   privacy: "public" | "friends" | "private";
   isReacted: boolean; // ← এটা add করো
+  viewsCount: number;
   likesCount: number;
   commentsCount: number;
   sharesCount: number;

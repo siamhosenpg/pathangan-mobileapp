@@ -70,12 +70,13 @@ const NotificationCard = ({ item, onRead, onDelete }: Props) => {
   return (
     <TouchableOpacity
       onPress={handlePress}
-      className={`flex-row items-start px-4 py-3 gap-3 rounded-2xl mx-3 my-1 ${
-        item.read ? "bg-transparent" : "bg-accent/15"
+      activeOpacity={0.9}
+      className={`flex-row items-center px-4 py-3.5 gap-3    ${
+        item.read ? "bg-transparent" : "bg-accent/10"
       }`}
     >
       {/* avatar */}
-      <View className="w-10 h-10 rounded-full bg-accent/30 items-center justify-center overflow-hidden">
+      <View className="w-11 h-11 rounded-full bg-accent/30 items-center justify-center overflow-hidden">
         {item.actorId?.profileImage ? (
           <Image
             source={{ uri: item.actorId.profileImage }}
@@ -91,20 +92,23 @@ const NotificationCard = ({ item, onRead, onDelete }: Props) => {
 
       {/* content */}
       <View className="flex-1">
-        <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
+        <Text className="text-sm text-text dark:text-dark-text">
           <Text className="font-bold text-text dark:text-dark-text">
             {item.actorId.name}{" "}
           </Text>
           {getText(item.type)}
         </Text>
 
-        <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary mt-1">
+        <Text className="text-xs font-medium text-text-tertiary dark:text-dark-text-tertiary mt-1">
           {timeAgo(item.createdAt)}
         </Text>
       </View>
 
       {/* delete */}
-      <TouchableOpacity onPress={() => onDelete(item._id)} className="p-2">
+      <TouchableOpacity
+        onPress={() => onDelete(item._id)}
+        className="p-1.5  border-border border rounded-full"
+      >
         <Ionicons name="close" size={16} color="#999" />
       </TouchableOpacity>
     </TouchableOpacity>

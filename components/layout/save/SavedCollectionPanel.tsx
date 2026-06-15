@@ -41,7 +41,7 @@ export function SavedCollectionPanel({ activeId, onSelect }: Props) {
   };
 
   return (
-    <View className="bg-background border-b border-border">
+    <View className="bg-background dark:bg-dark-background border-b border-border dark:border-dark-border">
       {/* ── chips + add button এক row এ ── */}
       <View className="flex-row items-center gap-2 px-4 py-3">
         {/* Collection chips */}

@@ -27,7 +27,7 @@ const PrivateQuestionHeader = ({
   return (
     <View
       style={{ paddingTop: insets.top }}
-      className="bg-background dark:bg-dark-background border-b border-border dark:border-dark-border"
+      className="bg-background dark:bg-dark-background "
     >
       {/* ── TOP BAR ── */}
       <View className="px-4 pt-3 pb-2 flex-row items-center mb-3">

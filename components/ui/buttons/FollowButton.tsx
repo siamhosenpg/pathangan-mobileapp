@@ -4,7 +4,9 @@ import {
   useUnfollowUserMutation,
 } from "@/redux/api/followApi";
 import { useAppSelector } from "@/redux/hooks";
+import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { useColorScheme } from "nativewind";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity } from "react-native";
@@ -16,6 +18,8 @@ interface Props {
 const FollowButton = ({ targetUserId }: Props) => {
   const { t } = useTranslation();
   const currentUser = useAppSelector((state) => state.auth.user);
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const { data, isLoading: checkingFollow } =
     useGetFollowersQuery(targetUserId);
@@ -71,10 +75,16 @@ const FollowButton = ({ targetUserId }: Props) => {
       disabled={isLoading}
       style={{ opacity: isLoading ? 0.6 : 1 }}
       activeOpacity={0.5}
+      className={` px-3 py-1 flex-row gap-1 items-center justify-center rounded-full  border  ${localFollowing ? " bg-background-secondary dark:bg-dark-background-secondary border-border dark:border-dark-border" : "bg-accent border-accent"}`}
     >
+      <Ionicons
+        name={localFollowing ? "person-remove-outline" : "person-add-outline"}
+        size={14}
+        color={localFollowing ? (isDark ? "#8a8a8a" : "#6b7280") : "#fff"}
+      />
       <Text
-        className="font-semibold text-sm"
-        style={{ color: localFollowing ? "#9CA3AF" : "#00914d" }}
+        className="font-semibold text-base"
+        style={{ color: localFollowing ? "#777" : "#fff" }}
       >
         {isLoading ? "..." : localFollowing ? t("unfollow") : t("follow")}
       </Text>

@@ -46,7 +46,10 @@
       ],
       "expo-secure-store",
       "expo-localization",
-      "expo-video"
+      "expo-video",
+      "react-native-video",
+      "expo-web-browser",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

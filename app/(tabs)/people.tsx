@@ -15,7 +15,7 @@ export default function PeopleScreen() {
 
       {/* Loading */}
       {isLoading && (
-        <View className="px-4 pt-3 gap-2">
+        <View className="">
           <UserCardSuggestionSkeleton />
           <UserCardSuggestionSkeleton />
           <UserCardSuggestionSkeleton />
@@ -37,9 +37,9 @@ export default function PeopleScreen() {
       {!isLoading && !isError && data && (
         <FlatList
           contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingTop: 12,
-            gap: 8,
+            paddingHorizontal: 0,
+            paddingTop: 0,
+            gap: 0,
           }}
           data={data.users}
           keyExtractor={(item) => String(item.userid)}

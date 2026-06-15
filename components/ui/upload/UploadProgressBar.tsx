@@ -52,7 +52,7 @@ const UploadProgressBar = () => {
   return (
     <Animated.View
       style={{ opacity: opacityAnim }}
-      className="  mt-1 overflow-hidden  bg-background dark:bg-dark-background"
+      className="  overflow-hidden  bg-background dark:bg-dark-background border-b border-border dark:border-dark-border"
     >
       <View className="px-4 pt-3 pb-2">
         {/* Top row */}

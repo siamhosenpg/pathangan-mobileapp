@@ -8,13 +8,13 @@ import { useColorScheme } from "nativewind";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Modal,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import GoogleLoginButton from "./buttons/GoogleLoginButton";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -55,39 +55,6 @@ export default function LoginForm() {
       contentContainerStyle={{ flexGrow: 1 }}
       keyboardShouldPersistTaps="handled"
     >
-      {/* Google Coming Soon Modal */}
-      <Modal visible={googleAlert} transparent animationType="fade">
-        <View className="flex-1 bg-black/60 items-center justify-center px-6">
-          <View className="bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border rounded-2xl p-6 w-full max-w-sm">
-            <View className="flex-row items-center gap-3 mb-3">
-              <View className="w-10 h-10 rounded-full bg-background-tertiary dark:bg-dark-background-tertiary items-center justify-center">
-                <Text className="text-base font-bold text-text dark:text-dark-text">
-                  G
-                </Text>
-              </View>
-              <View>
-                <Text className="text-text dark:text-dark-text font-semibold text-sm">
-                  Google লগইন শীঘ্রই আসছে
-                </Text>
-                <Text className="text-text-tertiary dark:text-dark-text-tertiary text-xs mt-0.5">
-                  Coming Soon
-                </Text>
-              </View>
-            </View>
-            <Text className="text-text-secondary dark:text-dark-text-secondary text-sm leading-6 mb-5">
-              আমরা শীঘ্রই Google-এর সাথে সংযোগ স্থাপন করব। এর মধ্যে ইমেইল দিয়ে
-              লগইন করুন।
-            </Text>
-            <TouchableOpacity
-              onPress={() => setGoogleAlert(false)}
-              className="bg-accent py-3 rounded-xl items-center"
-            >
-              <Text className="text-white font-semibold text-sm">বুঝেছি</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
       <View className="flex-1 px-6 justify-center">
         <View className="w-full max-w-md self-center">
           {/* Logo & Header */}
@@ -117,16 +84,9 @@ export default function LoginForm() {
           )}
 
           {/* Google Button */}
-          <TouchableOpacity
-            onPress={() => setGoogleAlert(true)}
-            className="w-full flex-row items-center justify-center gap-3 py-3.5 rounded-xl bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border mb-5"
-            activeOpacity={0.7}
-          >
-            <Text className="text-lg">G</Text>
-            <Text className="text-text-secondary dark:text-dark-text-secondary text-sm font-medium">
-              Google দিয়ে লগইন করুন
-            </Text>
-          </TouchableOpacity>
+          <View className="pb-4">
+            <GoogleLoginButton />
+          </View>
 
           {/* Divider */}
           <View className="flex-row items-center gap-3 mb-5">

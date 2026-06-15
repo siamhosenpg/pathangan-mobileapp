@@ -170,6 +170,54 @@ const postApi = baseApi.injectEndpoints({
 
       invalidatesTags: ["Post"],
     }),
+
+    // ===================== RECORD VIEW =====================
+    recordView: builder.mutation<{ counted: boolean }, string>({
+      query: (postId) => ({
+        url: `/posts/view/${postId}`,
+        method: "POST" as const,
+      }),
+
+      // ── Cache এ viewsCount optimistically increment করো ──
+      async onQueryStarted(postId, { dispatch, queryFulfilled }) {
+        // getPosts (HomeFeed) এর cache patch
+        const patchResult = dispatch(
+          postApi.util.updateQueryData("getPosts", { limit: 10 }, (draft) => {
+            for (const page of draft.pages) {
+              const post = page.posts.find((p) => p._id === postId);
+              if (post) {
+                post.viewsCount = (post.viewsCount ?? 0) + 1;
+                break;
+              }
+            }
+          }),
+        );
+
+        // getPostById (single post page) এর cache patch
+        const patchByIdResult = dispatch(
+          postApi.util.updateQueryData("getPostById", postId, (draft) => {
+            if (draft) {
+              draft.viewsCount = (draft.viewsCount ?? 0) + 1;
+            }
+          }),
+        );
+
+        try {
+          const { data } = await queryFulfilled;
+
+          // ── Backend rate-limited করলে (counted: false) ──
+          // optimistic update revert করো — UI তে fake count থাকবে না
+          if (!data.counted) {
+            patchResult.undo();
+            patchByIdResult.undo();
+          }
+        } catch {
+          // request fail হলে revert
+          patchResult.undo();
+          patchByIdResult.undo();
+        }
+      },
+    }),
   }),
 });
 export { postApi };
@@ -184,4 +232,5 @@ export const {
   useCreateSharePostMutation,
   useUpdatePostMutation,
   useDeletePostMutation,
+  useRecordViewMutation, // ← এটা add করো
 } = postApi;

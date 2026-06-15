@@ -8,10 +8,11 @@ module.exports = {
     extend: {
       colors: {
         accent: "#00914d",
-        "accent-secondary": "#9ef1cf",
+        "accent-secondary": "#009439",
         "accent-transparent": "#09330946",
 
         // ✅ Light
+
         text: "#1b1b1b",
         "text-secondary": "#3a3a3a",
         "text-tertiary": "#6d6d6d",
@@ -24,6 +25,8 @@ module.exports = {
 
         // ✅ Dark
         dark: {
+          accent: "#00914d",
+          "accent-secondary": "#22c55e",
           text: "#f1f1f1",
           "text-secondary": "#c4c4c4",
           "text-tertiary": "#8a8a8a",

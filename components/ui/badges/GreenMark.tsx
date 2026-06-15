@@ -1,3 +1,4 @@
+import { useIconColor } from "@/hooks/useIconColor";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React from "react";
 import { StyleSheet, View, ViewStyle } from "react-native";
@@ -9,16 +10,12 @@ interface GreenMarkProps {
 }
 
 const GreenMark = ({ mark, size = 18, style }: GreenMarkProps) => {
+  const { accent } = useIconColor();
   if (!mark) return null;
 
   return (
     <View style={[styles.container, style]} className=" text-accent">
-      <MaterialIcons
-        name="verified"
-        size={size}
-        className="text-accent"
-        color="#00914d"
-      />
+      <MaterialIcons name="verified" size={size} color={accent} />
     </View>
   );
 };
