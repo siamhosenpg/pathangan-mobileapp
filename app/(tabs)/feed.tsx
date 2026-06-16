@@ -13,7 +13,7 @@ export default function FeedScreen() {
       </View>
 
       {/* Feed */}
-      <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
+      <View className="flex-1 bg-background dark:bg-dark-background">
         <HomeFeed />
       </View>
     </View>

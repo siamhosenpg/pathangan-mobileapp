@@ -1,5 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import * as Haptics from "expo-haptics";
 import { Tabs } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -8,6 +6,20 @@ import { Pressable } from "react-native-gesture-handler";
 
 import AuthGuard from "@/components/ui/guard/AuthGuard";
 import { useTranslation } from "react-i18next";
+
+import SearchBold from "../../assets/icons/category.svg";
+import Search from "../../assets/icons/categorylite.svg";
+import HomeBold from "../../assets/icons/house.svg";
+import Home from "../../assets/icons/houselite.svg";
+import CourseBold from "../../assets/icons/learning.svg";
+import Course from "../../assets/icons/learninglite.svg";
+import QuestionBold from "../../assets/icons/question.svg";
+import Question from "../../assets/icons/questionlite.svg";
+import PeopleBold from "../../assets/icons/users.svg";
+import People from "../../assets/icons/userslite.svg";
+
+import SheetBold from "../../assets/icons/sheet.svg";
+import Sheet from "../../assets/icons/sheetlite.svg";
 
 export default function TabLayout() {
   const { colorScheme } = useColorScheme();
@@ -32,7 +44,7 @@ export default function TabLayout() {
           headerShown: false,
           tabBarShowLabel: true,
           tabBarActiveTintColor: isDark ? "#22c55e" : "#009439",
-          tabBarInactiveTintColor: isDark ? "#fff" : "#6d6d6",
+          tabBarInactiveTintColor: isDark ? "#fff" : "#555",
 
           tabBarStyle: {
             backgroundColor: isDark ? "#0f0f0f" : "#ffffff",
@@ -40,8 +52,8 @@ export default function TabLayout() {
             borderTopColor: isDark ? "#2e2e2e" : "#e7e7e7",
             elevation: 0,
             shadowOpacity: 0,
-            height: 84,
-            paddingHorizontal: 6,
+            height: 86,
+            paddingHorizontal: 10,
           },
 
           tabBarItemStyle: {
@@ -50,13 +62,15 @@ export default function TabLayout() {
           },
 
           tabBarIconStyle: {
-            marginTop: 6,
+            marginTop: 8,
           },
 
           tabBarLabelStyle: {
-            fontSize: 10,
+            fontSize: 7,
             fontWeight: "600",
-            marginBottom: 6,
+            marginBottom: 0,
+            marginTop: 2,
+            textTransform: "uppercase",
           },
         }}
       >
@@ -65,13 +79,10 @@ export default function TabLayout() {
           options={{
             tabBarButton: hapticTabButton,
             title: t("community"),
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons
-                name={focused ? "home" : "home-outline"}
-                size={focused ? 26 : 24}
-                color={color}
-              />
-            ),
+            tabBarIcon: ({ color, focused }) => {
+              const HomeIcon = focused ? HomeBold : Home;
+              return <HomeIcon width={24} height={24} color={color} />;
+            },
           }}
         />
         <Tabs.Screen
@@ -79,13 +90,10 @@ export default function TabLayout() {
           options={{
             tabBarButton: hapticTabButton,
             title: t("questions"),
-            tabBarIcon: ({ color, focused }) => (
-              <MaterialCommunityIcons
-                name={focused ? "head-question" : "head-question-outline"}
-                size={focused ? 30 : 24}
-                color={color}
-              />
-            ),
+            tabBarIcon: ({ color, focused }) => {
+              const HomeIcon = focused ? QuestionBold : Question;
+              return <HomeIcon width={24} height={24} color={color} />;
+            },
           }}
         />
         <Tabs.Screen
@@ -93,27 +101,34 @@ export default function TabLayout() {
           options={{
             tabBarButton: hapticTabButton,
             title: t("search"),
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons
-                name={focused ? "search" : "search-outline"}
-                size={focused ? 26 : 24}
-                color={color}
-              />
-            ),
+            tabBarIcon: ({ color, focused }) => {
+              const HomeIcon = focused ? SearchBold : Search;
+              return <HomeIcon width={24} height={24} color={color} />;
+            },
           }}
         />
+
         <Tabs.Screen
           name="courses"
           options={{
             tabBarButton: hapticTabButton,
             title: t("courses"),
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons
-                name={focused ? "book" : "book-outline"}
-                size={focused ? 26 : 24}
-                color={color}
-              />
-            ),
+            tabBarIcon: ({ color, focused }) => {
+              const HomeIcon = focused ? CourseBold : Course;
+              return <HomeIcon width={24} height={24} color={color} />;
+            },
+          }}
+        />
+
+        <Tabs.Screen
+          name="sheets"
+          options={{
+            tabBarButton: hapticTabButton,
+            title: t("Sheets"),
+            tabBarIcon: ({ color, focused }) => {
+              const HomeIcon = focused ? SheetBold : Sheet;
+              return <HomeIcon width={24} height={24} color={color} />;
+            },
           }}
         />
         <Tabs.Screen
@@ -121,13 +136,10 @@ export default function TabLayout() {
           options={{
             tabBarButton: hapticTabButton,
             title: t("people"),
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons
-                name={focused ? "people" : "people-outline"}
-                size={focused ? 26 : 24}
-                color={color}
-              />
-            ),
+            tabBarIcon: ({ color, focused }) => {
+              const HomeIcon = focused ? PeopleBold : People;
+              return <HomeIcon width={24} height={24} color={color} />;
+            },
           }}
         />
         <Tabs.Screen name="profile" options={{ href: null }} />
