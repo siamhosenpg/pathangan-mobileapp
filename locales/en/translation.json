@@ -25,6 +25,7 @@
   "love": "Support",
   "countLove": "{{count}} Supports",
   "share": "Share",
+  "sheets": "Handout",
   "countShare": "{{count}} Shares",
   "countViews": "{{count}} Views",
   "shared": "Shared",

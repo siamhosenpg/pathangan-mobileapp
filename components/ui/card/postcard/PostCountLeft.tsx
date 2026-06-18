@@ -18,29 +18,31 @@ const PostCountLeft = ({
   const { t } = useTranslation();
   const n = useNumber();
   return (
-    <View className="flex-row items-center gap-3">
-      <View className="flex-row items-center gap-1">
-        <Text className="text-sm font-semibold  text-text-tertiary dark:text-dark-text-tertiary">
-          {t("countLove", { count: n(likesCount) })}
-        </Text>
-      </View>
-
-      {commentsCount > 0 && (
+    <View className="flex-row items-center  justify-between gap-3">
+      <View className="flex-row items-center gap-3">
         <View className="flex-row items-center gap-1">
-          <Text className="font-semibold text-sm text-text-tertiary dark:text-dark-text-tertiary">
-            {t("countComments", { count: n(commentsCount) })}
+          <Text className="text-sm font-semibold  text-text-tertiary dark:text-dark-text-tertiary">
+            {t("countLove", { count: n(likesCount) })}
           </Text>
         </View>
-      )}
 
-      <View className="flex-row items-center gap-1">
-        <Text className="font-semibold text-sm text-text-tertiary dark:text-dark-text-tertiary">
-          {t("countShare", { count: n(sharesCount) })}
-        </Text>
+        {commentsCount > 0 && (
+          <View className="flex-row items-center gap-1">
+            <Text className="font-semibold text-sm text-text-tertiary dark:text-dark-text-tertiary">
+              {t("countComments", { count: n(commentsCount) })}
+            </Text>
+          </View>
+        )}
+
+        <View className="flex-row items-center gap-1">
+          <Text className="font-semibold text-sm text-text-tertiary dark:text-dark-text-tertiary">
+            {t("countShare", { count: n(sharesCount) })}
+          </Text>
+        </View>
       </View>
       {/* ← views add */}
       {viewsCount > 0 && (
-        <View className="flex-row items-center gap-1">
+        <View className="flex-row  items-center gap-1">
           <Text className="font-semibold text-sm text-text-tertiary dark:text-dark-text-tertiary">
             {t("countViews", { count: n(viewsCount) })}
           </Text>

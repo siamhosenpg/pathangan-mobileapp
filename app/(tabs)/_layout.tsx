@@ -44,7 +44,7 @@ export default function TabLayout() {
           headerShown: false,
           tabBarShowLabel: true,
           tabBarActiveTintColor: isDark ? "#22c55e" : "#009439",
-          tabBarInactiveTintColor: isDark ? "#fff" : "#555",
+          tabBarInactiveTintColor: isDark ? "#fff" : "#222",
 
           tabBarStyle: {
             backgroundColor: isDark ? "#0f0f0f" : "#ffffff",
@@ -66,10 +66,10 @@ export default function TabLayout() {
           },
 
           tabBarLabelStyle: {
-            fontSize: 7,
+            fontSize: 8,
             fontWeight: "600",
             marginBottom: 0,
-            marginTop: 2,
+            marginTop: 4,
             textTransform: "uppercase",
           },
         }}
@@ -124,7 +124,7 @@ export default function TabLayout() {
           name="sheets"
           options={{
             tabBarButton: hapticTabButton,
-            title: t("Sheets"),
+            title: t("sheets"),
             tabBarIcon: ({ color, focused }) => {
               const HomeIcon = focused ? SheetBold : Sheet;
               return <HomeIcon width={24} height={24} color={color} />;

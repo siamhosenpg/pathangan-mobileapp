@@ -147,7 +147,7 @@ export default function ProfilePosts({ userid, listHeader }: Props) {
       viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: 10 }}
-      ItemSeparatorComponent={() => <View className="h-1" />}
+      ItemSeparatorComponent={() => <View className="h-0" />}
     />
   );
 }
