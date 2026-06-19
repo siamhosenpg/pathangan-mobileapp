@@ -1,4 +1,4 @@
-import useVideoViewTracker from "@/hooks/viewcount/useVideoViewTracker";
+import { useRecordViewMutation } from "@/redux/api/postApi";
 import { toggleMute } from "@/redux/features/video/videoSlice";
 import type { RootState } from "@/redux/store";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,7 +20,7 @@ interface Props {
   isVisible: boolean;
   isNearVisible?: boolean;
   videoMeta?: { width: number; height: number };
-  postId: string; // ← এটা add করো
+  postId: string;
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -28,12 +28,15 @@ const MAX_HEIGHT = 500;
 const MIN_HEIGHT = SCREEN_WIDTH * 0.5;
 const DEFAULT_HEIGHT = SCREEN_WIDTH * (9 / 16);
 
+// ── Session guard — একই video session এ একবারই count ──
+const sessionViewedVideoPosts = new Set<string>();
+
 const PostVideo = ({
   uri,
   isVisible,
   isNearVisible = false,
   videoMeta,
-  postId, // ← এটা add করো
+  postId,
 }: Props) => {
   const dispatch = useDispatch();
   const isMuted = useSelector((state: RootState) => state.video.isMuted);
@@ -46,11 +49,40 @@ const PostVideo = ({
 
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const durationRef = useRef(0);
-  const isSeekingRef = useRef(false); // ← state না, ref — PanResponder closure safe
-  const playerRef = useRef<any>(null); // ← player ref, PanResponder এর জন্য
-  const isManuallyPlayingRef = useRef(false); // ← 2x press-out এ tap দমানোর জন্য
-  const is2xActiveRef = useRef(false); // ← pressOut এ tap দমানোর জন্য
-  const { onProgressUpdate } = useVideoViewTracker(postId);
+  const isSeekingRef = useRef(false);
+  const playerRef = useRef<any>(null);
+  const isManuallyPlayingRef = useRef(false);
+  const is2xActiveRef = useRef(false);
+
+  // ── View tracking — post এর মতোই 3 সেকেন্ড ──
+  const [recordView] = useRecordViewMutation();
+  const viewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    // visible হলে timer শুরু
+    if (isVisible && !sessionViewedVideoPosts.has(postId)) {
+      viewTimerRef.current = setTimeout(() => {
+        sessionViewedVideoPosts.add(postId);
+        recordView(postId)
+          .unwrap()
+          .catch(() => {});
+      }, 3000);
+    } else {
+      // visible না হলে timer cancel
+      if (viewTimerRef.current) {
+        clearTimeout(viewTimerRef.current);
+        viewTimerRef.current = null;
+      }
+    }
+
+    return () => {
+      if (viewTimerRef.current) {
+        clearTimeout(viewTimerRef.current);
+        viewTimerRef.current = null;
+      }
+    };
+  }, [isVisible, postId, recordView]);
+
   const shouldLoad = isVisible || isNearVisible;
 
   const videoHeight = (() => {
@@ -72,7 +104,7 @@ const PostVideo = ({
     playerRef.current = player;
   }, [player]);
 
-  // time update
+  // time update — শুধু progress bar এর জন্য
   useEffect(() => {
     if (!player) return;
     const sub = player.addListener("timeUpdate", (payload) => {
@@ -81,11 +113,10 @@ const PostVideo = ({
       durationRef.current = dur;
       if (dur > 0) {
         setProgress(payload.currentTime / dur);
-        onProgressUpdate(payload.currentTime, dur); // ← শুধু এই line add করো
       }
     });
     return () => sub.remove();
-  }, [player, onProgressUpdate]); // ← onProgressUpdate dependency এ add
+  }, [player]);
 
   // mute sync
   useEffect(() => {
@@ -138,12 +169,9 @@ const PostVideo = ({
 
   // tap to play/pause
   const handleVideoTap = () => {
-    // 2x long press ছেড়ে দেওয়ার সময় onPress fire হয় — দমাও
     if (is2xActiveRef.current) return;
-
     const p = playerRef.current;
     if (!p) return;
-
     if (isAutoPlay) {
       if (p.playing) {
         p.pause();
@@ -179,14 +207,13 @@ const PostVideo = ({
     if (is2xActiveRef.current && p) {
       p.playbackRate = 1;
       setIs2x(false);
-      // ছোট delay দাও যাতে onPress fire হওয়ার আগে ref clear হয়
       setTimeout(() => {
         is2xActiveRef.current = false;
       }, 50);
     }
   };
 
-  // PanResponder — সব ref থেকে পড়ে, closure stale হয় না
+  // PanResponder
   const progressPanResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -289,7 +316,7 @@ const PostVideo = ({
         </View>
       </TouchableOpacity>
 
-      {/* progress bar — touch target 18px, visual 2px */}
+      {/* progress bar */}
       <View
         style={{
           position: "absolute",

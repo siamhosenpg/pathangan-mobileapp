@@ -18,7 +18,7 @@ const PostCountLeft = ({
   const { t } = useTranslation();
   const n = useNumber();
   return (
-    <View className="flex-row items-center  justify-between gap-3">
+    <View className="flex-row items-center w-full  justify-between gap-3">
       <View className="flex-row items-center gap-3">
         <View className="flex-row items-center gap-1">
           <Text className="text-sm font-semibold  text-text-tertiary dark:text-dark-text-tertiary">

@@ -22,9 +22,9 @@ const userApi = baseApi.injectEndpoints({
       ],
     }),
 
-    getSuggestedUsers: builder.query<SuggestedUsersResponse, void>({
-      query: () => ({ url: "/users/suggested", method: "GET" }),
-      providesTags: ["User"],
+    // suggested users
+    getPeopleSuggestions: builder.query<SuggestedUsersResponse, void>({
+      query: () => ({ url: "/peoples/suggestions", method: "GET" }),
     }),
 
     // ⚠️ Mobile এ FormData image upload এভাবে করতে হয়
@@ -59,7 +59,7 @@ const userApi = baseApi.injectEndpoints({
 export const {
   useGetUsersQuery,
   useGetUserByUsernameQuery,
-  useGetSuggestedUsersQuery,
+  useGetPeopleSuggestionsQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
 } = userApi;

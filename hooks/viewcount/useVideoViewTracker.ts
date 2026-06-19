@@ -1,17 +1,19 @@
 import { useRecordViewMutation } from "@/redux/api/postApi";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 // ── Session guard — video post আলাদা Set এ track ──
 const sessionViewedVideoPosts = new Set<string>();
 
 const useVideoViewTracker = (postId: string) => {
-  // একবার count হলে আর হবে না — component re-render এ reset হবে না
   const hasCountedRef = useRef(false);
   const [recordView] = useRecordViewMutation();
 
-  // ── expo-video এর onPlaybackStatusUpdate থেকে call করবে ──
-  // currentTime: seconds এ এখন কতটুকু দেখেছে
-  // duration: video এর মোট length seconds এ
+  // recordView কে ref এ রাখো — stale closure এড়াতে
+  const recordViewRef = useRef(recordView);
+  useEffect(() => {
+    recordViewRef.current = recordView;
+  }, [recordView]);
+
   const onProgressUpdate = useCallback(
     (currentTime: number, duration: number) => {
       // Already counted হলে skip
@@ -27,12 +29,14 @@ const useVideoViewTracker = (postId: string) => {
         hasCountedRef.current = true;
         sessionViewedVideoPosts.add(postId);
 
-        recordView(postId)
+        // ref থেকে call — dependency loop নেই
+        recordViewRef
+          .current(postId)
           .unwrap()
-          .catch(() => {}); // silently fail
+          .catch(() => {});
       }
     },
-    [postId, recordView],
+    [postId], // ← শুধু postId, recordView নেই
   );
 
   return { onProgressUpdate };

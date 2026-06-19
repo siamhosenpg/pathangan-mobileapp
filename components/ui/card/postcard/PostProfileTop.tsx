@@ -87,7 +87,10 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
               <GreenMark mark={!!user.greenmarkVerified} size={14} />
             )}
             <View className="ml-1">
-              <FollowButtonPost targetUserId={user._id} />
+              <FollowButtonPost
+                targetUserId={user._id}
+                initialIsFollowing={(user as any).isFollowing}
+              />
             </View>
           </View>
           <Text className="text-text-secondary dark:text-dark-text-secondary">

@@ -1,11 +1,11 @@
-import { User } from "@/types/userTypes";
+import { SuggestedUser } from "@/types/userTypes";
 import { useRouter } from "expo-router";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import GreenMark from "../../badges/GreenMark";
 import FollowButton from "../../buttons/FollowButton";
 
 interface Props {
-  user: User;
+  user: SuggestedUser;
 }
 
 export default function UserCardSuggestion({ user }: Props) {
@@ -49,7 +49,6 @@ export default function UserCardSuggestion({ user }: Props) {
             @{user.username}
           </Text>
         )}
-
         {user.bio ? (
           <Text
             className="text-sm font-medium text-text-secondary dark:text-dark-text-secondary mt-0.5"
@@ -60,8 +59,11 @@ export default function UserCardSuggestion({ user }: Props) {
         ) : null}
       </View>
 
-      {/* Follow button */}
-      <FollowButton targetUserId={user._id} />
+      {/* Follow button — isFollowing initial state হিসেবে পাস করা হচ্ছে */}
+      <FollowButton
+        targetUserId={user._id}
+        initialIsFollowing={user.isFollowing}
+      />
     </TouchableOpacity>
   );
 }

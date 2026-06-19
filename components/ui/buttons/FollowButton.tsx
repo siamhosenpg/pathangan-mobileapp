@@ -1,6 +1,6 @@
+// FollowButton.tsx
 import {
   useFollowUserMutation,
-  useGetFollowersQuery,
   useUnfollowUserMutation,
 } from "@/redux/api/followApi";
 import { useAppSelector } from "@/redux/hooks";
@@ -13,38 +13,27 @@ import { Text, TouchableOpacity } from "react-native";
 
 interface Props {
   targetUserId: string;
+  initialIsFollowing: boolean; // ✅ server থেকে আসা সত্যি ডেটা (suggestions/profile API থেকে)
 }
 
-const FollowButton = ({ targetUserId }: Props) => {
+const FollowButton = ({ targetUserId, initialIsFollowing }: Props) => {
   const { t } = useTranslation();
   const currentUser = useAppSelector((state) => state.auth.user);
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const { data, isLoading: checkingFollow } =
-    useGetFollowersQuery(targetUserId);
+  // ❌ আগে এখানে useGetFollowersQuery ছিল — N+1 এর কারণ, বাদ দেওয়া হলো
+  const [localFollowing, setLocalFollowing] = useState(initialIsFollowing);
 
-  const followers = data?.followers ?? [];
-
-  // ✅ id এবং _id দুইটাই check
-  const serverFollowing = followers.some((f: any) => {
-    const followerId =
-      typeof f.followerId === "object" ? f.followerId._id : f.followerId;
-    return (
-      followerId === currentUser?.id || followerId === (currentUser as any)?._id
-    );
-  });
-
-  const [localFollowing, setLocalFollowing] = useState(false);
-
+  // prop পরিবর্তন হলে (যেমন parent re-fetch করলে) sync রাখা
   useEffect(() => {
-    setLocalFollowing(serverFollowing);
-  }, [serverFollowing]);
+    setLocalFollowing(initialIsFollowing);
+  }, [initialIsFollowing]);
 
   const [followUser, { isLoading: following }] = useFollowUserMutation();
   const [unfollowUser, { isLoading: unfollowing }] = useUnfollowUserMutation();
 
-  const isLoading = checkingFollow || following || unfollowing;
+  const isLoading = following || unfollowing;
 
   const handleToggle = async () => {
     if (!currentUser || isLoading) return;

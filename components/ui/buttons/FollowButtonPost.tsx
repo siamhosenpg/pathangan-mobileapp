@@ -1,9 +1,5 @@
-import {
-  useFollowUserMutation,
-  useGetFollowersQuery,
-} from "@/redux/api/followApi";
+import { useFollowUserMutation } from "@/redux/api/followApi";
 import { useAppSelector } from "@/redux/hooks";
-import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -18,37 +14,30 @@ import Animated, {
 
 interface Props {
   targetUserId: string;
+  initialIsFollowing?: boolean; // ✅ server থেকে আসা সত্যি ডেটা
 }
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
-const FollowButtonPost = ({ targetUserId }: Props) => {
+const FollowButtonPost = ({
+  targetUserId,
+  initialIsFollowing = false,
+}: Props) => {
   const { t } = useTranslation();
   const currentUser = useAppSelector((state) => state.auth.user);
   const currentUserId = currentUser?.id ?? (currentUser as any)?._id;
 
-  const { data, isLoading: checkingFollow } =
-    useGetFollowersQuery(targetUserId);
-
-  const followers = data?.followers ?? [];
-
-  // ✅ id এবং _id দুইটাই check
-  const serverFollowing = followers.some((f: any) => {
-    const followerId =
-      typeof f.followerId === "object" ? f.followerId._id : f.followerId;
-    return followerId === currentUserId;
-  });
-
-  const [localFollowing, setLocalFollowing] = useState(false);
+  // ❌ useGetFollowersQuery বাদ — N+1 এর কারণ ছিল
+  const [localFollowing, setLocalFollowing] = useState(initialIsFollowing);
   const [isHidden, setIsHidden] = useState(false);
 
   useEffect(() => {
-    setLocalFollowing(serverFollowing);
-  }, [serverFollowing]);
+    setLocalFollowing(initialIsFollowing);
+  }, [initialIsFollowing]);
 
   const [followUser, { isLoading: following }] = useFollowUserMutation();
 
-  const isLoading = checkingFollow || following;
+  const isLoading = following;
 
   // ---------- Animation values ----------
   const scale = useSharedValue(1);
@@ -102,11 +91,8 @@ const FollowButtonPost = ({ targetUserId }: Props) => {
   // ✅ নিজের পোস্টে কোনো বাটন থাকবে না
   if (!currentUserId || currentUserId === targetUserId) return null;
 
-  // ✅ সার্ভার রেসপন্স আসার আগে কিছু দেখাবে না (flash এড়াতে)
-  if (checkingFollow) return null;
-
   // ✅ আগে থেকে follow করা থাকলে সম্পূর্ণ blank — কিছুই দেখাবে না
-  if (serverFollowing) return null;
+  if (initialIsFollowing) return null;
 
   // ✅ ক্লিক করার পর exit-animation শেষ হয়ে গেলে blank
   if (localFollowing && isHidden) return null;
@@ -119,9 +105,8 @@ const FollowButtonPost = ({ targetUserId }: Props) => {
       disabled={isLoading || localFollowing}
       activeOpacity={0.8}
       style={animatedStyle}
-      className="px-2 py-1 flex-row gap-1 items-center justify-center rounded-full bg-accent"
+      className="px-2.5 py-1 flex-row gap-1 items-center justify-center rounded-full bg-accent"
     >
-      <Ionicons name="person-add-outline" size={10} color="#fff" />
       <Text className="font-semibold text-xs" style={{ color: "#fff" }}>
         {isLoading ? "..." : t("follow")}
       </Text>

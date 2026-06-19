@@ -1,19 +1,34 @@
 import UserCardSuggestion from "@/components/ui/card/user/UserCardSuggestion";
 import UserCardSuggestionSkeleton from "@/components/ui/card/user/UserCardSuggestionSkeleton";
 import { Header } from "@/components/ui/headers/Header";
-import { useGetSuggestedUsersQuery } from "@/redux/api/userApi";
+import { useGetPeopleSuggestionsQuery } from "@/redux/api/user/peopleApi";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FlatList, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Text, View } from "react-native";
 
 export default function PeopleScreen() {
-  const { data, isLoading, isError } = useGetSuggestedUsersQuery();
+  const [cursor, setCursor] = useState<string | null>(null);
+
+  const { data, isLoading, isFetching, isError } = useGetPeopleSuggestionsQuery(
+    {
+      cursor,
+      limit: 10,
+    },
+  );
+
   const { t } = useTranslation();
+
+  const handleLoadMore = useCallback(() => {
+    if (!isFetching && data?.hasMore && data?.nextCursor) {
+      setCursor(data.nextCursor);
+    }
+  }, [isFetching, data?.hasMore, data?.nextCursor]);
 
   return (
     <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
       <Header title={t("people")} />
 
-      {/* Loading */}
+      {/* Initial Loading */}
       {isLoading && (
         <View className="">
           <UserCardSuggestionSkeleton />
@@ -42,8 +57,17 @@ export default function PeopleScreen() {
             gap: 0,
           }}
           data={data.users}
-          keyExtractor={(item) => String(item.userid)}
+          keyExtractor={(item) => item._id}
           renderItem={({ item }) => <UserCardSuggestion user={item} />}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isFetching && !isLoading ? (
+              <View className="py-4">
+                <ActivityIndicator size="small" />
+              </View>
+            ) : null
+          }
           ListEmptyComponent={
             <View className="items-center justify-center py-16">
               <Text className="text-text-secondary dark:text-dark-text-secondary text-sm">
