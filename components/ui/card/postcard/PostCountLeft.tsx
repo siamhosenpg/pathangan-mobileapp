@@ -6,19 +6,23 @@ interface Props {
   likesCount?: number;
   commentsCount?: number;
   sharesCount?: number;
-  viewsCount?: number; // ← add
+  viewsCount?: number;
+  classStyle?: String;
 }
 
 const PostCountLeft = ({
+  classStyle,
   likesCount = 0,
   commentsCount = 0,
   sharesCount = 0,
-  viewsCount = 0, // ← add
+  viewsCount = 0,
 }: Props) => {
   const { t } = useTranslation();
   const n = useNumber();
   return (
-    <View className="flex-row items-center w-full  justify-between gap-3">
+    <View
+      className={`flex-row items-center  justify-between gap-3 ${classStyle ? classStyle : "w-full "}`}
+    >
       <View className="flex-row items-center gap-3">
         <View className="flex-row items-center gap-1">
           <Text className="text-sm font-semibold  text-text-tertiary dark:text-dark-text-tertiary">

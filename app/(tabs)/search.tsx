@@ -11,7 +11,10 @@ import {
   Text,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import PostRow from "@/components/layout/search/PostRow";
 import SearchEmptyState from "@/components/layout/search/SearchEmptyState";
@@ -138,12 +141,12 @@ export default function SearchScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
+    <SafeAreaView
+      edges={["top"]}
+      className="flex-1 bg-background-secondary dark:bg-dark-background-secondary"
+    >
       {/* Header */}
-      <View
-        className="bg-background dark:bg-dark-background border-b border-border dark:border-dark-border px-4 pb-3 gap-2.5"
-        style={{ paddingTop: insets.top + 8 }}
-      >
+      <View className="bg-background dark:bg-dark-background  px-4 pb-3 gap-2.5 pt-3">
         <SearchInput
           value={query}
           onChangeText={setQuery}
@@ -178,6 +181,6 @@ export default function SearchScreen() {
           stickyHeaderIndices={[0]}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }

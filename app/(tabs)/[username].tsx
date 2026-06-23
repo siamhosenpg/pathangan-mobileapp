@@ -9,6 +9,7 @@ import { useGetUserByUsernameQuery } from "@/redux/api/userApi";
 import { useAppSelector } from "@/redux/hooks";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function UserProfileScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
@@ -29,11 +30,14 @@ export default function UserProfileScreen() {
 
   if (isLoading || isFetching) {
     return (
-      <View className="flex-1 bg-background dark:bg-dark-background">
+      <SafeAreaView
+        edges={["top"]}
+        className="flex-1 bg-background dark:bg-dark-background"
+      >
         <ProfileHeaderSkeleton />
         <ProfileTopSectionSkeleton />
         <PostCardSkeleton />
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -66,7 +70,10 @@ export default function UserProfileScreen() {
   );
 
   return (
-    <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
+    <SafeAreaView
+      edges={["top"]}
+      className="flex-1 bg-background dark:bg-dark-background"
+    >
       {isOwnProfile ? (
         <ProfileHeader
           mode="own"
@@ -77,6 +84,6 @@ export default function UserProfileScreen() {
       )}
 
       <ProfilePosts userid={user._id} listHeader={profileHeader} />
-    </View>
+    </SafeAreaView>
   );
 }

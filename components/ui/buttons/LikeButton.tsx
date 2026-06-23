@@ -1,6 +1,7 @@
+import Heart from "@/assets/icons/heart.svg";
+import HeartBold from "@/assets/icons/heartBold.svg";
 import { useIconColor } from "@/hooks/useIconColor";
 import { useToggleReactionMutation } from "@/redux/api/reactionApi";
-import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -31,7 +32,7 @@ const LikeButton = ({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Animated.sequence([
       Animated.spring(scaleAnim, {
-        toValue: 1.4,
+        toValue: 1.2,
         useNativeDriver: true,
         speed: 50,
         bounciness: 20,
@@ -60,12 +61,11 @@ const LikeButton = ({
       style={{ opacity: isLoading ? 0.6 : 1 }}
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        <Ionicons
-          name={isLiked ? "heart" : "heart-outline"}
-          size={20}
-          color={iconColor}
-          className={isLiked ? "" : "text-text dark:text-dark-text"}
-        />
+        {isLiked ? (
+          <HeartBold width={18} height={18} color={iconColor} />
+        ) : (
+          <Heart width={18} height={18} color={iconColor} />
+        )}
       </Animated.View>
       <Text
         className={

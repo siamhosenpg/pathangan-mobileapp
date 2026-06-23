@@ -12,7 +12,7 @@ const NotificationBadge = ({ count }: Props) => {
     <View
       style={{
         position: "absolute",
-        top: -4,
+        top: -6,
         right: -4,
         minWidth: 18,
         height: 18,

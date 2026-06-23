@@ -5,8 +5,17 @@ import { useGetAllQuestionsInfiniteQuery } from "@/redux/api/post/questionApi";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, FlatList, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  Text,
+  View,
+} from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 export default function QuestionScreen() {
   const insets = useSafeAreaInsets();
@@ -19,6 +28,8 @@ export default function QuestionScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch,
+    isFetching,
   } = useGetAllQuestionsInfiniteQuery({ limit: 10 });
 
   const allQuestions = data?.pages.flatMap((page) => page.questions) ?? [];
@@ -29,6 +40,10 @@ export default function QuestionScreen() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const handleRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
   const renderFooter = () => {
     if (!isFetchingNextPage) return null;
     return (
@@ -38,8 +53,14 @@ export default function QuestionScreen() {
     );
   };
 
+  // প্রথম load বাদে, refetch চলাকালীন refreshing true থাকবে
+  const isRefreshing = !isLoading && isFetching && !isFetchingNextPage;
+
   return (
-    <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
+    <SafeAreaView
+      edges={["top"]}
+      className="flex-1 bg-background dark:bg-dark-background"
+    >
       <Header title={t("questions")} />
 
       {/* Loading */}
@@ -85,8 +106,16 @@ export default function QuestionScreen() {
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.5}
           ListFooterComponent={renderFooter}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              colors={["#00914d"]} // Android spinner color
+              tintColor={"#00914d"} // iOS spinner color
+            />
+          }
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }

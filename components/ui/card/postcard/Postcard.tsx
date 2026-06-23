@@ -25,6 +25,9 @@ interface Props {
 const screenWidth = Dimensions.get("window").width;
 const maxImageSize = screenWidth - 0;
 
+// টেক্সট কত character এর পর truncate করে "Read more" দেখানো হবে
+const TEXT_TRUNCATE_LENGTH = 120;
+
 const DynamicImage = ({
   uri,
   onPress,
@@ -82,6 +85,14 @@ const Postcard = ({
 
   const { t } = useTranslation();
 
+  // টেক্সট truncate করার দরকার আছে কিনা চেক
+  const fullText = content?.text ?? "";
+  const isLongText = fullText.length > TEXT_TRUNCATE_LENGTH;
+  const displayText =
+    !expanded && isLongText
+      ? fullText.slice(0, TEXT_TRUNCATE_LENGTH).trimEnd()
+      : fullText;
+
   const renderMedia = () => {
     if ((content as any)?.type === "video" && mediaList.length > 0) {
       return (
@@ -117,16 +128,27 @@ const Postcard = ({
 
         {content?.text && (
           <View className="mt-1.5 px-4">
-            <Text
-              className="text-text dark:text-dark-text text-base leading-6"
-              numberOfLines={expanded ? undefined : 2}
-            >
-              {content.text}
+            <Text className="text-text dark:text-dark-text text-base leading-6">
+              {displayText}
+              {!expanded && isLongText && (
+                <>
+                  <Text className="text-text dark:text-dark-text">
+                    {"... "}
+                  </Text>
+                  <Text
+                    className="text-text-tertiary dark:text-dark-text-tertiary font-medium"
+                    onPress={() => setExpanded(true)}
+                  >
+                    {t("readMore")}
+                  </Text>
+                </>
+              )}
             </Text>
-            {content.text.length > 200 && (
-              <TouchableOpacity onPress={() => setExpanded((prev) => !prev)}>
+
+            {expanded && isLongText && (
+              <TouchableOpacity onPress={() => setExpanded(false)}>
                 <Text className="text-sm text-text-tertiary dark:text-dark-text-tertiary font-medium py-1 mt-1">
-                  {expanded ? t("showLess") : t("readMore")}
+                  {t("showLess")}
                 </Text>
               </TouchableOpacity>
             )}

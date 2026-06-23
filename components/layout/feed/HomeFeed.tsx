@@ -1,5 +1,4 @@
 import CourseCardFeed from "@/components/ui/card/course/CourseCardFeed";
-import CreatePostCard from "@/components/ui/card/createpostcard/CreatePostCard";
 import Postcard from "@/components/ui/card/postcard/Postcard";
 import PostCardSkeleton from "@/components/ui/card/postcard/PostCardSkeleton";
 import QuestionCard from "@/components/ui/card/questioncard/QuestionCard";
@@ -146,7 +145,6 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
       viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
       ListHeaderComponent={
         <View className="">
-          <CreatePostCard />
           <UploadProgressBar />
         </View>
       }

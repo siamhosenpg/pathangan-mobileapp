@@ -1,3 +1,4 @@
+import type { Answer } from "@/types/answerTypes";
 // ===================== USER (populated) =====================
 export interface PostUser {
   _id: string;
@@ -66,6 +67,8 @@ export interface Post {
   sharesCount: number;
   createdAt: string;
   updatedAt: string;
+  previewAnswers?: Answer[];
+  answersCount?: number;
 }
 
 // ===================== REQUEST TYPES =====================

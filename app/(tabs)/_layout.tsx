@@ -3,6 +3,7 @@ import { Tabs } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "nativewind";
 import { Pressable } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AuthGuard from "@/components/ui/guard/AuthGuard";
 import { useTranslation } from "react-i18next";
@@ -25,6 +26,8 @@ export default function TabLayout() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+
   const hapticTabButton = (props: any) => (
     <Pressable
       {...props}
@@ -52,7 +55,8 @@ export default function TabLayout() {
             borderTopColor: isDark ? "#2e2e2e" : "#e7e7e7",
             elevation: 0,
             shadowOpacity: 0,
-            height: 86,
+            height: 60 + insets.bottom,
+            paddingBottom: insets.bottom,
             paddingHorizontal: 10,
           },
 

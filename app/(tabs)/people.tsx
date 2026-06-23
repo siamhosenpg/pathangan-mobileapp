@@ -5,6 +5,7 @@ import { useGetPeopleSuggestionsQuery } from "@/redux/api/user/peopleApi";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, FlatList, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PeopleScreen() {
   const [cursor, setCursor] = useState<string | null>(null);
@@ -25,7 +26,10 @@ export default function PeopleScreen() {
   }, [isFetching, data?.hasMore, data?.nextCursor]);
 
   return (
-    <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
+    <SafeAreaView
+      edges={["top"]}
+      className="flex-1 bg-background dark:bg-dark-background"
+    >
       <Header title={t("people")} />
 
       {/* Initial Loading */}
@@ -78,6 +82,6 @@ export default function PeopleScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }

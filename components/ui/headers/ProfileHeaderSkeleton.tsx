@@ -3,7 +3,7 @@ import { View } from "react-native";
 
 export default function ProfileHeaderSkeleton() {
   return (
-    <View className="bg-background dark:bg-dark-background px-4 pt-16 pb-3 flex-row items-center justify-between">
+    <View className="bg-background dark:bg-dark-background px-4 pt-5 pb-3 flex-row items-center justify-between">
       {/* Left */}
       <View className="flex-row items-center gap-3 flex-1 mr-3">
         {/* Back Button */}

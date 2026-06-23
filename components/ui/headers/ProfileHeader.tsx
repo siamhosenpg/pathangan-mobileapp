@@ -29,7 +29,7 @@ export default function ProfileHeader(props: Props) {
 
   if (props.mode === "own") {
     return (
-      <View className="bg-background dark:bg-dark-background px-4 pt-16 pb-3 border-b border-border dark:border-dark-border flex-row items-center justify-between">
+      <View className="bg-background dark:bg-dark-background px-4 pt-2 pb-3 border-b border-border dark:border-dark-border flex-row items-center justify-between">
         <Text className="text-xl font-bold text-text dark:text-dark-text">
           প্রোফাইল
         </Text>
@@ -108,7 +108,7 @@ function OtherProfileHeader({
   };
 
   return (
-    <View className="bg-background dark:bg-dark-background px-4 pt-16 pb-3  flex-row items-center justify-between">
+    <View className="bg-background dark:bg-dark-background px-4 pt-4 pb-2  flex-row items-center justify-between">
       {/* Left: Back + Name */}
       <View className="flex-row items-center gap-3 flex-1 mr-3">
         <TouchableOpacity onPress={() => router.back()} className="p-1">

@@ -11,7 +11,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -44,7 +47,10 @@ export default function PostDetailScreen() {
   }
 
   return (
-    <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
+    <SafeAreaView
+      edges={["top"]}
+      className="flex-1 bg-background-secondary dark:bg-dark-background-secondary"
+    >
       {/* Header */}
       <View
         style={{ paddingTop: insets.top + 8 }}
@@ -82,6 +88,6 @@ export default function PostDetailScreen() {
           />
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

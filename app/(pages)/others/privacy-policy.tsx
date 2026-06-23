@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PrivacyPolicyScreen() {
   const router = useRouter();
@@ -9,7 +10,10 @@ export default function PrivacyPolicyScreen() {
   const isDark = colorScheme === "dark";
 
   return (
-    <View className="flex-1 bg-background dark:bg-dark-background">
+    <SafeAreaView
+      edges={["top"]}
+      className="flex-1 bg-background dark:bg-dark-background"
+    >
       {/* Header */}
       <View className="px-4 pt-16 pb-3 border-b border-border dark:border-dark-border flex-row items-center gap-3">
         <TouchableOpacity onPress={() => router.back()} className="p-1">
@@ -81,6 +85,6 @@ export default function PrivacyPolicyScreen() {
           </View>
         ))}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

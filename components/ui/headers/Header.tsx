@@ -1,9 +1,10 @@
 import { MenuDrawer } from "@/components/layout/menu/MenuDrawer";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
+import AddIcon from "@/assets/icons/add.svg";
+import BellIcon from "@/assets/icons/bell.svg";
 import NotificationBadge from "@/components/layout/notifications/NotificationBadge";
 import NotificationPanel from "@/components/layout/notifications/NotificationPanel";
 import { useBottomSheet } from "@/components/ui/bottom-sheet/useBottomSheet";
@@ -26,45 +27,15 @@ export function Header({ title }: { title?: string }) {
   const { data } = useGetUnreadNotificationCountQuery();
   const unreadCount = data?.count ?? 0;
 
+  const handleCreatePost = () => {
+    router.push("/create");
+  };
+
   return (
     <>
-      <View className="bg-background dark:bg-dark-background px-4 pt-14 pb-2 ">
+      <View className="bg-background dark:bg-dark-background px-5 pt-4 pb-3  border-b border-border dark:border-dark-border">
         <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center gap-0.5">
-            <View className="flex-row items-center w-11 h-11 -ml-1 -mt-1">
-              <Image
-                source={require("../../../assets/images/favicon.png")}
-                className="w-full object-cover h-full"
-                resizeMode="contain"
-              />
-            </View>
-            {title ? (
-              <View>
-                <Text className="text-xl font-semibold text-gray-900 dark:text-dark-text">
-                  {title}
-                </Text>
-              </View>
-            ) : (
-              <View>
-                <Text className="text-xl font-bold text-text dark:text-dark-text">
-                  {t("pathangan")}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          <View className="flex-row gap-5 items-center">
-            <TouchableOpacity onPress={() => open(<NotificationPanel />)}>
-              <View style={{ position: "relative" }}>
-                <Ionicons
-                  name="notifications-outline"
-                  size={24}
-                  color={iconColor}
-                />
-                <NotificationBadge count={unreadCount} />
-              </View>
-            </TouchableOpacity>
-
+          <View className="flex-row items-center gap-2">
             {/* menu button — icon এর বদলে profile image */}
             <TouchableOpacity onPress={() => setMenuOpen(true)}>
               {user?.profileImage ? (
@@ -75,7 +46,7 @@ export function Header({ title }: { title?: string }) {
                     borderRadius: 15,
                     overflow: "hidden",
                     borderWidth: 0.5,
-                    borderColor: isDark ? "#f1f1f1" : "#1b1b1b",
+                    borderColor: isDark ? "#333" : "#ccc",
                   }}
                 >
                   <Image
@@ -107,6 +78,33 @@ export function Header({ title }: { title?: string }) {
                   </Text>
                 </View>
               )}
+            </TouchableOpacity>
+            {title ? (
+              <View>
+                <Text className="text-lg font-bold text-gray-900 dark:text-dark-text ">
+                  {title}
+                </Text>
+              </View>
+            ) : (
+              <View>
+                <Text className="text-lg font-bold  text-text dark:text-dark-text">
+                  {user?.name}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <View className="flex-row gap-5 items-center">
+            <TouchableOpacity onPress={handleCreatePost}>
+              <View>
+                <AddIcon width={22} height={22} color={iconColor} />
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => open(<NotificationPanel />)}>
+              <View style={{ position: "relative" }}>
+                <BellIcon width={22} height={22} color={iconColor} />
+                <NotificationBadge count={unreadCount} />
+              </View>
             </TouchableOpacity>
           </View>
         </View>

@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CoursesPage() {
   const { colorScheme } = useColorScheme();
@@ -60,7 +61,10 @@ export default function CoursesPage() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
+    <SafeAreaView
+      edges={["top"]}
+      className="flex-1 bg-background dark:bg-dark-background"
+    >
       <Header title={t("courses")} />
 
       {/* Loading */}
@@ -127,6 +131,6 @@ export default function CoursesPage() {
           }}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }

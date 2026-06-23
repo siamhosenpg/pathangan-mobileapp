@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import Comments from "@/assets/icons/beacon.svg";
 import { useColorScheme } from "nativewind";
 import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity } from "react-native";
@@ -17,7 +17,7 @@ const CommentsButton = ({ onClick }: Props) => {
       onPress={onClick}
       className="flex-row items-center gap-1.5 py-3.5"
     >
-      <Ionicons name="chatbubble-outline" size={20} color={iconColor} />
+      <Comments width={16} height={16} color={iconColor} />
       <Text className="font-semibold text-base text-text dark:text-dark-text">
         {t("comments")}
       </Text>

@@ -1,3 +1,5 @@
+import Bookmark from "@/assets/icons/bookmark.svg";
+import BookmarkBold from "@/assets/icons/bookmarkBold.svg";
 import { useIconColor } from "@/hooks/useIconColor";
 import { useGetDefaultCollectionQuery } from "@/redux/api/save/savedCollectionApi";
 import {
@@ -5,7 +7,6 @@ import {
   useDeleteSavedItemMutation,
   useSavePostMutation,
 } from "@/redux/api/save/savedItemApi";
-import { Ionicons } from "@expo/vector-icons";
 
 import { TouchableOpacity } from "react-native";
 
@@ -39,11 +40,11 @@ export default function BookmarkButton({ postId }: { postId: string }) {
       disabled={isLoading || !postId}
       style={{ opacity: isLoading ? 0.5 : 1 }}
     >
-      <Ionicons
-        name={savedStatus?.saved ? "bookmark" : "bookmark-outline"}
-        size={22}
-        color={iconColor}
-      />
+      {savedStatus?.saved ? (
+        <BookmarkBold width={16} height={16} color={iconColor} />
+      ) : (
+        <Bookmark width={16} height={16} color={iconColor} />
+      )}
     </TouchableOpacity>
   );
 }

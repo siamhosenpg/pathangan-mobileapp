@@ -5,12 +5,11 @@ import { useGetPostByIdQuery } from "@/redux/api/postApi";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AnswerDetailPage() {
   const { answerId } = useLocalSearchParams<{ answerId: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   const { data, isLoading, isError } = useGetAnswerByIdQuery(answerId);
 
@@ -21,12 +20,12 @@ export default function AnswerDetailPage() {
   const isPageLoading = isLoading || (!!questionId && questionLoading);
 
   return (
-    <View
-      className="flex-1 bg-background-secondary dark:bg-dark-background-secondary"
-      style={{ paddingTop: insets.top }}
+    <SafeAreaView
+      edges={["top"]}
+      className="flex-1 bg-background-secondary dark:bg-dark-background-secondary pb-2"
     >
       {/* Header */}
-      <View className="flex-row items-center gap-3 px-4 py-3">
+      <View className="flex-row items-center gap-3 px-4 py-3 pt-4">
         <TouchableOpacity
           onPress={() => router.back()}
           className="w-9 h-9 rounded-full bg-background dark:bg-dark-background items-center justify-center"
@@ -133,6 +132,6 @@ export default function AnswerDetailPage() {
           <AnswerDetail answer={data.answer} />
         </ScrollView>
       )}
-    </View>
+    </SafeAreaView>
   );
 }

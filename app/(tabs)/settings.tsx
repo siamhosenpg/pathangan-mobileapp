@@ -17,6 +17,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
@@ -29,9 +30,12 @@ export default function SettingsScreen() {
   const accent = "#00914d";
 
   return (
-    <View className="flex-1 bg-background dark:bg-dark-background">
+    <SafeAreaView
+      edges={["top"]}
+      className="flex-1 bg-background dark:bg-dark-background"
+    >
       {/* ── Header ── */}
-      <View className="flex-row items-center gap-3 px-5 pt-14 pb-3 border-b border-border dark:border-dark-border">
+      <View className="flex-row items-center gap-3 px-5 pt-6 pb-3 border-b border-border dark:border-dark-border">
         <TouchableOpacity
           onPress={() => router.back()}
           className="w-9 h-9 rounded-full bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border items-center justify-center"
@@ -210,6 +214,6 @@ export default function SettingsScreen() {
           প্রসঙ্গ v1.0.0
         </Text>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

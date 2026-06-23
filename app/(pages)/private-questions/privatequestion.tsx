@@ -4,6 +4,7 @@ import PrivateQuestionHeader from "@/components/ui/headers/PrivateQuestionHeader
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Animated, Dimensions, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
@@ -38,7 +39,10 @@ const Index = () => {
   };
 
   return (
-    <View className="flex-1 bg-background dark:bg-dark-background">
+    <SafeAreaView
+      edges={["top"]}
+      className="flex-1 bg-background dark:bg-dark-background"
+    >
       <PrivateQuestionHeader
         activeTab={activeTab}
         onTabChange={switchTab}
@@ -63,7 +67,7 @@ const Index = () => {
           {sentMounted && <SentTab onPress={handlePress} />}
         </View>
       </Animated.View>
-    </View>
+    </SafeAreaView>
   );
 };
 
