@@ -53,6 +53,17 @@ const userApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
+
+    // ✅ নতুন এটা যোগ হলো
+    savePushToken: builder.mutation<{ message: string }, { pushToken: string }>(
+      {
+        query: (body) => ({
+          url: "/users/push-token",
+          method: "POST",
+          body,
+        }),
+      },
+    ),
   }),
 });
 
@@ -62,4 +73,5 @@ export const {
   useGetPeopleSuggestionsQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useSavePushTokenMutation, // ✅ এটাও export হলো
 } = userApi;

@@ -1,3 +1,4 @@
+import GreenMark from "@/components/ui/badges/GreenMark";
 import { Notification } from "@/types/notification/notificationTypes";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -71,12 +72,12 @@ const NotificationCard = ({ item, onRead, onDelete }: Props) => {
     <TouchableOpacity
       onPress={handlePress}
       activeOpacity={0.9}
-      className={`flex-row items-center px-4 py-3.5 gap-3    ${
+      className={`flex-row items-start px-4 py-3.5 gap-3    ${
         item.read ? "bg-transparent" : "bg-accent/10"
       }`}
     >
       {/* avatar */}
-      <View className="w-11 h-11 rounded-full bg-accent/30 items-center justify-center overflow-hidden">
+      <View className="w-12 h-12 rounded-full bg-accent/30 items-center justify-center overflow-hidden">
         {item.actorId?.profileImage ? (
           <Image
             source={{ uri: item.actorId.profileImage }}
@@ -92,12 +93,18 @@ const NotificationCard = ({ item, onRead, onDelete }: Props) => {
 
       {/* content */}
       <View className="flex-1">
-        <Text className="text-sm text-text dark:text-dark-text">
-          <Text className="font-bold text-text dark:text-dark-text">
-            {item.actorId.name}{" "}
-          </Text>
-          {getText(item.type)}
-        </Text>
+        <View className=" text-text dark:text-dark-text">
+          <View className=" flex-row items-center gap-1">
+            <Text className="font-bold text-text dark:text-dark-text">
+              {item.actorId.name}
+            </Text>
+            <GreenMark
+              mark={item.actorId.greenmarkVerified || false}
+              size={16}
+            />
+          </View>
+          <Text>{getText(item.type)}</Text>
+        </View>
 
         <Text className="text-xs font-medium text-text-tertiary dark:text-dark-text-tertiary mt-1">
           {timeAgo(item.createdAt)}

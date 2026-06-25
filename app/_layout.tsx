@@ -1,5 +1,6 @@
 import AuthInitializer from "@/components/ui/AuthInitializer";
 import { BottomSheetProvider } from "@/components/ui/bottom-sheet/BottomSheetProvider";
+import { usePushNotification } from "@/hooks/notification/usePushNotification";
 import { store } from "@/redux/store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack } from "expo-router";
@@ -13,6 +14,12 @@ import "../global.css";
 import "../i18n";
 
 const THEME_KEY = "app_color_scheme";
+
+// AuthInitializer এর পাশে এই component বানাও
+function AppInit() {
+  usePushNotification();
+  return null;
+}
 
 export default function RootLayout() {
   const { setColorScheme } = useColorScheme();
@@ -43,6 +50,7 @@ export default function RootLayout() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <BottomSheetProvider>
             <AuthInitializer />
+            <AppInit /> {/* ✅ এটা যোগ করো */}
             <Stack
               screenOptions={{
                 headerShown: false,

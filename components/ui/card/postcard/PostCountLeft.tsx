@@ -25,21 +25,21 @@ const PostCountLeft = ({
     >
       <View className="flex-row items-center gap-3">
         <View className="flex-row items-center gap-1">
-          <Text className="text-sm font-semibold  text-text-tertiary dark:text-dark-text-tertiary">
+          <Text className="text-xs font-medium  text-text-tertiary dark:text-dark-text-tertiary">
             {t("countLove", { count: n(likesCount) })}
           </Text>
         </View>
 
         {commentsCount > 0 && (
           <View className="flex-row items-center gap-1">
-            <Text className="font-semibold text-sm text-text-tertiary dark:text-dark-text-tertiary">
+            <Text className="font-medium text-xs text-text-tertiary dark:text-dark-text-tertiary">
               {t("countComments", { count: n(commentsCount) })}
             </Text>
           </View>
         )}
 
         <View className="flex-row items-center gap-1">
-          <Text className="font-semibold text-sm text-text-tertiary dark:text-dark-text-tertiary">
+          <Text className="font-medium text-xs text-text-tertiary dark:text-dark-text-tertiary">
             {t("countShare", { count: n(sharesCount) })}
           </Text>
         </View>
@@ -47,7 +47,7 @@ const PostCountLeft = ({
       {/* ← views add */}
       {viewsCount > 0 && (
         <View className="flex-row  items-center gap-1">
-          <Text className="font-semibold text-sm text-text-tertiary dark:text-dark-text-tertiary">
+          <Text className="font-medium text-xs text-text-tertiary dark:text-dark-text-tertiary">
             {t("countViews", { count: n(viewsCount) })}
           </Text>
         </View>
