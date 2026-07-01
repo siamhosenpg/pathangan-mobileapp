@@ -1,10 +1,9 @@
-import { MenuDrawer } from "@/components/layout/menu/MenuDrawer";
 import { useRouter } from "expo-router";
-import { useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
 import AddIcon from "@/assets/icons/add.svg";
 import BellIcon from "@/assets/icons/bell.svg";
+import { useDrawer } from "@/components/layout/menu/DrawerContext";
 import NotificationBadge from "@/components/layout/notifications/NotificationBadge";
 import NotificationPanel from "@/components/layout/notifications/NotificationPanel";
 import { useBottomSheet } from "@/components/ui/bottom-sheet/useBottomSheet";
@@ -15,7 +14,7 @@ import { useTranslation } from "react-i18next";
 
 export function Header({ title }: { title?: string }) {
   const router = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const { openDrawer } = useDrawer(); // ← এটা যোগ করো
   const { colorScheme } = useColorScheme();
   const { t } = useTranslation();
   const isDark = colorScheme === "dark";
@@ -35,9 +34,9 @@ export function Header({ title }: { title?: string }) {
     <>
       <View className="bg-background dark:bg-dark-background px-5 pt-4 pb-3  border-b border-border dark:border-dark-border">
         <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-center gap-2 flex-1 mr-3">
             {/* menu button — icon এর বদলে profile image */}
-            <TouchableOpacity onPress={() => setMenuOpen(true)}>
+            <TouchableOpacity onPress={openDrawer}>
               {user?.profileImage ? (
                 <View
                   style={{
@@ -56,7 +55,6 @@ export function Header({ title }: { title?: string }) {
                   />
                 </View>
               ) : (
-                // profile image না থাকলে নামের প্রথম অক্ষর দিয়ে avatar
                 <View
                   style={{
                     width: 30,
@@ -80,14 +78,22 @@ export function Header({ title }: { title?: string }) {
               )}
             </TouchableOpacity>
             {title ? (
-              <View>
-                <Text className="text-lg font-bold text-gray-900 dark:text-dark-text ">
+              <View className="flex-shrink">
+                <Text
+                  className="text-lg font-bold text-gray-900 dark:text-dark-text "
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
                   {title}
                 </Text>
               </View>
             ) : (
-              <View>
-                <Text className="text-lg font-bold  text-text dark:text-dark-text">
+              <View className="flex-shrink">
+                <Text
+                  className="text-lg font-bold text-text dark:text-dark-text "
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
                   {user?.name}
                 </Text>
               </View>
@@ -109,9 +115,6 @@ export function Header({ title }: { title?: string }) {
           </View>
         </View>
       </View>
-
-      {/* drawer */}
-      <MenuDrawer visible={menuOpen} onClose={() => setMenuOpen(false)} />
     </>
   );
 }

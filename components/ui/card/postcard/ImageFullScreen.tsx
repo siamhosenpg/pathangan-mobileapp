@@ -28,6 +28,7 @@ const ImageFullScreen = ({ images, initialIndex, visible, onClose }: Props) => {
       transparent
       animationType="fade"
       statusBarTranslucent
+      onRequestClose={onClose} // ✅ এটুকুই — Android back + iOS swipe
     >
       <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.96)" }}>
         {/* Close button */}

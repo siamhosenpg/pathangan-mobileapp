@@ -3,7 +3,7 @@ import HeartBold from "@/assets/icons/heartBold.svg";
 import { useIconColor } from "@/hooks/useIconColor";
 import { useToggleReactionMutation } from "@/redux/api/reactionApi";
 import * as Haptics from "expo-haptics";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Animated, Text, TouchableOpacity } from "react-native";
 
@@ -14,17 +14,14 @@ const LikeButton = ({
   postId: string;
   initialLiked: boolean;
 }) => {
-  const [isLiked, setIsLiked] = useState(initialLiked);
   const [toggleReaction, { isLoading }] = useToggleReactionMutation();
   const { primary, accent } = useIconColor();
 
+  // ✅ local state নেই — সরাসরি prop থেকে পড়ছি
+  // RTK Query cache update হলে parent re-render হবে, নতুন prop আসবে
+  const isLiked = initialLiked;
   const iconColor = isLiked ? accent : primary;
   const { t } = useTranslation();
-  // liked হলে accent, না হলে dark/light text color
-
-  useEffect(() => {
-    setIsLiked(initialLiked);
-  }, [initialLiked]);
 
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -46,8 +43,9 @@ const LikeButton = ({
     ]).start();
 
     try {
-      const res = await toggleReaction(postId).unwrap();
-      setIsLiked(res.liked);
+      await toggleReaction(postId).unwrap();
+      // ✅ setIsLiked নেই — RTK Query optimistic update cache ঠিক করবে
+      // cache update → parent re-render → নতুন initialLiked prop আসবে
     } catch (err) {
       console.error(err);
     }
@@ -58,7 +56,7 @@ const LikeButton = ({
       onPress={handleLike}
       disabled={isLoading}
       className="flex-row items-center gap-1.5 py-3.5"
-      style={{ opacity: isLoading ? 0.6 : 1 }}
+      style={{ opacity: isLoading ? 1 : 1 }}
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         {isLiked ? (

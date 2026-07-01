@@ -34,14 +34,14 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
   const { open } = useBottomSheet();
 
   return (
-    <View className="px-4 pb-1 flex-row items-center justify-between">
+    <View className="px-4 pb-1 flex-row items-center justify-between gap-2">
       <View className="flex-row items-center justify-start gap-2 flex-1">
         <TouchableOpacity
           className="border border-border dark:border-dark-border"
           onPress={() => router.push(`/${user.username}` as any)}
           style={{
-            width: 40,
-            height: 40,
+            width: 38,
+            height: 38,
             borderRadius: 99,
             overflow: "hidden",
             backgroundColor: "rgba(0,145,77,0.15)",
@@ -75,11 +75,13 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
           )}
         </TouchableOpacity>
 
-        <View style={{ flex: 1 }}>
-          <View className="flex-row  items-center gap-1">
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <View className="flex-row items-center gap-1">
             <Text
-              className="flex-row items-center gap-1 text-text dark:text-dark-text"
-              style={{ fontWeight: "600", fontSize: 14 }}
+              className="text-text dark:text-dark-text"
+              style={{ fontWeight: "600", fontSize: 14, flexShrink: 1 }}
+              numberOfLines={1}
+              ellipsizeMode="tail"
             >
               {user.name}
             </Text>
@@ -95,7 +97,7 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
           </View>
           <Text className="text-text-secondary dark:text-dark-text-secondary">
             <TimeAgo
-              className="text-sm text-text-tertiary dark:text-dark-text-tertiary font-medium"
+              className="text-xs text-text-tertiary dark:text-dark-text-tertiary font-semibold"
               date={createdAt}
             />
           </Text>

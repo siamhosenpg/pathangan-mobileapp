@@ -74,6 +74,8 @@
   "saveChanges": "Save Changes",
   "cancel": "Cancel",
   "deleteAccount": "Delete Account",
+  "delete": "Delete",
+  "deleteing": "Deleteing",
   "deleteAccountConfirm": "Are you sure you want to delete your account? This action cannot be undone.",
   "yesDelete": "Yes, delete my account",
   "noCancel": "No, keep my account",
@@ -92,6 +94,7 @@
   "showLess": "Show less",
   "community": "Home",
   "questions": "Questions",
+  "question": "Question",
   "search": "Search",
   "failed_to_load_questions": "Failed to load questions",
   "failed_to_load_courses": "Failed to load courses",
@@ -100,5 +103,6 @@
   "privateQuestions": "Private Questions",
   "askQuestion": "Ask Question",
   "privacyPolicy": "Privacy Policy",
-  "termsAndConditions": "Terms and Conditions"
+  "termsAndConditions": "Terms and Conditions",
+  "pressAgainToExit": "Press again to exit."
 }

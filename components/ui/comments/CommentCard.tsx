@@ -1,16 +1,9 @@
 import { useDeleteCommentMutation } from "@/redux/api/commentsApi";
 import { useAppSelector } from "@/redux/hooks";
 import type { Comment } from "@/types/commentsTypes";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { useTranslation } from "react-i18next";
+import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
 import GreenMark from "../badges/GreenMark";
 import TimeAgo from "../datetime/TimeAgo";
 
@@ -21,7 +14,7 @@ interface Props {
 
 const CommentCard = ({ comment, onReply }: Props) => {
   const router = useRouter();
-
+  const { t } = useTranslation();
   const currentUser = useAppSelector((state) => state.auth.user);
 
   const currentUserId = currentUser?.id || (currentUser as any)?._id;
@@ -65,12 +58,12 @@ const CommentCard = ({ comment, onReply }: Props) => {
   const initials = user.name?.charAt(0).toUpperCase() ?? "?";
 
   return (
-    <View className="flex-row gap-2.5 px-4 py-3 bg-background dark:bg-dark-background">
+    <View className="flex-row gap-2.5 px-2 py-2 border-b border-border/20 dark:border-dark-border/20">
       {/* Avatar */}
       <TouchableOpacity
         onPress={() => router.push(`/${user.username}` as any)}
         activeOpacity={0.8}
-        className="w-9 h-9 rounded-full overflow-hidden bg-accent/10 border border-border dark:border-dark-border flex-shrink-0 mt-0.5"
+        className="w-12 h-12 rounded-full overflow-hidden bg-accent/10 border border-border dark:border-dark-border flex-shrink-0 mt-0.5"
       >
         {user.profileImage ? (
           <Image
@@ -86,11 +79,11 @@ const CommentCard = ({ comment, onReply }: Props) => {
       </TouchableOpacity>
 
       {/* Content */}
-      <View className="flex-1">
+      <View className="flex-1 mt-1">
         {/* Bubble */}
-        <View className="bg-background-secondary dark:bg-dark-background-secondary rounded-2xl rounded-tl-none px-3.5 py-2.5 border border-border/40 dark:border-dark-border/30">
+        <View className=" ">
           {/* Name */}
-          <View className="flex-row items-center justify-between mb-1">
+          <View className="flex-row items-center justify-between ">
             <View className="flex-row items-center gap-1.5">
               <View>
                 <Text
@@ -101,53 +94,24 @@ const CommentCard = ({ comment, onReply }: Props) => {
                 </Text>
                 <GreenMark mark={user.greenmarkVerified || false} size={18} />
               </View>
-
-              {isOwn && (
-                <View className="px-1.5 py-0.5 rounded-full bg-accent/10">
-                  <Text className="text-[10px] font-medium text-accent">
-                    আপনি
-                  </Text>
-                </View>
-              )}
             </View>
-
-            {/* DELETE ICON (top-right, clean) */}
-            {isOwn && (
-              <TouchableOpacity
-                onPress={handleDelete}
-                disabled={isDeleting}
-                className="w-7 h-7 items-center justify-center rounded-full bg-red-500/10"
-              >
-                {isDeleting ? (
-                  <ActivityIndicator size="small" color="red" />
-                ) : (
-                  <MaterialIcons
-                    name="delete-outline"
-                    size={20}
-                    color="black"
-                  />
-                )}
-              </TouchableOpacity>
-            )}
           </View>
 
           {/* Text */}
-          <Text className="text-sm text-text dark:text-dark-text leading-relaxed">
+          <Text className="text-base text-text py-0.5 dark:text-dark-text leading-relaxed ">
             {comment.text}
           </Text>
         </View>
 
         {/* Meta row (reply + time inline clean) */}
-        <View className="flex-row items-center gap-3 mt-1.5 px-1">
+        <View className="flex-row items-center gap-3 ">
           <TimeAgo
             date={comment.createdAt}
-            className="text-[11px] text-text-tertiary dark:text-dark-text-tertiary"
+            className="text-[11px] font-medium text-text-tertiary dark:text-dark-text-tertiary"
           />
 
           {onReply && (
             <>
-              <View className="w-0.5 h-0.5 rounded-full bg-text-tertiary dark:bg-dark-text-tertiary" />
-
               <TouchableOpacity
                 onPress={() => onReply(comment)}
                 hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
@@ -157,6 +121,24 @@ const CommentCard = ({ comment, onReply }: Props) => {
                 </Text>
               </TouchableOpacity>
             </>
+          )}
+          {/* DELETE ICON (top-right, clean) */}
+          {isOwn && (
+            <TouchableOpacity
+              onPress={handleDelete}
+              disabled={isDeleting}
+              className=" "
+            >
+              {isDeleting ? (
+                <Text className="text-sm font-medium text-text-tertiary dark:text-dark-text-tertiary">
+                  {t("deleteing")}
+                </Text>
+              ) : (
+                <Text className="text-sm font-medium text-red-600">
+                  {t("delete")}
+                </Text>
+              )}
+            </TouchableOpacity>
           )}
         </View>
       </View>

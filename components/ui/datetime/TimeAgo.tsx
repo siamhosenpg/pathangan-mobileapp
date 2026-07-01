@@ -25,8 +25,17 @@ const TimeAgo = ({ date, className }: Props) => {
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
-    // ৫ দিনের বেশি → তারিখ দেখাও
-    if (days >= 5) {
+    // ৪ মাস (calendar month হিসেবে) এর বেশি হলে → তারিখ দেখাও
+    let monthsDiff =
+      (now.getFullYear() - past.getFullYear()) * 12 +
+      (now.getMonth() - past.getMonth());
+
+    // দিন সংখ্যা এখনো পার হয়নি সেটাও হিসাব করা
+    if (now.getDate() < past.getDate()) {
+      monthsDiff -= 1;
+    }
+
+    if (monthsDiff >= 4) {
       const day = past.getDate();
       const year = past.getFullYear();
 
@@ -66,7 +75,7 @@ const TimeAgo = ({ date, className }: Props) => {
       }
     }
 
-    // ২৪ ঘণ্টার বেশি → X দিন আগে
+    // ২৪ ঘণ্টার বেশি → X দিন আগে (৪ মাস পর্যন্ত)
     if (hours >= 24) {
       return isBn ? `${n(days)} দিন আগে` : `${days}d ago`;
     }

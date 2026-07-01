@@ -32,7 +32,15 @@
     },
     "plugins": [
       "expo-router",
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/android-icon-foreground.png",
+          "color": "#E6F4FE",
+          "androidMode": "default",
+          "androidCollapsedTitle": "%(count)s নতুন নোটিফিকেশন"
+        }
+      ],
       [
         "expo-splash-screen",
         {

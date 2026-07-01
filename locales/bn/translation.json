@@ -74,10 +74,13 @@
   "saveChanges": "পরিবর্তন সংরক্ষণ করুন",
   "cancel": "বাতিল",
   "deleteAccount": "অ্যাকাউন্ট মুছে দিন",
+  "delete": "মুছুন",
+  "deleteing": "মুছে ফেলা হচ্ছে...",
   "readMore": "আরও পড়ুন",
   "showLess": "কম দেখান",
   "community": "কমিউনিটি",
   "questions": "প্রশ্নসমূহ",
+  "question": "প্রশ্ন",
   "search": "তথ্য খুঁজুন",
   "courses": "কোর্সসমূহ",
   "failed_to_load_questions": "প্রশ্ন লোড করা যায়নি",
@@ -88,5 +91,6 @@
   "noQuestions": "এখনও কোন প্রশ্ন নেই",
 
   "privacyPolicy": "গোপনীয়তা নীতি",
-  "termsAndConditions": "শর্তাবলী"
+  "termsAndConditions": "শর্তাবলী",
+  "pressAgainToExit": "আবার চাপলে বের হয়ে যাবে।"
 }

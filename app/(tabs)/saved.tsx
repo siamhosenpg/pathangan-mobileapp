@@ -27,7 +27,7 @@ export default function SavedScreen() {
         {/* Posts scroll */}
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerClassName="  pb-32 gap-2"
+          contentContainerClassName="  pb-32 gap-0"
         >
           {isDefaultColLoading ? (
             <View className="items-center py-16">

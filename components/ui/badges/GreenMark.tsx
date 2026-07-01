@@ -1,5 +1,5 @@
+import Badge from "@/assets/icons/badge.svg";
 import { useIconColor } from "@/hooks/useIconColor";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React from "react";
 import { StyleSheet, View, ViewStyle } from "react-native";
 
@@ -15,7 +15,7 @@ const GreenMark = ({ mark, size = 18, style }: GreenMarkProps) => {
 
   return (
     <View style={[styles.container, style]} className=" text-accent">
-      <MaterialIcons name="verified" size={size} color={accent} />
+      <Badge width={size} height={size} color={accent} />
     </View>
   );
 };

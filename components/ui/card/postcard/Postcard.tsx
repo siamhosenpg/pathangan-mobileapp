@@ -13,6 +13,7 @@ import CommentsButton from "../../buttons/CommentsButton";
 import LikeButton from "../../buttons/LikeButton";
 import ShareButton from "../../buttons/ShareButton";
 import CommentSheet from "../../comments/CommentSheet";
+import ImageFullScreen from "./ImageFullScreen";
 import ImageSlider from "./ImageSlider";
 import PostVideo from "./PostVideo";
 
@@ -36,6 +37,7 @@ const DynamicImage = ({
   onPress: () => void;
 }) => {
   const [imageHeight, setImageHeight] = useState<number>(screenWidth);
+  const [fullScreenVisible, setFullScreenVisible] = useState(false); // নতুন
 
   useEffect(() => {
     Image.getSize(
@@ -54,14 +56,31 @@ const DynamicImage = ({
   }, [uri]);
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
-      <Image
-        source={{ uri }}
-        style={{ width: screenWidth, height: imageHeight, borderRadius: 0 }}
-        resizeMode="cover"
-        className=" border-t border-b border-border/60 dark:border-dark-border/70"
+    <>
+      <TouchableOpacity
+        onPress={() => setFullScreenVisible(true)} // onPress এর বদলে full screen open
+        activeOpacity={0.9}
+      >
+        <Image
+          source={{ uri }}
+          style={{
+            width: screenWidth,
+            height: imageHeight,
+            borderRadius: 0,
+          }}
+          resizeMode="cover"
+          className="border-t border-b border-border/60 dark:border-dark-border/70"
+        />
+      </TouchableOpacity>
+
+      {/* Full screen modal */}
+      <ImageFullScreen
+        images={[uri]}
+        initialIndex={0}
+        visible={fullScreenVisible}
+        onClose={() => setFullScreenVisible(false)}
       />
-    </TouchableOpacity>
+    </>
   );
 };
 

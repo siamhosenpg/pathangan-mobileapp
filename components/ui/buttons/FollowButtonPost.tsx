@@ -105,7 +105,7 @@ const FollowButtonPost = ({
       disabled={isLoading || localFollowing}
       activeOpacity={0.8}
       style={animatedStyle}
-      className="px-2.5 py-1 flex-row gap-1 items-center justify-center rounded-full bg-accent"
+      className="px-2 py-0.5 flex-row gap-1 items-center justify-center rounded-full bg-accent"
     >
       <Text className="font-semibold text-xs" style={{ color: "#fff" }}>
         {isLoading ? "..." : t("follow")}

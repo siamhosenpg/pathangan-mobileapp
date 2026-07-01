@@ -52,7 +52,10 @@ const ProfileTopSection = ({ data }: Props) => {
       <View className="px-4 pb-4">
         <View className="flex-row items-center gap-2 justify-start ">
           {/* Avatar */}
-          <View className="w-20 h-20 rounded-full border border-border dark:border-dark-border overflow-hidden bg-accent/20">
+          <View
+            className="w-20 h-20 rounded-full border border-border dark:border-dark-border overflow-hidden bg-accent/20"
+            style={{ flexShrink: 0 }}
+          >
             {data.profileImage ? (
               <Image
                 source={{ uri: data.profileImage }}
@@ -69,16 +72,21 @@ const ProfileTopSection = ({ data }: Props) => {
           </View>
 
           {/* Name + Rating */}
-          <View className="  ">
+          <View style={{ flex: 1, minWidth: 0 }}>
             <View className="flex-row items-center gap-1">
-              <Text className="text-lg font-bold text-text dark:text-dark-text">
+              <Text
+                className="text-lg font-bold text-text dark:text-dark-text"
+                style={{ flexShrink: 1, flex: 0 }}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
                 {data.name}
               </Text>
               {data?.greenmarkVerified && (
                 <GreenMark mark={!!data.greenmarkVerified} size={16} />
               )}
             </View>
-            <View className="mt-0.5">
+            <View className="mt-1">
               <UserRating userId={data._id} />
             </View>
           </View>
