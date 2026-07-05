@@ -53,6 +53,18 @@ const answersApi = baseApi.injectEndpoints({
         { type: "Answer", id: `count-${questionId}` },
       ],
     }),
+    deleteAnswer: builder.mutation<
+      { success: boolean; message?: string },
+      string
+    >({
+      query: (answerId) => ({
+        url: `/answers/${answerId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, answerId) => [
+        { type: "Answer", id: answerId },
+      ],
+    }),
 
     voteAnswer: builder.mutation<VoteAnswerResponse, VoteAnswerPayload>({
       query: ({ answerId, voteType }) => ({
@@ -94,5 +106,6 @@ export const {
   useGetAnswerCountQuery,
   useGetAnswerByIdQuery,
   useCreateAnswerMutation,
+  useDeleteAnswerMutation,
   useVoteAnswerMutation,
 } = answersApi;

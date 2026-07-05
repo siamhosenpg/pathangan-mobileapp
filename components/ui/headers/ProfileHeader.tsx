@@ -111,7 +111,16 @@ function OtherProfileHeader({
     <View className="bg-background dark:bg-dark-background px-4 pt-4 pb-2  flex-row items-center justify-between">
       {/* Left: Back + Name */}
       <View className="flex-row items-center gap-3 flex-1 mr-3">
-        <TouchableOpacity onPress={() => router.back()} className="p-1">
+        <TouchableOpacity
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/(tabs)/feed"); // আপনার feed route অনুযায়ী path দিন
+            }
+          }}
+          className="p-1"
+        >
           <Ionicons
             name="arrow-back"
             size={22}

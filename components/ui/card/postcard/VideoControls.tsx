@@ -10,8 +10,8 @@ interface Props {
   currentTime: number;
   duration: number;
   isLandscape: boolean;
-  screenW: number;
-  screenH: number;
+  containerW: number; // rotated container এর actual width
+  containerH: number; // rotated container এর actual height
   onPlayPause: () => void;
   onClose: () => void;
   onRotate: () => void;
@@ -34,8 +34,8 @@ const VideoControls = ({
   currentTime,
   duration,
   isLandscape,
-  screenW,
-  screenH,
+  containerW,
+  containerH,
   onPlayPause,
   onClose,
   onRotate,
@@ -46,21 +46,8 @@ const VideoControls = ({
   const dispatch = useDispatch();
   const isMuted = useSelector((state: RootState) => state.video.isMuted);
 
-  // Controls landscape এ rotate হয়, তাই W/H swap
-  const controlW = isLandscape ? screenH : screenW;
-  const controlH = isLandscape ? screenW : screenH;
-  const paddingTop = isLandscape ? 16 : 52;
-  const paddingBottom = isLandscape ? 16 : 44;
-
-  // Landscape transform:
-  // controls view টা portrait size (screenW x screenH) এ আছে
-  // 90deg rotate করলে center এ থাকে
-  // কিন্তু rotated এর পর W হয় screenH, H হয় screenW
-  // তাই translateX/Y দিয়ে সরাতে হবে
-  const diff = (screenH - screenW) / 2;
-  const controlTransform = isLandscape
-    ? [{ rotate: "90deg" }, { translateX: diff }, { translateY: -diff }]
-    : [];
+  const paddingTop = isLandscape ? 14 : 52;
+  const paddingBottom = isLandscape ? 14 : 44;
 
   return (
     <View
@@ -68,9 +55,8 @@ const VideoControls = ({
         position: "absolute",
         top: 0,
         left: 0,
-        width: screenW,
-        height: screenH,
-        transform: controlTransform,
+        width: containerW,
+        height: containerH,
       }}
     >
       {/* ── Top bar ── */}
@@ -160,8 +146,8 @@ const VideoControls = ({
           position: "absolute",
           top: 0,
           left: 0,
-          width: screenW,
-          height: screenH,
+          width: containerW,
+          height: containerH,
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "center",
@@ -249,10 +235,9 @@ const VideoControls = ({
           paddingBottom,
           paddingTop: 16,
           paddingHorizontal: PADDING,
-          backgroundColor: "rgba(0,0,0,0.45)",
+          backgroundColor: "rgba(0,0,0,0.5)",
         }}
       >
-        {/* Time */}
         <View
           style={{
             flexDirection: "row",

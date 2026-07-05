@@ -36,7 +36,7 @@ export function AnswerRating({ answerId }: Props) {
   const activeRating = pressed > 0 ? pressed : currentRating;
 
   return (
-    <View className="mt-4 pt-4 border-t border-border dark:border-dark-border">
+    <View className="mt-4 pt-4 border-t border-border dark:border-dark-border ">
       {/* লেবেল */}
       <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary mb-2">
         {hasRated ? "আপনার রেটিং" : "এই উত্তরটি রেট করুন"}

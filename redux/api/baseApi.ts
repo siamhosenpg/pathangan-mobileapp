@@ -27,6 +27,8 @@ export const baseApi = createApi({
     "Notification",
     "PrivateQuestion",
     "PrivateAnswer",
+    "Handout",
+    "Chapter",
   ],
   endpoints: () => ({}),
 });

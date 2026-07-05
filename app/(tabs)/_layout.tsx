@@ -144,17 +144,7 @@ export default function TabLayout() {
                 },
               }}
             />
-            <Tabs.Screen
-              name="sheets"
-              options={{
-                tabBarButton: hapticTabButton,
-                title: t("sheets"),
-                tabBarIcon: ({ color, focused }) => {
-                  const Icon = focused ? SheetBold : Sheet;
-                  return <Icon width={24} height={24} color={color} />;
-                },
-              }}
-            />
+
             <Tabs.Screen
               name="people"
               options={{
@@ -166,11 +156,41 @@ export default function TabLayout() {
                 },
               }}
             />
+            <Tabs.Screen
+              name="handouts/index"
+              options={{
+                tabBarButton: hapticTabButton,
+                title: t("handouts"),
+                tabBarIcon: ({ color, focused }) => {
+                  const Icon = focused ? SheetBold : Sheet;
+                  return <Icon width={24} height={24} color={color} />;
+                },
+              }}
+            />
             <Tabs.Screen name="profile" options={{ href: null }} />
             <Tabs.Screen name="[username]" options={{ href: null }} />
             <Tabs.Screen name="create" options={{ href: null }} />
             <Tabs.Screen name="settings" options={{ href: null }} />
             <Tabs.Screen name="saved" options={{ href: null }} />
+
+            <Tabs.Screen name="handouts/create" options={{ href: null }} />
+            <Tabs.Screen name="handouts/mine" options={{ href: null }} />
+            <Tabs.Screen
+              name="handouts/[handoutId]/index"
+              options={{ href: null }}
+            />
+            <Tabs.Screen
+              name="handouts/[handoutId]/chapter/[chapterId]"
+              options={{ href: null }}
+            />
+            <Tabs.Screen
+              name="handouts/manage/[handoutId]/index"
+              options={{ href: null }}
+            />
+            <Tabs.Screen
+              name="handouts/manage/[handoutId]/add-chapter"
+              options={{ href: null }}
+            />
           </Tabs>
         </DrawerLayout>
       </AuthGuard>

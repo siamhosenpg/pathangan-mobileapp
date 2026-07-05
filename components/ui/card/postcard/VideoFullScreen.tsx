@@ -46,10 +46,22 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
   const startTimeAppliedRef = useRef(false);
   const isLandscapeRef = useRef(false);
 
-  // landscape এ trackWidth = SCREEN_H - PADDING*2
-  // portrait এ trackWidth = SCREEN_W - PADDING*2
-  const getTrackWidth = () =>
-    (isLandscapeRef.current ? SCREEN_H : SCREEN_W) - PADDING * 2;
+  // ── Landscape হলে container size swap ──
+  // Portrait:  container = SCREEN_W x SCREEN_H
+  // Landscape: wrapper কে 90deg rotate করলে
+  //            visually SCREEN_H wide, SCREEN_W tall হয়
+  //            কিন্তু layout এ এখনো SCREEN_W x SCREEN_H
+  //            তাই container কে SCREEN_H x SCREEN_W দিলে
+  //            rotate এর পর ঠিকঠাক fit হবে
+  const containerW = isLandscape ? SCREEN_H : SCREEN_W;
+  const containerH = isLandscape ? SCREEN_W : SCREEN_H;
+
+  // progress bar এর track width — container এর width অনুযায়ী
+  const trackWidth = containerW - PADDING * 2;
+  const trackWidthRef = useRef(trackWidth);
+  useEffect(() => {
+    trackWidthRef.current = trackWidth;
+  }, [trackWidth]);
 
   const player = useVideoPlayer(visible ? uri : null, (p) => {
     p.loop = true;
@@ -186,9 +198,18 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
   };
 
   // ── PanResponder ──
-  // Landscape এ touch এর X/Y axes swap হয়।
-  // Rotated view এ আঙুল Y বরাবর সরালে locationX পাল্টায়।
-  // তাই landscape এ locationY দিয়ে seek করতে হবে।
+  // Wrapper টা rotate হয় কিন্তু touch coordinate সবসময়
+  // screen এর portrait coordinate এ আসে।
+  // তাই landscape এ locationX আর locationY swap করতে হবে।
+  // Landscape এ progress bar portrait এ vertically আছে —
+  // আঙুল উপর-নিচ সরালে = progress বাড়া-কমা
+  // portrait এ bottom এ bar থাকে, landscape এ rotate হয়ে
+  // right side এ চলে যায় visually।
+  // locationX সবসময় screen এর X (landscape এ = portrait Y)
+  // কিন্তু rotated container এ bar টা portrait এর মতোই
+  // horizontally আছে (container নিজে rotated)
+  // তাই শুধু locationX ই যথেষ্ট — container rotate হওয়ায়
+  // touch coordinate আপনা-আপনি সঠিক হয়
   const progressPanResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -198,12 +219,8 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
         if (controlsTimer.current) clearTimeout(controlsTimer.current);
         const p = playerRef.current;
         if (!p || durationRef.current === 0) return;
-        const tw = getTrackWidth();
-        // landscape এ Y axis উল্টো হয় তাই (tw - locationY) নিই
-        const loc = isLandscapeRef.current
-          ? tw - e.nativeEvent.locationY
-          : e.nativeEvent.locationX;
-        const ratio = Math.min(Math.max(loc / tw, 0), 1);
+        const tw = trackWidthRef.current;
+        const ratio = Math.min(Math.max(e.nativeEvent.locationX / tw, 0), 1);
         setProgress(ratio);
         setCurrentTime(ratio * durationRef.current);
         p.currentTime = ratio * durationRef.current;
@@ -211,11 +228,8 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
       onPanResponderMove: (e: GestureResponderEvent) => {
         const p = playerRef.current;
         if (!p || durationRef.current === 0) return;
-        const tw = getTrackWidth();
-        const loc = isLandscapeRef.current
-          ? tw - e.nativeEvent.locationY
-          : e.nativeEvent.locationX;
-        const ratio = Math.min(Math.max(loc / tw, 0), 1);
+        const tw = trackWidthRef.current;
+        const ratio = Math.min(Math.max(e.nativeEvent.locationX / tw, 0), 1);
         setProgress(ratio);
         setCurrentTime(ratio * durationRef.current);
         p.currentTime = ratio * durationRef.current;
@@ -227,12 +241,17 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
     }),
   ).current;
 
-  // ── transform — video কে screen center এ রেখে rotate ──
-  // React Native transform origin হলো center।
-  // SCREEN_W x SCREEN_H view কে 90deg rotate করলে
-  // এটা SCREEN_H x SCREEN_W হয়ে যায় visually।
-  // কিন্তু center এ থাকে তাই translate দরকার নেই।
-  const videoTransform = isLandscape ? [{ rotate: "90deg" }] : [];
+  // ── Key insight ──
+  // Video আর Controls দুটোকে একটা wrapper এ রাখো
+  // wrapper টাকে rotate করো — দুটোই একসাথে ঘোরে
+  // container size: landscape হলে SCREEN_H x SCREEN_W
+  // rotate করার পর visually SCREEN_W x SCREEN_H screen fill করে
+  //
+  // Wrapper position: screen center এ রাখো
+  // top = (SCREEN_H - containerH) / 2
+  // left = (SCREEN_W - containerW) / 2
+  const wrapperTop = (SCREEN_H - containerH) / 2;
+  const wrapperLeft = (SCREEN_W - containerW) / 2;
 
   return (
     <Modal
@@ -244,98 +263,102 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
       supportedOrientations={["portrait"]}
     >
       <StatusBar hidden />
+
+      {/* Full screen black background */}
       <View
         style={{
           flex: 1,
           backgroundColor: "#000",
-          alignItems: "center",
-          justifyContent: "center",
         }}
       >
-        {/* Video */}
+        {/* ── Rotatable wrapper — video + controls একসাথে ── */}
         <View
           style={{
-            width: SCREEN_W,
-            height: SCREEN_H,
-            transform: videoTransform,
-            alignItems: "center",
-            justifyContent: "center",
+            position: "absolute",
+            top: wrapperTop,
+            left: wrapperLeft,
+            width: containerW,
+            height: containerH,
+            transform: isLandscape ? [{ rotate: "90deg" }] : [],
+            overflow: "hidden",
           }}
         >
+          {/* Video */}
           <VideoView
             player={player}
-            style={{ width: SCREEN_W, height: SCREEN_H }}
+            style={{ width: containerW, height: containerH }}
             contentFit="contain"
             nativeControls={false}
           />
-        </View>
 
-        {/* Tap overlay */}
-        <TouchableOpacity
-          onPress={handleVideoTap}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          activeOpacity={1}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-          }}
-        >
-          {is2x && (
-            <View
-              style={{
-                position: "absolute",
-                top: 56,
-                left: 0,
-                right: 0,
-                alignItems: "center",
-              }}
-            >
+          {/* Tap overlay */}
+          <TouchableOpacity
+            onPress={handleVideoTap}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            activeOpacity={1}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
+          >
+            {/* 2x badge */}
+            {is2x && (
               <View
                 style={{
-                  backgroundColor: "rgba(0,0,0,0.6)",
-                  borderRadius: 20,
-                  paddingHorizontal: 16,
-                  paddingVertical: 6,
-                  flexDirection: "row",
+                  position: "absolute",
+                  top: 56,
+                  left: 0,
+                  right: 0,
                   alignItems: "center",
-                  gap: 5,
-                  borderWidth: 1,
-                  borderColor: "rgba(255,255,255,0.15)",
                 }}
               >
-                <Ionicons name="flash" size={13} color="#FFD700" />
-                <Text
-                  style={{ color: "#fff", fontSize: 13, fontWeight: "600" }}
+                <View
+                  style={{
+                    backgroundColor: "rgba(0,0,0,0.6)",
+                    borderRadius: 20,
+                    paddingHorizontal: 16,
+                    paddingVertical: 6,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 5,
+                    borderWidth: 1,
+                    borderColor: "rgba(255,255,255,0.15)",
+                  }}
                 >
-                  ২× গতি
-                </Text>
+                  <Ionicons name="flash" size={13} color="#FFD700" />
+                  <Text
+                    style={{ color: "#fff", fontSize: 13, fontWeight: "600" }}
+                  >
+                    ২× গতি
+                  </Text>
+                </View>
               </View>
-            </View>
-          )}
-        </TouchableOpacity>
+            )}
+          </TouchableOpacity>
 
-        {/* Controls */}
-        {showControls && (
-          <VideoControls
-            isPlaying={isPlaying}
-            progress={progress}
-            currentTime={currentTime}
-            duration={duration}
-            isLandscape={isLandscape}
-            screenW={SCREEN_W}
-            screenH={SCREEN_H}
-            onPlayPause={handlePlayPause}
-            onClose={handleClose}
-            onRotate={handleRotate}
-            onSeekForward={handleSeekForward}
-            onSeekBackward={handleSeekBackward}
-            progressPanHandlers={progressPanResponder.panHandlers}
-          />
-        )}
+          {/* Controls — wrapper এর ভেতরেই */}
+          {showControls && (
+            <VideoControls
+              isPlaying={isPlaying}
+              progress={progress}
+              currentTime={currentTime}
+              duration={duration}
+              isLandscape={isLandscape}
+              containerW={containerW}
+              containerH={containerH}
+              onPlayPause={handlePlayPause}
+              onClose={handleClose}
+              onRotate={handleRotate}
+              onSeekForward={handleSeekForward}
+              onSeekBackward={handleSeekBackward}
+              progressPanHandlers={progressPanResponder.panHandlers}
+            />
+          )}
+        </View>
       </View>
     </Modal>
   );

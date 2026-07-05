@@ -65,6 +65,13 @@ export default function RootLayout() {
               <Stack.Screen name="profile/editprofile" />
               <Stack.Screen name="private-questions" />
               <Stack.Screen name="private-questions/[id]" />
+              {/* ✅ নতুন Handout রুটগুলো */}
+              <Stack.Screen name="handouts/index" />
+              <Stack.Screen name="handouts/create" />
+              <Stack.Screen name="handouts/[handoutId]/index" />
+              <Stack.Screen name="handouts/[handoutId]/chapter/[chapterId]" />
+              <Stack.Screen name="handouts/manage/[handoutId]/index" />
+              <Stack.Screen name="handouts/manage/[handoutId]/add-chapter" />
             </Stack>
           </BottomSheetProvider>
         </GestureHandlerRootView>
