@@ -1,13 +1,14 @@
 import { useFollowUserMutation } from "@/redux/api/followApi";
 import { useAppSelector } from "@/redux/hooks";
 import * as Haptics from "expo-haptics";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity } from "react-native";
 import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withSequence,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
@@ -27,7 +28,6 @@ const FollowButtonPost = ({
   const currentUser = useAppSelector((state) => state.auth.user);
   const currentUserId = currentUser?.id ?? (currentUser as any)?._id;
 
-  // ❌ useGetFollowersQuery বাদ — N+1 এর কারণ ছিল
   const [localFollowing, setLocalFollowing] = useState(initialIsFollowing);
   const [isHidden, setIsHidden] = useState(false);
 
@@ -42,6 +42,8 @@ const FollowButtonPost = ({
   // ---------- Animation values ----------
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
+  const pressed = useSharedValue(false); // ✅ guard: press হয়ে গেলে onPressOut আর scale টাচ করবে না
+  const fallbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -50,36 +52,54 @@ const FollowButtonPost = ({
   // ----------------------------------------
 
   const onPressIn = () => {
+    if (pressed.value) return; // ✅ ইতিমধ্যে follow flow চললে ignore
     scale.value = withSpring(0.92, { damping: 12, stiffness: 250 });
   };
 
   const onPressOut = () => {
+    if (pressed.value) return; // ✅ পপ/শ্রিংক animation কে interrupt করতে দেবে না
     scale.value = withSpring(1, { damping: 12, stiffness: 250 });
   };
 
+  useEffect(() => {
+    return () => {
+      if (fallbackTimer.current) clearTimeout(fallbackTimer.current);
+    };
+  }, []);
+
   const handleFollow = async () => {
     if (!currentUser || isLoading || localFollowing) return;
+
+    pressed.value = true; // ✅ এখন থেকে onPressIn/onPressOut আর scale ছোঁবে না
 
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     // Optimistic update
     setLocalFollowing(true);
 
-    // 🎬 quick pop, then shrink + fade out
-    scale.value = withSpring(1.15, { damping: 6, stiffness: 280 }, () => {
-      scale.value = withTiming(0, { duration: 200 }, (finished) => {
+    // 🎬 quick pop, then shrink + fade out — একই chain এ, interrupt-proof
+    scale.value = withSequence(
+      withSpring(1.15, { damping: 6, stiffness: 280 }),
+      withTiming(0, { duration: 200 }, (finished) => {
         if (finished) {
           runOnJS(setIsHidden)(true);
         }
-      });
-    });
+      }),
+    );
 
     opacity.value = withTiming(0, { duration: 250 });
+
+    // ✅ Safety net: animation callback কোনো কারণে না চললেও ৬০০ms পর force hide
+    fallbackTimer.current = setTimeout(() => {
+      setIsHidden(true);
+    }, 600);
 
     try {
       await followUser(targetUserId).unwrap();
     } catch (err) {
       // rollback
+      if (fallbackTimer.current) clearTimeout(fallbackTimer.current);
+      pressed.value = false;
       setLocalFollowing(false);
       setIsHidden(false);
       scale.value = withSpring(1, { damping: 12, stiffness: 250 });

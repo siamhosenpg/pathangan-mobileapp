@@ -1,6 +1,7 @@
 // ImageSlider.tsx
 import React, { memo, useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   Image,
@@ -31,21 +32,44 @@ const ImageItem = memo(
     uri: string;
     index: number;
     onPress: (i: number) => void;
-  }) => (
-    <TouchableOpacity
-      activeOpacity={0.92}
-      onPress={() => onPress(index)}
-      className="rounded-xl overflow-hidden"
-      style={{ width: ITEM_WIDTH, height: ITEM_HEIGHT }}
-    >
-      <Image
-        source={{ uri }}
-        style={{ width: "100%", height: "100%" }}
-        resizeMode="cover"
-        className="border-border/50 border dark:border-dark-border/50"
-      />
-    </TouchableOpacity>
-  ),
+  }) => {
+    const [loading, setLoading] = useState(true);
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.92}
+        onPress={() => onPress(index)}
+        className="rounded-xl overflow-hidden"
+        style={{ width: ITEM_WIDTH, height: ITEM_HEIGHT }}
+      >
+        <Image
+          source={{ uri }}
+          style={{ width: "100%", height: "100%" }}
+          resizeMode="cover"
+          className="border-border/50 border dark:border-dark-border/50 rounded-xl"
+          onLoadStart={() => setLoading(true)}
+          onLoadEnd={() => setLoading(false)}
+        />
+
+        {loading && (
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0,0,0,0.06)",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <ActivityIndicator size="small" color="#999" />
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  },
 );
 
 const ImageSlider = memo(({ images }: Props) => {

@@ -16,6 +16,8 @@ import { useTranslation } from "react-i18next";
 
 import HomeBold from "../../assets/icons/house.svg";
 import Home from "../../assets/icons/houselite.svg";
+import Sheet from "../../assets/icons/journal.svg";
+import SheetBold from "../../assets/icons/journalbold.svg";
 import CourseBold from "../../assets/icons/learning.svg";
 import Course from "../../assets/icons/learninglite.svg";
 import QuestionBold from "../../assets/icons/question.svg";
@@ -24,8 +26,6 @@ import {
   default as Search,
   default as SearchBold,
 } from "../../assets/icons/search.svg";
-import SheetBold from "../../assets/icons/sheet.svg";
-import Sheet from "../../assets/icons/sheetlite.svg";
 import PeopleBold from "../../assets/icons/users.svg";
 import People from "../../assets/icons/userslite.svg";
 

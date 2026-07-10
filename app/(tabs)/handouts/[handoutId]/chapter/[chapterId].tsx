@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const FONT_SIZES = [15, 17, 19, 22];
+const FONT_SIZES = [14, 15, 17, 19, 22];
 
 export default function ChapterReaderScreen() {
   // route এ handoutId আসলে slug
@@ -84,7 +84,7 @@ export default function ChapterReaderScreen() {
       className="flex-1 bg-background dark:bg-dark-background"
     >
       {/* টপ বার */}
-      <View className="flex-row items-center justify-between px-4 py-3">
+      <View className="flex-row items-center justify-between gap-2 px-4 py-3">
         <TouchableOpacity
           onPress={() => router.back()}
           className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
@@ -96,12 +96,17 @@ export default function ChapterReaderScreen() {
           />
         </TouchableOpacity>
 
-        <Text
-          numberOfLines={1}
-          className="flex-1 text-center text-sm font-semibold text-text dark:text-dark-text mx-3"
-        >
-          {handoutData?.data?.title}
-        </Text>
+        <View className="flex-1 flex-col items-start justify-start">
+          <Text
+            numberOfLines={1}
+            className="flex-1 text-center text-sm font-semibold text-text dark:text-dark-text line-clamp-1"
+          >
+            {handoutData?.data?.title}
+          </Text>
+          <Text className="text-xs font-medium text-text-tertiary dark:text-dark-text-tertiary">
+            অধ্যায় {currentIndex + 1} / {chapters.length}
+          </Text>
+        </View>
 
         {/* ফন্ট সাইজ কন্ট্রোল */}
         <View className="flex-row items-center gap-1">
@@ -111,7 +116,7 @@ export default function ChapterReaderScreen() {
             className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
           >
             <Text className="text-text dark:text-dark-text text-xs font-bold">
-              Aa-
+              A-
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -122,20 +127,17 @@ export default function ChapterReaderScreen() {
             className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
           >
             <Text className="text-text dark:text-dark-text text-sm font-bold">
-              Aa+
+              A+
             </Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* progress */}
-      <View className="px-5 pb-2">
-        <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
-          অধ্যায় {currentIndex + 1} / {chapters.length}
-        </Text>
-        <View className="h-1 rounded-full bg-background-tertiary dark:bg-dark-background-tertiary mt-1">
+      <View className=" ">
+        <View className="h-0.5  bg-background-tertiary dark:bg-dark-background-tertiary">
           <View
-            className="h-1 rounded-full bg-accent"
+            className="h-0.5  bg-accent"
             style={{
               width: `${((currentIndex + 1) / chapters.length) * 100}%`,
             }}
@@ -145,9 +147,13 @@ export default function ChapterReaderScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingBottom: 40,
+          paddingTop: 6,
+        }}
       >
-        <Text className="text-xl font-bold text-text dark:text-dark-text mb-4 leading-8">
+        <Text className="text-xl font-bold text-text dark:text-dark-text mb-2 mt-1 leading-8">
           {currentChapter.title}
         </Text>
 

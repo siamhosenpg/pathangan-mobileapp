@@ -1,5 +1,6 @@
 import GreenMark from "@/components/ui/badges/GreenMark";
 import TimeAgo from "@/components/ui/datetime/TimeAgo";
+import BackHeader from "@/components/ui/headers/BackHeader";
 import { useGetHandoutBySlugQuery } from "@/redux/api/handout/handoutApi";
 import { toBanglaNumber } from "@/utils/toBanglaNumber";
 import { Ionicons } from "@expo/vector-icons";
@@ -80,18 +81,7 @@ export default function HandoutDetailScreen() {
       className="flex-1 bg-background dark:bg-dark-background"
     >
       {/* কাস্টম টপ বার */}
-      <View className="flex-row items-center px-4 py-3">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
-        >
-          <Ionicons
-            name="arrow-back"
-            size={20}
-            color={isDark ? "#f1f1f1" : "#1b1b1b"}
-          />
-        </TouchableOpacity>
-      </View>
+      <BackHeader />
 
       <ScrollView
         showsVerticalScrollIndicator={false}

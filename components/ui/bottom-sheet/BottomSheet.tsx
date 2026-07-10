@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dimensions,
   Keyboard,
@@ -43,7 +44,7 @@ const SNAP_SPRING = {
 const BottomSheet = ({ visible, onClose, children }: Props) => {
   const [mounted, setMounted] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-
+  const { t } = useTranslation();
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const backdropOpacity = useSharedValue(0);
 
@@ -158,7 +159,7 @@ const BottomSheet = ({ visible, onClose, children }: Props) => {
           <View className="flex-1 items-center justify-center gap-2">
             <Text className="text-3xl">📭</Text>
             <Text className="text-text-secondary dark:text-dark-text-secondary text-sm">
-              কোনো তথ্য নেই
+              {t("noDataAvailable")}
             </Text>
           </View>
         ) : (

@@ -3,6 +3,7 @@ import { useDeletePostMutation } from "@/redux/api/postApi";
 import { useAppSelector } from "@/redux/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
@@ -28,7 +29,7 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
     (currentUser as any)?._id === postAuthorId;
 
   const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
-
+  const { t } = useTranslation();
   const handleCopyLink = () => {
     close();
   };
@@ -44,52 +45,42 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
 
   const menuItems: MenuItem[] = [
     {
-      icon: "help-circle-outline",
-      title: "কেন এই পোস্টটি দেখছি?",
-      subtitle: "এই পোস্টটি কেন দেখানো হচ্ছে তা জানুন",
-      onPress: close,
-    },
-    {
-      icon: "link-outline",
-      title: "লিংক কপি করুন",
-      subtitle: "এই পোস্টের লিংক কপি করুন",
+      icon: "link",
+      title: t("copyLink"),
+      subtitle: t("copyLinkSub"),
       onPress: handleCopyLink,
     },
     {
-      icon: "eye-off-outline",
-      title: "আগ্রহী নই",
-      subtitle: "এই ধরনের পোস্ট কম দেখাও",
+      icon: "eye-off",
+      title: t("notInterested"),
+      subtitle: t("notInterestedSub"),
       onPress: close,
     },
     {
-      icon: "flag-outline",
-      title: "পোস্ট রিপোর্ট করুন",
-      subtitle: "এই পোস্টটি নিয়ে আমি উদ্বিগ্ন",
+      icon: "flag",
+      title: t("reportPost"),
+      subtitle: t("reportPostSub"),
       onPress: close,
     },
   ];
 
   if (isOwnPost) {
     menuItems.push({
-      icon: "trash-outline",
-      title: "পোস্ট ডিলিট করুন",
-      subtitle: "এই পোস্টটি স্থায়ীভাবে মুছে ফেলুন",
+      icon: "trash",
+      title: t("deletePost"),
+      subtitle: t("deletePostSub"),
       onPress: handleDeletePost,
       danger: true,
     });
   }
 
   return (
-    <View className="px-3 pt-1 pb-2">
-      {/* Header */}
-      <View className="px-3 py-3 mb-1 border-b border-border dark:border-dark-border">
-        <Text className="text-base font-bold text-text dark:text-dark-text">
-          পোস্ট অপশন
-        </Text>
-      </View>
-
+    <View className="px-4 pt-1 pb-2">
       {/* Menu Items */}
-      <View className="pt-2">
+      <Text className=" font-semibold text-text dark:text-dark-text mb-2 w-full text-center">
+        {t("postOptions")}
+      </Text>
+      <View className="py-2 flex flex-col gap-3 bg-background dark:bg-dark-background rounded-2xl">
         {menuItems.map((item, index) => (
           <React.Fragment key={index}>
             {item.danger && (
@@ -97,25 +88,25 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
             )}
             <TouchableOpacity
               onPress={item.onPress}
-              activeOpacity={0.6}
+              activeOpacity={0.9}
               disabled={isDeleting}
-              className={`flex-row items-center gap-3 px-3 py-2.5 rounded-2xl mb-0.5 ${
-                item.danger ? "bg-red-500/5" : ""
-              }`}
+              className={`flex-row items-start gap-4 px-3 py-2.5 rounded-2xl mb-0.5 `}
             >
               <View
-                className={`w-11 h-11 rounded-full items-center justify-center ${
-                  item.danger
-                    ? "bg-red-500/10"
-                    : "bg-background-secondary dark:bg-dark-background-secondary"
-                }`}
+                className=" mt-1"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.04,
+                  shadowRadius: 2,
+                }}
               >
                 {item.danger && isDeleting ? (
                   <ActivityIndicator size="small" color="#EF4444" />
                 ) : (
                   <Ionicons
                     name={item.icon}
-                    size={20}
+                    size={22}
                     color={item.danger ? "#EF4444" : "#374151"}
                   />
                 )}
@@ -123,21 +114,19 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
 
               <View className="flex-1">
                 <Text
-                  className={`text-sm font-semibold leading-5 ${
+                  className={` font-semibold leading-5 ${
                     item.danger
                       ? "text-red-500"
                       : "text-text dark:text-dark-text"
                   }`}
                 >
-                  {item.danger && isDeleting
-                    ? "মুছে ফেলা হচ্ছে..."
-                    : item.title}
+                  {item.danger && isDeleting ? t("deleteing") : item.title}
                 </Text>
                 <Text
-                  className={`text-xs mt-0.5 ${
+                  className={`text-sm font-medium  mt-0.5 ${
                     item.danger
-                      ? "text-red-300"
-                      : "text-text-secondary dark:text-dark-text-secondary"
+                      ? "text-red-500"
+                      : "text-text-tertiary dark:text-dark-text-tertiary"
                   }`}
                 >
                   {item.subtitle}
