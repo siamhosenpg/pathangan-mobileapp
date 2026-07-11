@@ -16,7 +16,7 @@ export default function UserCard({ user }: Props) {
 
   return (
     <TouchableOpacity
-      onPress={() => router.push(`/profile/${user.username}` as any)}
+      onPress={() => router.push(`/${user.username}` as any)}
       activeOpacity={0.7}
       className="flex-row items-center gap-3 px-4 py-3 bg-background dark:bg-dark-background border-b border-background-secondary dark:border-dark-border"
     >

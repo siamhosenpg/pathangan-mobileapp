@@ -2,6 +2,8 @@ import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider
 import { useDeletePostMutation } from "@/redux/api/postApi";
 import { useAppSelector } from "@/redux/hooks";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
@@ -13,6 +15,8 @@ interface Props {
 
 interface MenuItem {
   icon: keyof typeof Ionicons.glyphMap;
+  iconBg: string;
+  iconColor: string;
   title: string;
   subtitle: string;
   onPress: () => void;
@@ -21,7 +25,10 @@ interface MenuItem {
 
 const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
   const { close } = useBottomSheet();
+  const router = useRouter();
   const currentUser = useAppSelector((state) => state.auth.user);
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   // ✅ id এবং _id দুইটাই check
   const isOwnPost =
@@ -30,8 +37,14 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
 
   const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
   const { t } = useTranslation();
+
   const handleCopyLink = () => {
     close();
+  };
+
+  const handleEditPost = () => {
+    close();
+    router.push(`/post/edit/${postId}` as any);
   };
 
   const handleDeletePost = async () => {
@@ -46,18 +59,24 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
   const menuItems: MenuItem[] = [
     {
       icon: "link",
+      iconBg: "bg-accent/10 dark:bg-accent/15",
+      iconColor: "#00914d",
       title: t("copyLink"),
       subtitle: t("copyLinkSub"),
       onPress: handleCopyLink,
     },
     {
       icon: "eye-off",
+      iconBg: "bg-gray-500/10 dark:bg-gray-400/10",
+      iconColor: isDark ? "#9CA3AF" : "#6B7280",
       title: t("notInterested"),
       subtitle: t("notInterestedSub"),
       onPress: close,
     },
     {
       icon: "flag",
+      iconBg: "bg-amber-500/10",
+      iconColor: "#F59E0B",
       title: t("reportPost"),
       subtitle: t("reportPostSub"),
       onPress: close,
@@ -66,7 +85,18 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
 
   if (isOwnPost) {
     menuItems.push({
+      icon: "create-outline",
+      iconBg: "bg-blue-500/10",
+      iconColor: "#3B82F6",
+      title: t("editPost") ?? "সম্পাদনা করুন",
+      subtitle: t("editPostSub") ?? "তোমার পোস্ট পরিবর্তন করো",
+      onPress: handleEditPost,
+    });
+
+    menuItems.push({
       icon: "trash",
+      iconBg: "bg-red-500/10",
+      iconColor: "#EF4444",
       title: t("deletePost"),
       subtitle: t("deletePostSub"),
       onPress: handleDeletePost,
@@ -76,11 +106,16 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
 
   return (
     <View className="px-4 pt-1 pb-2">
+      {/* Header */}
+      <View className="items-center mb-3">
+        <View className="w-10 h-1 rounded-full bg-border dark:bg-dark-border mb-3" />
+        <Text className="text-base font-bold text-text dark:text-dark-text">
+          {t("postOptions")}
+        </Text>
+      </View>
+
       {/* Menu Items */}
-      <Text className=" font-semibold text-text dark:text-dark-text mb-2 w-full text-center">
-        {t("postOptions")}
-      </Text>
-      <View className="py-2 flex flex-col gap-3 bg-background dark:bg-dark-background rounded-2xl">
+      <View className="flex flex-col gap-1.5">
         {menuItems.map((item, index) => (
           <React.Fragment key={index}>
             {item.danger && (
@@ -88,33 +123,27 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
             )}
             <TouchableOpacity
               onPress={item.onPress}
-              activeOpacity={0.9}
+              activeOpacity={0.7}
               disabled={isDeleting}
-              className={`flex-row items-start gap-4 px-3 py-2.5 rounded-2xl mb-0.5 `}
+              className="flex-row items-center gap-3.5 px-3 py-3 rounded-2xl active:bg-background-secondary dark:active:bg-dark-background-secondary"
             >
               <View
-                className=" mt-1"
-                style={{
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.04,
-                  shadowRadius: 2,
-                }}
+                className={`w-11 h-11 rounded-full items-center justify-center ${item.danger ? "bg-red-500/10" : item.iconBg}`}
               >
                 {item.danger && isDeleting ? (
                   <ActivityIndicator size="small" color="#EF4444" />
                 ) : (
                   <Ionicons
                     name={item.icon}
-                    size={22}
-                    color={item.danger ? "#EF4444" : "#374151"}
+                    size={20}
+                    color={item.danger ? "#EF4444" : item.iconColor}
                   />
                 )}
               </View>
 
               <View className="flex-1">
                 <Text
-                  className={` font-semibold leading-5 ${
+                  className={`text-[15px] font-semibold leading-5 ${
                     item.danger
                       ? "text-red-500"
                       : "text-text dark:text-dark-text"
@@ -123,9 +152,9 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
                   {item.danger && isDeleting ? t("deleteing") : item.title}
                 </Text>
                 <Text
-                  className={`text-sm font-medium  mt-0.5 ${
+                  className={`text-xs font-medium mt-0.5 ${
                     item.danger
-                      ? "text-red-500"
+                      ? "text-red-500/70"
                       : "text-text-tertiary dark:text-dark-text-tertiary"
                   }`}
                 >
@@ -134,7 +163,11 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
               </View>
 
               {!(item.danger && isDeleting) && (
-                <Ionicons name="chevron-forward" size={16} color="#D1D5DB" />
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color={isDark ? "#3f3f3f" : "#D1D5DB"}
+                />
               )}
             </TouchableOpacity>
           </React.Fragment>

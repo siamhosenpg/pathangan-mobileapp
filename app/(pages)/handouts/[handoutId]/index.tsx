@@ -85,7 +85,7 @@ export default function HandoutDetailScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 40, paddingTop: 16 }}
       >
         <View className="px-5">
           {/* কভার (বামে) + টাইটেল/ক্যাটাগরি/ইউজার (ডানে) */}

@@ -157,7 +157,7 @@ export default function TabLayout() {
               }}
             />
             <Tabs.Screen
-              name="handouts/index"
+              name="handouts"
               options={{
                 tabBarButton: hapticTabButton,
                 title: t("handouts"),

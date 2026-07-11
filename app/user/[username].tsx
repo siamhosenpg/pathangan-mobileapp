@@ -1,2 +1,2 @@
-import UserProfileScreen from "../(tabs)/[username]";
+import UserProfileScreen from "../(pages)/[username]";
 export default UserProfileScreen;

@@ -6,5 +6,5 @@ export default function ProfileTab() {
 
   if (!currentUser?.username) return null;
 
-  return <Redirect href={`/(tabs)/${currentUser.username}`} />;
+  return <Redirect href={`/(pages)/${currentUser.username}`} />;
 }

@@ -35,7 +35,7 @@ export default function PostRow({ post }: Props) {
 
   return (
     <TouchableOpacity
-      onPress={() => router.push(`/post/${post._id}` as any)}
+      onPress={() => router.push(`/${post.postType}/${post._id}` as any)}
       activeOpacity={0.7}
       className="px-4 py-3.5 bg-background dark:bg-dark-background border-b border-background-secondary dark:border-dark-border gap-2"
     >
