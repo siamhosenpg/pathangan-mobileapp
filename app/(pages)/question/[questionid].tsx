@@ -1,6 +1,6 @@
 import QuestionCard from "@/components/ui/card/questioncard/QuestionCard";
 import BackHeader from "@/components/ui/headers/BackHeader";
-import { useGetPostByIdQuery } from "@/redux/api/postApi";
+import { useGetQuestionByIdQuery } from "@/redux/api/post/questionApi";
 
 import { useLocalSearchParams } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
@@ -28,7 +28,7 @@ export default function QuestionDetailScreen() {
     isLoading,
     isError,
     refetch,
-  } = useGetPostByIdQuery(questionid);
+  } = useGetQuestionByIdQuery(questionid);
 
   const scrollToComments = () => {
     commentsRef.current?.scrollToEnd({ animated: true });

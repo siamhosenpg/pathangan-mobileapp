@@ -95,7 +95,7 @@ const NotificationCard = ({ item, onRead, onDelete }: Props) => {
       <View className="flex-1">
         <View className=" text-text dark:text-dark-text">
           <View className=" flex-row items-center gap-1">
-            <Text className="font-bold text-text dark:text-dark-text">
+            <Text className="font-semibold text-sm text-text dark:text-dark-text">
               {item.actorId.name}
             </Text>
             <GreenMark

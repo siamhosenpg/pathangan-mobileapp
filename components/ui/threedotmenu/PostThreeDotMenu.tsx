@@ -7,6 +7,7 @@ import { useColorScheme } from "nativewind";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import ReportSheet from "../bottom-sheet/report/ReportSheet";
 
 interface Props {
   postId: string;
@@ -24,7 +25,7 @@ interface MenuItem {
 }
 
 const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
-  const { close } = useBottomSheet();
+  const { close, open } = useBottomSheet(); // ← এখন open ও আছে
   const router = useRouter();
   const currentUser = useAppSelector((state) => state.auth.user);
   const { colorScheme } = useColorScheme();
@@ -79,7 +80,7 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
       iconColor: "#F59E0B",
       title: t("reportPost"),
       subtitle: t("reportPostSub"),
-      onPress: close,
+      onPress: () => open(<ReportSheet targetType="post" targetId={postId} />),
     },
   ];
 

@@ -89,9 +89,19 @@ export default function ManageHandoutScreen() {
             color={isDark ? "#f1f1f1" : "#1b1b1b"}
           />
         </TouchableOpacity>
-        <Text className="flex-1 text-center text-base font-bold text-text dark:text-dark-text mr-9">
+        <Text className="flex-1 text-center text-base font-bold text-text dark:text-dark-text">
           অধ্যায় পরিচালনা
         </Text>
+        <TouchableOpacity
+          onPress={() => router.push(`/handouts/manage/${handoutId}/edit`)}
+          className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
+        >
+          <Ionicons
+            name="create-outline"
+            size={18}
+            color={isDark ? "#f1f1f1" : "#1b1b1b"}
+          />
+        </TouchableOpacity>
       </View>
 
       {isLoading ? (
