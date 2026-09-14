@@ -53,9 +53,7 @@ const CommentSheet = ({ postId }: Props) => {
       setText("");
       setReplyingTo(null);
       Keyboard.dismiss();
-    } catch (err) {
-      console.error("Comment failed:", err);
-    }
+    } catch {}
   };
 
   const handleReply = useCallback((comment: Comment) => {

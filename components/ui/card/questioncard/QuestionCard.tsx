@@ -153,7 +153,7 @@ const QuestionCard = ({ post }: Props) => {
         <View className="flex-row items-center gap-6">
           <LikeButton postId={_id} initialLiked={post.isReacted} />
           <AnswerButton onClick={handleAnswerOpen} />
-          <ShareButton />
+          <ShareButton postId={_id} title={question?.questionText} />
         </View>
         <BookmarkButton postId={post._id} />
       </View>

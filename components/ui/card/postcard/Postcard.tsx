@@ -195,7 +195,7 @@ const Postcard = ({
             <CommentsButton
               onClick={() => open(<CommentSheet postId={post._id} />)}
             />
-            <ShareButton />
+            <ShareButton postId={post._id} title={content?.title} />
           </View>
           <BookmarkButton postId={post._id} />
         </View>

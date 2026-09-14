@@ -120,9 +120,7 @@ const commentApi = baseApi.injectEndpoints({
               ),
             );
           }
-        } catch (error) {
-          console.error(error);
-        }
+        } catch {}
       },
 
       invalidatesTags: (result, error, { postId, parentCommentId }) => [
@@ -223,9 +221,7 @@ const commentApi = baseApi.injectEndpoints({
               ),
             );
           }
-        } catch (error) {
-          console.error(error);
-        }
+        } catch {}
       },
 
       invalidatesTags: (result, error, { postId, parentCommentId }) => [

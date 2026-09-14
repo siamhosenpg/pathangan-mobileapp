@@ -39,10 +39,8 @@ export function useGoogleAuth() {
         email: googleUser.email,
         name: googleUser.name,
         photo: googleUser.picture,
-      });
-    } catch (err) {
-      console.error("Google login error:", err);
-    }
+      }).unwrap();
+    } catch {}
   };
 
   return { promptAsync, request, isLoading };

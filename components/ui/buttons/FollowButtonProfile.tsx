@@ -63,10 +63,9 @@ const FollowButtonProfile = ({ targetUserId }: Props) => {
       } else {
         await followUser(targetUserId).unwrap();
       }
-    } catch (err) {
+    } catch {
       // rollback
       setLocalFollowing((prev) => !prev);
-      console.error("Follow toggle failed:", err);
     }
   };
 

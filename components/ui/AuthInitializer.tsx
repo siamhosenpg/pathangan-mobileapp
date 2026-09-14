@@ -3,6 +3,8 @@ import { clearUser, setUser } from "@/redux/features/auth/authSlice";
 import { useAppDispatch } from "@/redux/hooks";
 import { useEffect } from "react";
 
+
+
 export default function AuthInitializer() {
   const dispatch = useAppDispatch();
   const { data, isError, isSuccess } = useGetMeQuery(undefined, {

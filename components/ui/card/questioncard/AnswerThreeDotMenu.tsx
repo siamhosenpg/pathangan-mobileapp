@@ -37,9 +37,7 @@ const AnswerThreeDotMenu = ({ answerId, answerAuthorId }: Props) => {
     try {
       await deleteAnswer(answerId).unwrap();
       close();
-    } catch (err) {
-      console.error("Delete failed:", err);
-    }
+    } catch {}
   };
 
   const menuItems: MenuItem[] = [

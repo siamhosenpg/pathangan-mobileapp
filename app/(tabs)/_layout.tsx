@@ -18,8 +18,6 @@ import HomeBold from "../../assets/icons/house.svg";
 import Home from "../../assets/icons/houselite.svg";
 import Sheet from "../../assets/icons/journal.svg";
 import SheetBold from "../../assets/icons/journalbold.svg";
-import CourseBold from "../../assets/icons/learning.svg";
-import Course from "../../assets/icons/learninglite.svg";
 import QuestionBold from "../../assets/icons/question.svg";
 import Question from "../../assets/icons/questionlite.svg";
 import {
@@ -133,17 +131,7 @@ export default function TabLayout() {
                 },
               }}
             />
-            <Tabs.Screen
-              name="courses"
-              options={{
-                tabBarButton: hapticTabButton,
-                title: t("courses"),
-                tabBarIcon: ({ color, focused }) => {
-                  const Icon = focused ? CourseBold : Course;
-                  return <Icon width={24} height={24} color={color} />;
-                },
-              }}
-            />
+            <Tabs.Screen name="courses" options={{ href: null }} />
 
             <Tabs.Screen
               name="people"

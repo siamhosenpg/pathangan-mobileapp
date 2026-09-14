@@ -44,9 +44,7 @@ const CommentCard = ({ comment, onReply }: Props) => {
                 postId: comment.postId,
                 parentCommentId: comment.parentCommentId,
               }).unwrap();
-            } catch (err) {
-              console.error("Delete failed:", err);
-            }
+            } catch {}
           },
         },
       ],

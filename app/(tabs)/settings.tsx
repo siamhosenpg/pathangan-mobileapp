@@ -6,6 +6,7 @@ import VideoAutoplay from "@/components/ui/setting/VideoAutoplay";
 import { useTheme } from "@/hooks/useTheme";
 import { useAppSelector } from "@/redux/hooks";
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -25,6 +26,7 @@ export default function SettingsScreen() {
   const { isDark, toggleTheme } = useTheme();
   const currentUser = useAppSelector((state) => state.auth.user);
   const [notifEnabled, setNotifEnabled] = useState(true);
+  const version = Constants.expoConfig?.version;
 
   // Prosongo brand color
   const accent = "#00914d";
@@ -35,7 +37,7 @@ export default function SettingsScreen() {
       className="flex-1 bg-background dark:bg-dark-background"
     >
       {/* ── Header ── */}
-      <View className="flex-row items-center gap-3 px-5 pt-6 pb-3 border-b border-border dark:border-dark-border">
+      <View className="flex-row items-center gap-3 px-5 pt-3 pb-3 border-b border-border dark:border-dark-border">
         <TouchableOpacity
           onPress={() => router.back()}
           className="w-9 h-9 rounded-full bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border items-center justify-center"
@@ -187,7 +189,23 @@ export default function SettingsScreen() {
               iconBg={isDark ? "#1a2a1a" : "#eaf5ea"}
               iconColor="#5cb85c"
               title={t("helpSupport")}
-              onPress={() => router.push("/help")}
+              onPress={() => router.push("/(pages)/others/support")}
+            />
+            <SettingsRow
+              icon="document-text-outline"
+              iconBg={isDark ? "#1a2a1a" : "#eaf5ea"}
+              iconColor="#5cb85c"
+              title={t("privacyPolicy")}
+              onPress={() => router.push("/(pages)/others/privacy-policy")}
+            />
+            <SettingsRow
+              icon="document-outline"
+              iconBg={isDark ? "#1a2a1a" : "#eaf5ea"}
+              iconColor="#5cb85c"
+              title={t("termsAndConditions")}
+              onPress={() =>
+                router.push("/(pages)/others/terms-and-conditions")
+              }
             />
             <SettingsRow
               icon="information-circle-outline"
@@ -211,7 +229,7 @@ export default function SettingsScreen() {
 
         {/* ── Version ── */}
         <Text className="text-center text-xs text-text-tertiary dark:text-dark-text-tertiary mt-2">
-          প্রসঙ্গ v1.0.0
+          {t("version")} {version}
         </Text>
       </ScrollView>
     </SafeAreaView>

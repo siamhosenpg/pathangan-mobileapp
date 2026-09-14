@@ -94,9 +94,7 @@ const PrivateQuestionDetailPage = () => {
       }).unwrap();
       setAnswerText("");
       // ✅ refetch লাগবে না — invalidatesTags cache update করবে
-    } catch (err) {
-      console.error("Answer submit error:", err);
-    }
+    } catch {}
   };
 
   const charCount = answerText.length;

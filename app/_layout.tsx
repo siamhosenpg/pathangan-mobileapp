@@ -36,7 +36,7 @@ export default function RootLayout() {
 
         // system change listener শুধু "system" mode এ দরকার
         const sub = Appearance.addChangeListener(({ colorScheme }) => {
-          setColorScheme("light");
+          setColorScheme(colorScheme ?? "light");
         });
 
         return () => sub.remove();
@@ -50,7 +50,7 @@ export default function RootLayout() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <BottomSheetProvider>
             <AuthInitializer />
-            <AppInit /> {/* ✅ এটা যোগ করো */}
+            <AppInit />
             <Stack
               screenOptions={{
                 headerShown: false,
@@ -58,20 +58,8 @@ export default function RootLayout() {
             >
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(pages)" />
               <Stack.Screen name="user/[username]" />
-              <Stack.Screen name="post/[id]" />
-              <Stack.Screen name="answer/[answerId]" />
-              <Stack.Screen name="course/[id]" />
-              <Stack.Screen name="profile/editprofile" />
-              <Stack.Screen name="private-questions" />
-              <Stack.Screen name="private-questions/[id]" />
-              {/* ✅ নতুন Handout রুটগুলো */}
-              <Stack.Screen name="handouts" />
-              <Stack.Screen name="handouts/create" />
-              <Stack.Screen name="handouts/[handoutId]/index" />
-              <Stack.Screen name="handouts/[handoutId]/chapter/[chapterId]" />
-              <Stack.Screen name="handouts/manage/[handoutId]/index" />
-              <Stack.Screen name="handouts/manage/[handoutId]/add-chapter" />
             </Stack>
           </BottomSheetProvider>
         </GestureHandlerRootView>

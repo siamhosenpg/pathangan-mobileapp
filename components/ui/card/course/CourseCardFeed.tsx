@@ -125,7 +125,7 @@ const CourseCardFeed = ({ post }: Props) => {
               onClick={() => open(<CommentSheet postId={post._id} />)}
             />
 
-            <ShareButton />
+            <ShareButton postId={post._id} title={course?.title} />
           </View>
           <TouchableOpacity
             onPress={() =>

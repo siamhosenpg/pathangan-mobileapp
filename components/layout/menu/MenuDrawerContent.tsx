@@ -1,16 +1,20 @@
+import SaveIcon from "@/assets/icons/bookmark.svg";
+import SettingsIcon from "@/assets/icons/settings.svg";
+import LogoutIcon from "@/assets/icons/sign-out-alt.svg";
 import GreenMark from "@/components/ui/badges/GreenMark";
 import { useLogoutMutation } from "@/redux/api/authApi";
 import { clearUser } from "@/redux/features/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 import { useTranslation } from "react-i18next";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { SvgProps } from "react-native-svg";
 import { useDrawer } from "./DrawerContext";
 
 interface MenuItem {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: React.FC<SvgProps>;
   label: string;
   route?: string;
   onPress?: () => void;
@@ -24,6 +28,10 @@ export function MenuDrawerContent() {
   const [logout] = useLogoutMutation();
   const { closeDrawer } = useDrawer();
   const insets = useSafeAreaInsets();
+
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const iconColor = isDark ? "#f1f1f1" : "#1b1b1b";
 
   const navigate = (route: string) => {
     closeDrawer();
@@ -47,34 +55,15 @@ export function MenuDrawerContent() {
 
   const menuItems: MenuItem[] = [
     {
-      icon: "bookmark-outline",
+      icon: SaveIcon,
       label: t("savedPosts"),
       route: "/(tabs)/saved",
     },
+
     {
-      icon: "notifications-outline",
-      label: t("notifications"),
-      route: "/(tabs)/notifications",
-    },
-    {
-      icon: "settings-outline",
+      icon: SettingsIcon,
       label: t("settings"),
       route: "/(tabs)/settings",
-    },
-    {
-      icon: "shield-checkmark-outline",
-      label: t("privacyPolicy"),
-      route: "/others/privacy-policy",
-    },
-    {
-      icon: "document-text-outline",
-      label: t("termsAndConditions"),
-      route: "/others/terms-and-conditions",
-    },
-    {
-      icon: "chatbubble-ellipses-outline",
-      label: t("helpSupport"),
-      route: "/others/support",
     },
   ];
 
@@ -120,8 +109,8 @@ export function MenuDrawerContent() {
       </View>
 
       {/* Menu items */}
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="py-3">
+      <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
+        <View className="py-3 bg-background-secondary dark:bg-dark-background-secondary rounded-xl">
           {menuItems.map((item) => (
             <TouchableOpacity
               key={item.label}
@@ -133,10 +122,10 @@ export function MenuDrawerContent() {
                 }
               }}
               activeOpacity={0.65}
-              className="flex-row items-center gap-4 px-5 py-3.5"
+              className="flex-row items-center gap-2 px-5 py-4 "
             >
-              <View className="w-9 h-9 rounded-xl bg-background-secondary dark:bg-dark-background-secondary items-center justify-center">
-                <Ionicons name={item.icon} size={18} color="#6d6d6d" />
+              <View className="  items-center justify-center">
+                <item.icon width={19} height={19} color={iconColor} />
               </View>
               <Text className="text-text-secondary font-medium dark:text-dark-text-secondary text-[15px]">
                 {item.label}
@@ -157,7 +146,7 @@ export function MenuDrawerContent() {
           className="flex-row items-center gap-4 px-5 py-4"
         >
           <View className="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950 items-center justify-center">
-            <Ionicons name="log-out-outline" size={18} color="#ef4444" />
+            <LogoutIcon width={19} height={19} color="#ef4444" />
           </View>
           <Text className="text-red-500 dark:text-red-400 text-[15px]">
             {t("logout")}

@@ -52,9 +52,7 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
     try {
       await deletePost(postId).unwrap();
       close();
-    } catch (err) {
-      console.error("Delete failed:", err);
-    }
+    } catch {}
   };
 
   const menuItems: MenuItem[] = [

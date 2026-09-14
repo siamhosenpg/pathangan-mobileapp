@@ -36,17 +36,12 @@ export const usePushNotification = () => {
 
     notificationListener.current =
       Notifications.addNotificationReceivedListener(
-        (notification: Notifications.Notification) => {
-          console.log("Notification received:", notification);
-        },
+        (_notification: Notifications.Notification) => {},
       );
 
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener(
-        (response: Notifications.NotificationResponse) => {
-          const data = response.notification.request.content.data;
-          console.log("Notification tapped:", data);
-        },
+        (_response: Notifications.NotificationResponse) => {},
       );
 
     return () => {
@@ -57,7 +52,6 @@ export const usePushNotification = () => {
 
   const registerForPushNotifications = async (): Promise<void> => {
     if (!Device.isDevice) {
-      console.log("Physical device required for push notifications");
       return;
     }
 
@@ -80,7 +74,6 @@ export const usePushNotification = () => {
     }
 
     if (finalStatus !== "granted") {
-      console.log("Push notification permission denied");
       return;
     }
 
@@ -89,14 +82,11 @@ export const usePushNotification = () => {
       | undefined;
 
     if (!projectId) {
-      console.log("Project ID not found");
       return;
     }
 
     const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
     const token = tokenData.data;
-
-    console.log("Expo Push Token:", token);
 
     await savePushToken({ pushToken: token });
   };

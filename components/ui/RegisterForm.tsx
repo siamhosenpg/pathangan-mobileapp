@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import GoogleLoginButton from "./buttons/GoogleLoginButton";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -116,16 +117,9 @@ export default function RegisterForm() {
           )}
 
           {/* Google Button */}
-          <TouchableOpacity
-            onPress={() => setGoogleAlert(true)}
-            className="w-full flex-row items-center justify-center gap-3 py-3.5 rounded-xl bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border mb-5"
-            activeOpacity={0.7}
-          >
-            <Text className="text-lg">G</Text>
-            <Text className="text-text-secondary dark:text-dark-text-secondary text-sm font-medium">
-              Google দিয়ে রেজিস্ট্রেশন করুন
-            </Text>
-          </TouchableOpacity>
+          <View className="mb-5">
+            <GoogleLoginButton />
+          </View>
 
           {/* Divider */}
           <View className="flex-row items-center gap-3 mb-5">

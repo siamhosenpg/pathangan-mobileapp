@@ -44,9 +44,7 @@ const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
         questionText: questionText.trim(),
       }).unwrap();
       handleClose();
-    } catch (err) {
-      console.error("প্রশ্ন পাঠাতে সমস্যা হয়েছে:", err);
-    }
+    } catch {}
   };
 
   const charCount = questionText.length;

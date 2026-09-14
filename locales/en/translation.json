@@ -116,5 +116,8 @@
   "askQuestion": "Ask Question",
   "privacyPolicy": "Privacy Policy",
   "termsAndConditions": "Terms and Conditions",
-  "pressAgainToExit": "Press again to exit."
+  "pressAgainToExit": "Press again to exit.",
+  "cookiePolicy": "Cookie Policy",
+  "cookiePolicyContent": "We use cookies to enhance your experience on our app. By continuing to use our app, you agree to our use of cookies. For more information, please read our Privacy Policy.",
+  "version": "Version"
 }

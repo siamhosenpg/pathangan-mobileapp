@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const FONT_SIZES = [14, 15, 17, 19, 22];
+const FONT_SIZES = [13, 14, 15, 17, 19];
 
 export default function ChapterReaderScreen() {
   // route এ handoutId আসলে slug

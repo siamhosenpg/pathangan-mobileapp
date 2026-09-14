@@ -104,7 +104,6 @@ const FollowButtonPost = ({
       setIsHidden(false);
       scale.value = withSpring(1, { damping: 12, stiffness: 250 });
       opacity.value = withTiming(1, { duration: 200 });
-      console.error("Follow failed:", err);
     }
   };
 

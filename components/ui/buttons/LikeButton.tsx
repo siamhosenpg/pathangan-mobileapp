@@ -46,9 +46,7 @@ const LikeButton = ({
       await toggleReaction(postId).unwrap();
       // ✅ setIsLiked নেই — RTK Query optimistic update cache ঠিক করবে
       // cache update → parent re-render → নতুন initialLiked prop আসবে
-    } catch (err) {
-      console.error(err);
-    }
+    } catch {}
   };
 
   return (

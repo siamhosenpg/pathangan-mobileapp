@@ -103,7 +103,6 @@ function OtherProfileHeader({
       }
     } catch (err: any) {
       setIsFollowing((prev) => !prev);
-      console.error("Follow error:", err?.data?.message ?? err);
     }
   };
 

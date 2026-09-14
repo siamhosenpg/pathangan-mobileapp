@@ -30,9 +30,7 @@ export default function CommentsSection({ postId, commentsCount }: Props) {
   const handleSubmit = async (text: string) => {
     try {
       await createComment({ postId, text }).unwrap();
-    } catch (err) {
-      console.error("Failed to create comment", err);
-    }
+    } catch {}
   };
 
   const comments =
