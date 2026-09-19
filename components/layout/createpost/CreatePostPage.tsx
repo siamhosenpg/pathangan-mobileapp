@@ -11,6 +11,7 @@ import {
 } from "@/redux/features/upload/uploadSlice";
 import { useAppSelector } from "@/redux/hooks";
 import { Ionicons } from "@expo/vector-icons";
+import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
@@ -68,10 +69,13 @@ export default function CreatePostPage() {
 
   const pickMedia = async (target: "post" | "course") => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      mediaTypes: ["images", "videos"],
       allowsMultipleSelection: true,
       quality: 0.85,
       exif: false,
+      // 🟢 iOS HEIC ফাইলকে অটোমেটিক JPG করতে এই লাইনটি যোগ করুন
+      preferredAssetRepresentationMode:
+        ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
     });
     if (result.canceled) return;
 
@@ -115,11 +119,9 @@ export default function CreatePostPage() {
             : "image/jpeg");
       const fileName =
         m.fileName || `upload.${m.type === "video" ? "mp4" : ext || "jpg"}`;
-      formData.append("media", {
-        uri: m.uri,
-        name: fileName,
-        type: mimeType,
-      } as any);
+
+      const file = new File(m.uri);
+      formData.append("media", file, fileName);
     });
   };
 
@@ -201,6 +203,7 @@ export default function CreatePostPage() {
       dispatch(finishUpload());
     } catch (err: any) {
       clearInterval(interval);
+      console.log("UPLOAD ERROR:", JSON.stringify(err, null, 2));
       dispatch(failUpload());
     }
   };

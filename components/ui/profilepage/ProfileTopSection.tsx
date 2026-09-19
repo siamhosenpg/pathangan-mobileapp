@@ -40,11 +40,11 @@ const ProfileTopSection = ({ data }: Props) => {
         {data.coverImage ? (
           <Image
             source={{ uri: data.coverImage }}
-            className="w-full aspect-[6/2] rounded-lg border border-border dark:border-dark-border"
+            className="w-full aspect-[6/2] rounded-xl border border-border/20 dark:border-dark-border/20"
             resizeMode="cover"
           />
         ) : (
-          <View className="w-full aspect-[6/2] bg-accent/20 rounded-lg" />
+          <View className="w-full aspect-[6/2] bg-accent/20 rounded-xl" />
         )}
       </View>
 

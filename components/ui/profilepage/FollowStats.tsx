@@ -15,7 +15,7 @@ const FollowStats = ({ activityStats }: Props) => {
         <Text className="text-lg font-bold text-foreground dark:text-dark-foreground">
           <BanglaNumber value={activityStats?.totalFollowers ?? 0} />
         </Text>
-        <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
+        <Text className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary">
           {t("followers")}
         </Text>
       </View>
@@ -26,7 +26,7 @@ const FollowStats = ({ activityStats }: Props) => {
         <Text className="text-lg font-bold text-foreground dark:text-dark-foreground">
           <BanglaNumber value={activityStats?.totalFollowing ?? 0} />
         </Text>
-        <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
+        <Text className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary">
           {t("following")}
         </Text>
       </View>

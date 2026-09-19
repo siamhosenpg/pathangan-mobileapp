@@ -1,3 +1,4 @@
+import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { useColorScheme } from "nativewind";
 import React, { useEffect, useMemo, useState } from "react";
@@ -119,8 +120,8 @@ export default function EditProfileScreen() {
 
   const pickImage = async (type: "profile" | "cover") => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
+      mediaTypes: ["images"],
+      quality: type === "profile" ? 0.6 : 0.7,
       allowsEditing: true,
       aspect: type === "profile" ? [1, 1] : [6, 2],
     });
@@ -142,20 +143,16 @@ export default function EditProfileScreen() {
       Object.entries(form).forEach(([k, v]) => formData.append(k, v));
       formData.append("work", JSON.stringify(works));
       formData.append("educations", JSON.stringify(educations));
+
       if (profileImage) {
-        formData.append("profileImage", {
-          uri: profileImage.uri,
-          name: "profile.jpg",
-          type: "image/jpeg",
-        } as any);
+        const profileFile = new File(profileImage.uri);
+        formData.append("profileImage", profileFile, "profile.jpg");
       }
       if (coverImage) {
-        formData.append("coverImage", {
-          uri: coverImage.uri,
-          name: "cover.jpg",
-          type: "image/jpeg",
-        } as any);
+        const coverFile = new File(coverImage.uri);
+        formData.append("coverImage", coverFile, "cover.jpg");
       }
+
       const res = await updateUser({
         userid: fullUser.userid,
         formData,

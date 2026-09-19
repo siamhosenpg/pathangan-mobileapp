@@ -1,5 +1,5 @@
 import PostCardSkeleton from "@/components/ui/card/postcard/PostCardSkeleton";
-import ProfileHeader from "@/components/ui/headers/ProfileHeader";
+import BackHeader from "@/components/ui/headers/BackHeader";
 import ProfileHeaderSkeleton from "@/components/ui/headers/ProfileHeaderSkeleton";
 import ProfileAbout from "@/components/ui/profilepage/ProfileAbout";
 import ProfilePosts from "@/components/ui/profilepage/ProfilePosts";
@@ -74,14 +74,7 @@ export default function UserProfileScreen() {
       edges={["top"]}
       className="flex-1 bg-background dark:bg-dark-background"
     >
-      {isOwnProfile ? (
-        <ProfileHeader
-          mode="own"
-          onEditPress={() => router.push("/profile/editprofile" as any)}
-        />
-      ) : (
-        <ProfileHeader mode="other" userId={user._id} name={user.name} />
-      )}
+      {isOwnProfile ? <BackHeader /> : <BackHeader />}
 
       <ProfilePosts userid={user._id} listHeader={profileHeader} />
     </SafeAreaView>

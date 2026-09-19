@@ -4,16 +4,20 @@ import PostCardSkeleton from "@/components/ui/card/postcard/PostCardSkeleton";
 import QuestionCard from "@/components/ui/card/questioncard/QuestionCard";
 import UploadProgressBar from "@/components/ui/upload/UploadProgressBar";
 import usePostViewTracker from "@/hooks/viewcount/usePostViewTracker";
-import { useGetPostsInfiniteQuery } from "@/redux/api/postApi";
+import { postApi, useGetPostsInfiniteQuery } from "@/redux/api/postApi";
 import type { Post } from "@/types/postTypes";
 import { FlashList } from "@shopify/flash-list";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { Text, View } from "react-native";
+import { RefreshControl, Text, View } from "react-native";
+import { useDispatch } from "react-redux";
 
 interface HomeFeedProps {
   onScroll?: (scrollY: number) => void;
 }
+
+// hook r updateQueryData duitai same arg use korbe
+const QUERY_ARGS = { limit: 10 };
 
 const ItemSeparator = () => <View style={{ height: 0 }} />;
 
@@ -26,6 +30,8 @@ const ListEmpty = () => (
 );
 
 export default function HomeFeed({ onScroll }: HomeFeedProps) {
+  const dispatch = useDispatch<any>();
+
   const {
     data,
     isLoading,
@@ -33,9 +39,11 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-  } = useGetPostsInfiniteQuery({ limit: 10 });
+    refetch,
+  } = useGetPostsInfiniteQuery(QUERY_ARGS);
 
   const [visibleIndex, setVisibleIndex] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const lastVisibleIndexRef = useRef<number | null>(null);
 
   const posts = data?.pages.flatMap((page) => page.posts) ?? [];
@@ -55,9 +63,32 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
     }, [clearAllTimers]),
   );
 
+  // ── Pull to refresh ──
+  const handleRefresh = useCallback(async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      clearAllTimers();
+      lastVisibleIndexRef.current = null;
+      setVisibleIndex(null);
+
+      // cache e shudhu prothom page rakho, tahole refetch e 1ta request jabe
+      dispatch(
+        postApi.util.updateQueryData("getPosts", QUERY_ARGS, (draft) => {
+          draft.pages = draft.pages.slice(0, 1);
+          draft.pageParams = draft.pageParams.slice(0, 1);
+        }),
+      );
+
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [isRefreshing, clearAllTimers, dispatch, refetch]);
+
   const handleEndReached = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) fetchNextPage();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+    if (hasNextPage && !isFetchingNextPage && !isRefreshing) fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, isRefreshing, fetchNextPage]);
 
   // ── Existing + view tracker একসাথে ──
   const handleViewableItemsChanged = useCallback(
@@ -136,7 +167,7 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
 
   return (
     <FlashList
-      onScroll={(e) => onScroll?.(e.nativeEvent.contentOffset.y)}
+      onScroll={(e) => onScroll?.(Math.max(0, e.nativeEvent.contentOffset.y))}
       scrollEventThrottle={16}
       onViewableItemsChanged={handleViewableItemsChanged}
       data={posts}
@@ -155,6 +186,14 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: 10 }}
       ItemSeparatorComponent={ItemSeparator}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          colors={["#00914d"]} // Android spinner color
+          tintColor="#00914d" // iOS spinner color
+        />
+      }
     />
   );
 }
