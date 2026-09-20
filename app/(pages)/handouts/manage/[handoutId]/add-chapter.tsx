@@ -4,9 +4,9 @@ import {
   useUpdateChapterMutation,
 } from "@/redux/api/handout/chapterApi";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useColorScheme } from "nativewind";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -28,9 +28,16 @@ export default function AddEditChapterScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const isEditing = Boolean(chapterId);
+  const navigation = useNavigation();
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+
+  // Edit mode e server theke ashа original value. Change hoyeche kina bujhte lage.
+  const [original, setOriginal] = useState({ title: "", content: "" });
+
+  // Save successful hole confirm popup skip korar jonno
+  const allowLeaveRef = useRef(false);
 
   const { data: chaptersData } = useGetChaptersByHandoutQuery(handoutId ?? "", {
     skip: !isEditing || !handoutId,
@@ -39,17 +46,56 @@ export default function AddEditChapterScreen() {
   const [addChapter, { isLoading: isAdding }] = useAddChapterMutation();
   const [updateChapter, { isLoading: isUpdating }] = useUpdateChapterMutation();
 
+  // Edit mode: existing chapter ekbar load kore form e boshai.
+  // Ekbar boshale ar overwrite kori na, na hole refetch hole user er lekha muche jabe.
+  const hasLoadedRef = useRef(false);
+
   useEffect(() => {
-    if (isEditing && chaptersData) {
-      const existing = chaptersData.data.find((c) => c._id === chapterId);
-      if (existing) {
-        setTitle(existing.title);
-        setContent(existing.content);
-      }
+    if (!isEditing || !chaptersData || hasLoadedRef.current) return;
+
+    const existing = chaptersData.data.find((c) => c._id === chapterId);
+    if (existing) {
+      hasLoadedRef.current = true;
+      setTitle(existing.title);
+      setContent(existing.content);
+      setOriginal({ title: existing.title, content: existing.content });
     }
   }, [isEditing, chaptersData, chapterId]);
 
+  const hasUnsavedChanges = isEditing
+    ? title.trim() !== original.title.trim() ||
+      content.trim() !== original.content.trim()
+    : title.trim().length > 0 || content.trim().length > 0;
+
+  /* ─────────── Back confirmation ─────────── */
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("beforeRemove", (e) => {
+      if (allowLeaveRef.current || !hasUnsavedChanges) return;
+
+      e.preventDefault();
+
+      Alert.alert(
+        "পরিবর্তন বাতিল করবেন?",
+        "আপনার লেখা সংরক্ষিত হয়নি। এখন বেরিয়ে গেলে সব মুছে যাবে।",
+        [
+          { text: "থাকুন", style: "cancel" },
+          {
+            text: "বাদ দিন",
+            style: "destructive",
+            onPress: () => navigation.dispatch(e.data.action),
+          },
+        ],
+      );
+    });
+
+    return unsubscribe;
+  }, [navigation, hasUnsavedChanges]);
+
+  const isSaving = isAdding || isUpdating;
+
   const handleSubmit = async () => {
+    if (isSaving) return;
+
     if (!title.trim() || !content.trim()) {
       Alert.alert("তথ্য অসম্পূর্ণ", "অধ্যায়ের টাইটেল ও কনটেন্ট দিন");
       return;
@@ -70,19 +116,21 @@ export default function AddEditChapterScreen() {
           content: content.trim(),
         }).unwrap();
       }
+
+      // popup na dekhiye back jete dao
+      allowLeaveRef.current = true;
       router.back();
     } catch {
       Alert.alert("সমস্যা হয়েছে", "অধ্যায় সেভ করা যায়নি");
     }
   };
 
-  const isSaving = isAdding || isUpdating;
-
   return (
     <SafeAreaView
-      edges={["top"]}
+      edges={["top", "bottom"]}
       className="flex-1 bg-background dark:bg-dark-background"
     >
+      {/* টপ বার */}
       <View className="flex-row items-center px-4 py-3">
         <TouchableOpacity
           onPress={() => router.back()}
@@ -105,6 +153,7 @@ export default function AddEditChapterScreen() {
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 40 }}
         >
           <View className="gap-2">
@@ -135,26 +184,27 @@ export default function AddEditChapterScreen() {
             />
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
 
-      <View className="px-5 pb-5 pt-2 border-t border-border dark:border-dark-border">
-        <TouchableOpacity
-          onPress={handleSubmit}
-          disabled={isSaving}
-          className="bg-accent rounded-xl py-4 items-center justify-center flex-row gap-2"
-        >
-          {isSaving ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <>
-              <Ionicons name="save-outline" size={18} color="#fff" />
-              <Text className="text-white font-bold text-base">
-                {isEditing ? "আপডেট করুন" : "অধ্যায় যোগ করুন"}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
+        {/* সাবমিট বাটন (KeyboardAvoidingView er vitore, tai keyboard er upore thake) */}
+        <View className="px-5 pb-3 pt-2 border-t border-border dark:border-dark-border">
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={isSaving}
+            className="bg-accent rounded-xl py-4 items-center justify-center flex-row gap-2"
+          >
+            {isSaving ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="save-outline" size={18} color="#fff" />
+                <Text className="text-white font-bold text-base">
+                  {isEditing ? "আপডেট করুন" : "অধ্যায় যোগ করুন"}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

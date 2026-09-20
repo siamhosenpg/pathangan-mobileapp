@@ -7,14 +7,11 @@ import {
 
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Animated,
-  Dimensions,
   Keyboard,
-  KeyboardEvent,
   LayoutAnimation,
   Platform,
   ScrollView,
@@ -82,22 +79,27 @@ const REASONS: ReasonOption[] = [
 ];
 
 const MIN_OTHER_DESCRIPTION_LENGTH = 5;
-const FOOTER_BOTTOM_PADDING = 70; // keyboard বন্ধ থাকলে যেই bottom space
-const KEYBOARD_EXTRA_GAP = 12; // keyboard আর button-এর মাঝে ছোট্ট breathing space
 
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-const SHEET_MAX_HEIGHT = SCREEN_HEIGHT * 0.82;
-
+/**
+ * NOTE:
+ * Keyboard handling ar safe-area padding ei component e nei.
+ * BottomSheet nijei sheet ke keyboard er upore tole, ar max height
+ * komiye dey. Tai ekhane shudhu "header / scrollable list / footer" layout.
+ *
+ * Eta open korte hobe: open(<ReportSheet ... />, { scrollable: false })
+ */
 const ReportSheet = ({ targetType, targetId }: Props) => {
   const { close } = useBottomSheet();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
+  const scrollRef = useRef<ScrollView>(null);
+  const inputRef = useRef<TextInput>(null);
+
   const [selectedReason, setSelectedReason] = useState<ReportReason | null>(
     null,
   );
   const [description, setDescription] = useState("");
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [createReport, { isLoading }] = useCreateReportMutation();
 
   const isOtherSelected = selectedReason === "other";
@@ -109,55 +111,38 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
     (isOtherSelected &&
       trimmedDescription.length < MIN_OTHER_DESCRIPTION_LENGTH);
 
-  // ── Keyboard height থেকে footer-এর নিজের bottom padding বাদ দিয়ে shift ──
-  const translateY = useRef(new Animated.Value(0)).current;
-
+  // Keyboard khulle list er sheshe (input er jaigay) scroll kori,
+  // jate input keyboard er niche lukiye na thake.
   useEffect(() => {
     const showEvent =
       Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent =
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
 
-    const showSub = Keyboard.addListener(showEvent, (e: KeyboardEvent) => {
-      setKeyboardVisible(true);
-
-      // footer-এ আগে থেকেই ৭০ padding আছে (home-indicator এর জন্য),
-      // keyboard খোলা অবস্থায় ওই জায়গাটা keyboard নিজেই কভার করে,
-      // তাই পুরো keyboardHeight না তুলে, ৭০ বাদ দিয়ে ততটুকুই তোলা হচ্ছে
-      const shift = Math.max(
-        e.endCoordinates.height - FOOTER_BOTTOM_PADDING + KEYBOARD_EXTRA_GAP,
-        0,
-      );
-
-      Animated.timing(translateY, {
-        toValue: -shift,
-        duration: Platform.OS === "ios" ? e.duration || 250 : 200,
-        useNativeDriver: true,
-      }).start();
+    const sub = Keyboard.addListener(showEvent, () => {
+      if (!isOtherSelected) return;
+      // BottomSheet er height update hote ektu somoy lage
+      setTimeout(() => {
+        scrollRef.current?.scrollToEnd({ animated: true });
+      }, 120);
     });
 
-    const hideSub = Keyboard.addListener(hideEvent, (e: KeyboardEvent) => {
-      setKeyboardVisible(false);
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: Platform.OS === "ios" ? e?.duration || 250 : 200,
-        useNativeDriver: true,
-      }).start();
-    });
-
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, [translateY]);
+    return () => sub.remove();
+  }, [isOtherSelected]);
 
   const handleSelectReason = (reason: ReportReason) => {
-    Keyboard.dismiss();
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
-    if (reason !== "other") {
-      setDescription("");
+    if (reason === "other") {
+      setSelectedReason(reason);
+      // input mount howar por focus + scroll
+      setTimeout(() => {
+        inputRef.current?.focus();
+        scrollRef.current?.scrollToEnd({ animated: true });
+      }, 150);
+      return;
     }
+
+    Keyboard.dismiss();
+    setDescription("");
     setSelectedReason(reason);
   };
 
@@ -191,17 +176,11 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
   };
 
   return (
-    <Animated.View
-      style={{
-        maxHeight: SHEET_MAX_HEIGHT,
-        flexDirection: "column",
-        transform: [{ translateY }],
-      }}
-    >
+    // flexShrink: 1 -> BottomSheet er max height er moddhe shrink korte pare
+    <View style={{ flexShrink: 1 }}>
       {/* Header — fixed */}
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View className="items-center pt-1 pb-3 px-4">
-          <View className="w-10 h-1 rounded-full bg-border dark:bg-dark-border mb-3" />
+        <View className="items-center pb-3 px-4">
           <Text className="text-base font-bold text-text dark:text-dark-text">
             কেন রিপোর্ট করছো?
           </Text>
@@ -211,14 +190,17 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
         </View>
       </TouchableWithoutFeedback>
 
-      {/* Scrollable middle — reason list এখানে, এটাই স্ক্রল হবে */}
+      {/* Middle — ekhanei shudhu scroll hobe */}
       <ScrollView
+        ref={scrollRef}
         style={{ flexGrow: 0, flexShrink: 1 }}
-        className="px-4"
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8 }}
         keyboardShouldPersistTaps="handled"
         onScrollBeginDrag={Keyboard.dismiss}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 8 }}
+        bounces={false}
+        overScrollMode="never"
+        nestedScrollEnabled
       >
         <View className="flex flex-col gap-1">
           {REASONS.map((reason) => {
@@ -273,23 +255,27 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
             );
           })}
 
-          {/* "অন্যান্য কারণ" সিলেক্ট করলেই শুধু এই input দেখা যাবে */}
+          {/* "অন্যান্য কারণ" select korle shudhu ei input dekha jabe */}
           {isOtherSelected && (
             <View className="mt-2 mb-1">
               <TextInput
+                ref={inputRef}
                 value={description}
                 onChangeText={setDescription}
                 placeholder="বিস্তারিত লিখো, কমপক্ষে ৫ ক্যারেক্টার"
                 placeholderTextColor={isDark ? "#6B7280" : "#9CA3AF"}
                 multiline
-                autoFocus
                 maxLength={500}
                 numberOfLines={3}
                 returnKeyType="done"
                 blurOnSubmit
                 onSubmitEditing={Keyboard.dismiss}
                 className="bg-background-secondary dark:bg-dark-background-secondary rounded-2xl px-3.5 py-3 text-sm text-text dark:text-dark-text"
-                style={{ minHeight: 80, textAlignVertical: "top" }}
+                style={{
+                  minHeight: 80,
+                  maxHeight: 140,
+                  textAlignVertical: "top",
+                }}
               />
               <Text
                 className={`text-xs mt-1.5 ${
@@ -306,13 +292,9 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
         </View>
       </ScrollView>
 
-      {/* Footer — fixed, শুধু submit button। paddingBottom সবসময় ৭০ থাকবে —
-          keyboard খুললে translateY-ই সঠিক জায়গায় নিয়ে যাবে */}
+      {/* Footer — fixed, shobsomoy dekha jabe */}
       <View
-        style={{
-          flexShrink: 0,
-          paddingBottom: FOOTER_BOTTOM_PADDING,
-        }}
+        style={{ flexShrink: 0 }}
         className="px-4 pt-3 border-t border-border/50 dark:border-dark-border/50"
       >
         <TouchableOpacity
@@ -332,7 +314,7 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
           )}
         </TouchableOpacity>
       </View>
-    </Animated.View>
+    </View>
   );
 };
 

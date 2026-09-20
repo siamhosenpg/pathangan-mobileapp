@@ -1,10 +1,11 @@
 import { useCreateHandoutMutation } from "@/redux/api/handout/handoutApi";
 import type { HandoutCategory } from "@/types/handoutTypes";
 import { Ionicons } from "@expo/vector-icons";
+import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import { useColorScheme } from "nativewind";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -28,9 +29,21 @@ const categoryOptions: { key: HandoutCategory; label: string }[] = [
   { key: "onnanno", label: "অন্যান্য" },
 ];
 
+const SAFE_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
+
+/**
+ * uri theke safe extension ber kori.
+ * HEIC/unknown hole "jpg" (Compatible mode e ager theke JPEG hoye ashe).
+ */
+const getSafeExtension = (uri: string) => {
+  const ext = uri.split("?")[0].split(".").pop()?.toLowerCase();
+  return ext && SAFE_IMAGE_EXTENSIONS.includes(ext) ? ext : "jpg";
+};
+
 export default function CreateHandoutScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const navigation = useNavigation();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -40,27 +53,68 @@ export default function CreateHandoutScreen() {
 
   const [createHandout, { isLoading }] = useCreateHandoutMutation();
 
-  const pickCoverImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
+  // Submit successful hole confirm popup skip korar jonno
+  const allowLeaveRef = useRef(false);
+
+  const hasUnsavedChanges =
+    title.trim().length > 0 ||
+    description.trim().length > 0 ||
+    tagsInput.trim().length > 0 ||
+    category !== null ||
+    coverImageUri !== null;
+
+  /* ─────────── Back confirmation ───────────
+   * beforeRemove: close button, Android back, iOS swipe-back,
+   * router.back() shob ekhane atkay.
+   */
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("beforeRemove", (e) => {
+      if (allowLeaveRef.current || !hasUnsavedChanges) return;
+
+      e.preventDefault();
+
       Alert.alert(
-        "অনুমতি প্রয়োজন",
-        "ছবি নির্বাচন করতে গ্যালারি অ্যাক্সেস দিন",
+        "পরিবর্তন বাতিল করবেন?",
+        "আপনার লেখা তথ্য সংরক্ষিত হয়নি। এখন বেরিয়ে গেলে সব মুছে যাবে।",
+        [
+          { text: "থাকুন", style: "cancel" },
+          {
+            text: "বাদ দিন",
+            style: "destructive",
+            onPress: () => navigation.dispatch(e.data.action),
+          },
+        ],
       );
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      aspect: [2, 3],
-      quality: 0.9,
     });
-    if (!result.canceled) {
-      setCoverImageUri(result.assets[0].uri);
+
+    return unsubscribe;
+  }, [navigation, hasUnsavedChanges]);
+
+  /* ─────────── Cover image ─────────── */
+  const pickCoverImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: false,
+        quality: 0.9,
+        exif: false,
+        // iPhone er HEIC file auto JPG kore dey (create post page e jemon)
+        preferredAssetRepresentationMode:
+          ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setCoverImageUri(result.assets[0].uri);
+      }
+    } catch {
+      Alert.alert("সমস্যা হয়েছে", "ছবি নির্বাচন করা যায়নি, আবার চেষ্টা করুন");
     }
   };
 
+  /* ─────────── Submit ─────────── */
   const handleSubmit = async () => {
+    if (isLoading) return;
+
     if (!title.trim() || !description.trim() || !category) {
       Alert.alert(
         "তথ্য অসম্পূর্ণ",
@@ -72,7 +126,7 @@ export default function CreateHandoutScreen() {
     try {
       const tags = tagsInput
         .split(",")
-        .map((t) => t.trim())
+        .map((tag) => tag.trim())
         .filter(Boolean);
 
       const formData = new FormData();
@@ -82,21 +136,19 @@ export default function CreateHandoutScreen() {
       formData.append("tags", JSON.stringify(tags));
 
       if (coverImageUri) {
-        const filename = coverImageUri.split("/").pop() ?? "cover.jpg";
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : "image/jpeg";
-
-        formData.append("coverImage", {
-          uri: coverImageUri,
-          name: filename,
-          type,
-        } as any);
+        const ext = getSafeExtension(coverImageUri);
+        const fileName = `handout-cover-${Date.now()}.${ext}`;
+        const file = new File(coverImageUri);
+        formData.append("coverImage", file, fileName);
       }
 
       const res = await createHandout(formData).unwrap();
 
+      // popup na dekhiye niche jete dao
+      allowLeaveRef.current = true;
       router.replace(`/handouts/manage/${res.data._id}`);
     } catch (error) {
+      console.log("HANDOUT CREATE ERROR:", JSON.stringify(error, null, 2));
       Alert.alert(
         "সমস্যা হয়েছে",
         "হ্যান্ডআউট তৈরি করা যায়নি, আবার চেষ্টা করুন",
@@ -106,7 +158,7 @@ export default function CreateHandoutScreen() {
 
   return (
     <SafeAreaView
-      edges={["top"]}
+      edges={["top", "bottom"]}
       className="flex-1 bg-background dark:bg-dark-background"
     >
       {/* টপ বার */}
@@ -132,7 +184,8 @@ export default function CreateHandoutScreen() {
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ padding: 20, gap: 18, paddingBottom: 60 }}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ padding: 20, gap: 18, paddingBottom: 40 }}
         >
           {/* কভার ইমেজ */}
           <TouchableOpacity
@@ -238,27 +291,27 @@ export default function CreateHandoutScreen() {
             />
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
 
-      {/* সাবমিট বাটন */}
-      <View className="px-5 pb-5 pt-2 border-t border-border dark:border-dark-border">
-        <TouchableOpacity
-          onPress={handleSubmit}
-          disabled={isLoading}
-          className="bg-accent rounded-xl py-4 items-center justify-center flex-row gap-2"
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <>
-              <Text className="text-white font-bold text-base">
-                পরবর্তী ধাপ
-              </Text>
-              <Ionicons name="arrow-forward" size={18} color="#fff" />
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
+        {/* সাবমিট বাটন (KeyboardAvoidingView er vitore, tai keyboard er upore thake) */}
+        <View className="px-5 pb-3 pt-2 border-t border-border dark:border-dark-border">
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={isLoading}
+            className="bg-accent rounded-xl py-4 items-center justify-center flex-row gap-2"
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Text className="text-white font-bold text-base">
+                  পরবর্তী ধাপ
+                </Text>
+                <Ionicons name="arrow-forward" size={18} color="#fff" />
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

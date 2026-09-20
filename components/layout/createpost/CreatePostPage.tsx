@@ -1,5 +1,4 @@
 import {
-  useCreateCoursePostMutation,
   useCreatePostMutation,
   useCreateQuestionPostMutation,
 } from "@/redux/api/postApi";
@@ -13,10 +12,11 @@ import { useAppSelector } from "@/redux/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useNavigation, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -27,17 +27,37 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
-import CoursePostForm from "./CoursePostForm";
 import { MediaItem } from "./MediaPreviewGrid";
 import NormalPostForm from "./NormalPostForm";
-import PostTypeSelector from "./PostTypeSelector";
 import PrivacySelector from "./PrivacySelector";
 import QuestionPostForm from "./QuestionPostForm";
 
-type PostType = "post" | "question" | "course";
+type PostType = "post" | "question";
+type Privacy = "public" | "friends" | "private";
+
+const ACCENT = "#00914d";
+
+const POST_TYPES: {
+  key: PostType;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}[] = [
+  { key: "post", label: "পোস্ট", icon: "create-outline" },
+  { key: "question", label: "প্রশ্ন", icon: "help-circle-outline" },
+];
+
+const SAFE_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
+
+/** uri theke extension ber kori. Unknown/HEIC hole safe default. */
+const getExtension = (uri: string, type: "image" | "video") => {
+  const ext = uri.split("?")[0].split(".").pop()?.toLowerCase();
+  if (type === "video") return ext === "mov" ? "mov" : "mp4";
+  return ext && SAFE_IMAGE_EXTENSIONS.includes(ext) ? ext : "jpg";
+};
 
 export default function CreatePostPage() {
   const router = useRouter();
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { user } = useAppSelector((state) => state.auth);
   const { colorScheme } = useColorScheme();
@@ -45,9 +65,7 @@ export default function CreatePostPage() {
   const dispatch = useDispatch();
 
   const [activeType, setActiveType] = useState<PostType>("post");
-  const [privacy, setPrivacy] = useState<"public" | "friends" | "private">(
-    "public",
-  );
+  const [privacy, setPrivacy] = useState<Privacy>("public");
   const [error, setError] = useState("");
 
   const [title, setTitle] = useState("");
@@ -57,75 +75,125 @@ export default function CreatePostPage() {
   const [questionText, setQuestionText] = useState("");
   const [questionTags, setQuestionTags] = useState("");
 
-  const [courseTitle, setCourseTitle] = useState("");
-  const [courseDesc, setCourseDesc] = useState("");
-  const [coursePrice, setCoursePrice] = useState("");
-  const [courseTags, setCourseTags] = useState("");
-  const [courseMedia, setCourseMedia] = useState<MediaItem[]>([]);
+  // Reset e barbe. Form er `key` hisebe use hoy, tai form remount hoye
+  // vitorer local state / uncontrolled input o clear hoy.
+  const [formKey, setFormKey] = useState(0);
 
   const [createPost] = useCreatePostMutation();
   const [createQuestion] = useCreateQuestionPostMutation();
-  const [createCourse] = useCreateCoursePostMutation();
 
-  const pickMedia = async (target: "post" | "course") => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images", "videos"],
-      allowsMultipleSelection: true,
-      quality: 0.85,
-      exif: false,
-      // 🟢 iOS HEIC ফাইলকে অটোমেটিক JPG করতে এই লাইনটি যোগ করুন
-      preferredAssetRepresentationMode:
-        ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
+  // Submit er somoy back popup skip korar jonno
+  const allowLeaveRef = useRef(false);
+  // Double tap atkanor jonno (state na, tai kokhono atke thake na)
+  const submitLockRef = useRef(false);
+
+  const hasUnsavedChanges =
+    title.trim().length > 0 ||
+    text.trim().length > 0 ||
+    media.length > 0 ||
+    questionText.trim().length > 0 ||
+    questionTags.trim().length > 0;
+
+  // Shudhu visual er jonno. Button disable korar jonno na.
+  const hasContent =
+    activeType === "post"
+      ? text.trim().length > 0 || media.length > 0
+      : questionText.trim().length > 0;
+
+  /* ─────────── Form reset ─────────── */
+  const resetForm = useCallback(() => {
+    setTitle("");
+    setText("");
+    setMedia([]);
+    setQuestionText("");
+    setQuestionTags("");
+    setActiveType("post");
+    setPrivacy("public");
+    setError("");
+    setFormKey((k) => k + 1); // form remount, input clear
+  }, []);
+
+  /* ─────────── Screen focus hole flag reset ─────────── */
+  useFocusEffect(
+    useCallback(() => {
+      allowLeaveRef.current = false;
+      submitLockRef.current = false;
+    }, []),
+  );
+
+  /* ─────────── Back confirmation ─────────── */
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("beforeRemove", (e) => {
+      if (allowLeaveRef.current || !hasUnsavedChanges) return;
+
+      e.preventDefault();
+
+      Alert.alert(
+        "পোস্ট বাতিল করবেন?",
+        "আপনার লেখা সংরক্ষিত হয়নি। এখন বেরিয়ে গেলে সব মুছে যাবে।",
+        [
+          { text: "থাকুন", style: "cancel" },
+          {
+            text: "বাদ দিন",
+            style: "destructive",
+            onPress: () => navigation.dispatch(e.data.action),
+          },
+        ],
+      );
     });
-    if (result.canceled) return;
 
-    const selected: MediaItem[] = result.assets.map((a) => ({
-      uri: a.uri,
-      type: a.type === "video" ? "video" : "image",
-      fileName: a.fileName ?? undefined,
-      mimeType: a.mimeType ?? undefined,
-      thumbnail: a.type === "video" ? (a.uri ?? undefined) : undefined,
-    }));
+    return unsubscribe;
+  }, [navigation, hasUnsavedChanges]);
 
-    if (target === "post") {
+  /* ─────────── Media ─────────── */
+  const pickMedia = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images", "videos"],
+        allowsMultipleSelection: true,
+        quality: 0.85,
+        exif: false,
+        // iPhone er HEIC auto JPG hoye jay
+        preferredAssetRepresentationMode:
+          ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
+      });
+      if (result.canceled) return;
+
+      const selected: MediaItem[] = result.assets.map((a) => ({
+        uri: a.uri,
+        type: a.type === "video" ? "video" : "image",
+        fileName: a.fileName ?? undefined,
+        mimeType: a.mimeType ?? undefined,
+        thumbnail: a.type === "video" ? (a.uri ?? undefined) : undefined,
+      }));
+
       const hasVideo = selected.some((m) => m.type === "video");
       const hasImage = selected.some((m) => m.type === "image");
       if (hasVideo && hasImage) {
         setError("ছবি এবং ভিডিও একসাথে দেওয়া যাবে না");
         return;
       }
+
       setError("");
       setMedia(selected);
-    } else {
-      const videos = selected.filter((m) => m.type === "video");
-      if (videos.length > 1) {
-        setError("একটির বেশি ভিডিও দেওয়া যাবে না");
-        return;
-      }
-      setError("");
-      setCourseMedia((prev) => [...prev, ...selected]);
+    } catch {
+      setError("মিডিয়া নির্বাচন করা যায়নি, আবার চেষ্টা করুন");
     }
   };
 
   const buildFormData = (items: MediaItem[], formData: FormData) => {
-    items.forEach((m) => {
-      const ext = m.uri.split(".").pop()?.toLowerCase();
-      const mimeType =
-        m.mimeType ||
-        (m.type === "video"
-          ? "video/mp4"
-          : ext === "png"
-            ? "image/png"
-            : "image/jpeg");
-      const fileName =
-        m.fileName || `upload.${m.type === "video" ? "mp4" : ext || "jpg"}`;
-
+    items.forEach((m, i) => {
+      const ext = getExtension(m.uri, m.type === "video" ? "video" : "image");
+      // Original name (IMG_1234.HEIC) na diye safe name
+      const fileName = `upload-${Date.now()}-${i}.${ext}`;
       const file = new File(m.uri);
       formData.append("media", file, fileName);
     });
   };
 
+  /* ─────────── Submit ─────────── */
   const handleSubmit = async () => {
+    if (submitLockRef.current) return;
     setError("");
 
     if (activeType === "post" && !text.trim() && media.length === 0) {
@@ -136,21 +204,39 @@ export default function CreatePostPage() {
       setError("প্রশ্ন লিখুন");
       return;
     }
-    if (activeType === "course" && !courseTitle.trim()) {
-      setError("কোর্সের শিরোনাম দিন");
-      return;
-    }
 
-    // ✅ সাথে সাথে feed-এ চলে যাও
-    router.push("/(tabs)/feed" as any);
+    submitLockRef.current = true;
 
-    // ✅ background upload শুরু
+    // 1) Form er value gulo copy kore rakhi (reset er por lagbe)
+    const payload = {
+      type: activeType,
+      title: title.trim(),
+      text,
+      media,
+      questionText: questionText.trim(),
+      tags: questionTags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean),
+      privacy,
+    };
+
+    // 2) Form puro clear (state + form remount)
+    resetForm();
+
+    // 3) Popup na dekhiye feed e jao
+    allowLeaveRef.current = true;
+    router.replace("/(tabs)/feed" as any);
+
+    // Screen mounted thakle porer bar back popup abar kaj korar jonno
+    setTimeout(() => {
+      allowLeaveRef.current = false;
+    }, 600);
+
+    // 4) Background upload (payload theke, state theke na)
     dispatch(startUpload());
 
-    const hasMedia =
-      (activeType === "post" && media.length > 0) ||
-      (activeType === "course" && courseMedia.length > 0);
-
+    const hasMedia = payload.type === "post" && payload.media.length > 0;
     let fakeProgress = 0;
     const increment = hasMedia ? 1.5 : 8;
     const interval = setInterval(() => {
@@ -163,39 +249,19 @@ export default function CreatePostPage() {
     }, 200);
 
     try {
-      if (activeType === "post") {
+      if (payload.type === "post") {
         const formData = new FormData();
-        if (title.trim()) formData.append("title", title.trim());
-        formData.append("text", text);
-        formData.append("privacy", privacy);
-        buildFormData(media, formData);
+        if (payload.title) formData.append("title", payload.title);
+        formData.append("text", payload.text);
+        formData.append("privacy", payload.privacy);
+        buildFormData(payload.media, formData);
         await createPost(formData).unwrap();
-      }
-
-      if (activeType === "question") {
+      } else {
         await createQuestion({
-          questionText: questionText.trim(),
-          tags: questionTags
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean),
-          privacy,
+          questionText: payload.questionText,
+          tags: payload.tags,
+          privacy: payload.privacy,
         }).unwrap();
-      }
-
-      if (activeType === "course") {
-        const formData = new FormData();
-        formData.append("title", courseTitle.trim());
-        formData.append("description", courseDesc);
-        formData.append("price", coursePrice || "0");
-        formData.append("privacy", privacy);
-        courseTags
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean)
-          .forEach((tag) => formData.append("tags", tag));
-        buildFormData(courseMedia, formData);
-        await createCourse(formData).unwrap();
       }
 
       clearInterval(interval);
@@ -205,84 +271,152 @@ export default function CreatePostPage() {
       clearInterval(interval);
       console.log("UPLOAD ERROR:", JSON.stringify(err, null, 2));
       dispatch(failUpload());
+    } finally {
+      submitLockRef.current = false;
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <View
+      className="flex-1 bg-background dark:bg-dark-background"
+      style={{ paddingTop: insets.top }}
     >
-      <ScrollView
-        className="flex-1 bg-background dark:bg-dark-background"
-        contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      {/* ───────── Header ───────── */}
+      <View className="flex-row items-center gap-3 px-4 py-3 border-b border-border/60 dark:border-dark-border/60">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          activeOpacity={0.7}
+          className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
+        >
+          <Ionicons
+            name="close"
+            size={20}
+            color={isDark ? "#f1f1f1" : "#1b1b1b"}
+          />
+        </TouchableOpacity>
+
+        <Text className="flex-1 text-lg font-bold text-text dark:text-dark-text">
+          {activeType === "post" ? "নতুন পোস্ট" : "নতুন প্রশ্ন"}
+        </Text>
+
+        <TouchableOpacity
+          onPress={handleSubmit}
+          activeOpacity={0.85}
+          style={{
+            backgroundColor: ACCENT,
+            opacity: hasContent ? 1 : 0.45,
+            paddingHorizontal: 20,
+            paddingVertical: 8,
+            borderRadius: 999,
+          }}
+        >
+          <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700" }}>
+            {activeType === "post" ? "পোস্ট" : "জিজ্ঞাসা"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={{ paddingTop: insets.top + 12 }} className="px-4 gap-5">
-          {/* Header */}
-          <View className="flex-row items-center gap-3">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="w-9 h-9 rounded-full items-center justify-center border border-border dark:border-dark-border"
-            >
-              <Ionicons
-                name="arrow-back"
-                size={20}
-                color={isDark ? "#f1f1f1" : "#1b1b1b"}
-              />
-            </TouchableOpacity>
-            <Text className="text-text dark:text-dark-text text-lg font-bold flex-1">
-              নতুন পোস্ট
-            </Text>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            padding: 16,
+            gap: 16,
+            paddingBottom: insets.bottom + 40,
+          }}
+        >
+          {/* ───────── Type selector (segmented) ───────── */}
+          <View className="flex-row p-1 rounded-2xl bg-background-secondary dark:bg-dark-background-secondary">
+            {POST_TYPES.map((t) => {
+              const isActive = activeType === t.key;
+              return (
+                <TouchableOpacity
+                  key={t.key}
+                  onPress={() => {
+                    setActiveType(t.key);
+                    setError("");
+                  }}
+                  activeOpacity={0.8}
+                  style={{
+                    flex: 1,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    paddingVertical: 10,
+                    borderRadius: 12,
+                    backgroundColor: isActive ? ACCENT : "transparent",
+                  }}
+                >
+                  <Ionicons
+                    name={t.icon}
+                    size={18}
+                    color={isActive ? "#fff" : isDark ? "#9CA3AF" : "#6B7280"}
+                  />
+                  <Text
+                    className={`text-sm font-semibold ${
+                      isActive
+                        ? "text-white"
+                        : "text-text-secondary dark:text-dark-text-secondary"
+                    }`}
+                  >
+                    {t.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
-          {/* Type selector */}
-          <PostTypeSelector
-            active={activeType}
-            onChange={(t) => {
-              setActiveType(t);
-              setError("");
-            }}
-            isDark={isDark}
-          />
-
-          {/* User row */}
+          {/* ───────── User row ───────── */}
           <View className="flex-row items-center gap-3">
-            <View className="w-11 h-11 rounded-full overflow-hidden bg-accent/20 items-center justify-center">
+            <View className="w-12 h-12 rounded-full overflow-hidden bg-accent/20 items-center justify-center border border-border dark:border-dark-border">
               {user?.profileImage ? (
                 <Image
                   source={{ uri: user.profileImage }}
-                  className="w-full h-full"
+                  style={{ width: "100%", height: "100%" }}
                   resizeMode="cover"
                 />
               ) : (
-                <Text className="text-accent font-bold text-base">
+                <Text className="text-accent font-bold text-lg">
                   {user?.name?.charAt(0).toUpperCase()}
                 </Text>
               )}
             </View>
-            <View>
-              <Text className="text-text dark:text-dark-text text-sm font-semibold">
+            <View className="flex-1">
+              <Text
+                className="text-text dark:text-dark-text text-[15px] font-semibold"
+                numberOfLines={1}
+              >
                 {user?.name}
               </Text>
-              <Text className="text-text-tertiary dark:text-dark-text-tertiary text-xs">
+              <Text
+                className="text-text-tertiary dark:text-dark-text-tertiary text-xs mt-0.5"
+                numberOfLines={1}
+              >
                 @{user?.username}
               </Text>
             </View>
           </View>
 
-          {/* Error */}
+          {/* ───────── Error ───────── */}
           {error ? (
             <View className="flex-row items-center gap-2 bg-red-500/10 border border-red-500/30 px-4 py-3 rounded-2xl">
-              <Ionicons name="alert-circle-outline" size={16} color="#f87171" />
+              <Ionicons name="alert-circle-outline" size={18} color="#f87171" />
               <Text className="text-red-400 text-sm flex-1">{error}</Text>
+              <TouchableOpacity onPress={() => setError("")} hitSlop={10}>
+                <Ionicons name="close" size={16} color="#f87171" />
+              </TouchableOpacity>
             </View>
           ) : null}
 
-          {/* Forms */}
-          {activeType === "post" && (
+          {/* ───────── Forms (key bodlale remount hoy) ───────── */}
+          {activeType === "post" ? (
             <NormalPostForm
+              key={`post-${formKey}`}
               title={title}
               setTitle={setTitle}
               text={text}
@@ -291,13 +425,12 @@ export default function CreatePostPage() {
               onRemoveMedia={(i) =>
                 setMedia((prev) => prev.filter((_, j) => j !== i))
               }
-              onPickMedia={() => pickMedia("post")}
+              onPickMedia={pickMedia}
               isDark={isDark}
             />
-          )}
-
-          {activeType === "question" && (
+          ) : (
             <QuestionPostForm
+              key={`question-${formKey}`}
               questionText={questionText}
               setQuestionText={setQuestionText}
               tags={questionTags}
@@ -306,41 +439,14 @@ export default function CreatePostPage() {
             />
           )}
 
-          {activeType === "course" && (
-            <CoursePostForm
-              courseTitle={courseTitle}
-              setCourseTitle={setCourseTitle}
-              courseDesc={courseDesc}
-              setCourseDesc={setCourseDesc}
-              coursePrice={coursePrice}
-              setCoursePrice={setCoursePrice}
-              courseTags={courseTags}
-              setCourseTags={setCourseTags}
-              courseMedia={courseMedia}
-              onRemoveMedia={(i) =>
-                setCourseMedia((prev) => prev.filter((_, j) => j !== i))
-              }
-              onPickMedia={() => pickMedia("course")}
-              isDark={isDark}
-            />
-          )}
-
-          {/* Privacy */}
+          {/* ───────── Privacy ───────── */}
           <PrivacySelector
             value={privacy}
             onChange={setPrivacy}
             isDark={isDark}
           />
-
-          {/* Submit */}
-          <TouchableOpacity
-            onPress={handleSubmit}
-            className="w-full py-4 rounded-2xl bg-accent items-center justify-center"
-          >
-            <Text className="text-white font-semibold text-sm">পোস্ট করুন</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
