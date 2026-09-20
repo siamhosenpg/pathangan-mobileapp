@@ -1,10 +1,10 @@
+import FollowIcon from "@/assets/icons/user-add.svg";
 import {
   useFollowUserMutation,
   useGetFollowersQuery,
   useUnfollowUserMutation,
 } from "@/redux/api/followApi";
 import { useAppSelector } from "@/redux/hooks";
-import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
 import { useEffect, useState } from "react";
@@ -89,13 +89,13 @@ const FollowButtonProfile = ({ targetUserId }: Props) => {
           : "bg-accent border-accent"
       }`}
     >
-      <Ionicons
-        name={localFollowing ? "person-remove-outline" : "person-add-outline"}
-        size={16}
+      <FollowIcon
+        width={14}
+        height={14}
         color={localFollowing ? (isDark ? "#8a8a8a" : "#6b7280") : "#fff"}
       />
       <Text
-        className={`text-sm font-semibold ${
+        className={` font-semibold ${
           localFollowing
             ? "text-text-secondary dark:text-dark-text-secondary"
             : "text-white"

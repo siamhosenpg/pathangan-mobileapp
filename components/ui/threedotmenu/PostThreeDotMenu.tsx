@@ -107,7 +107,6 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
     <View className="px-4 pt-1 pb-2">
       {/* Header */}
       <View className="items-center mb-3">
-        <View className="w-10 h-1 rounded-full bg-border dark:bg-dark-border mb-3" />
         <Text className="text-base font-bold text-text dark:text-dark-text">
           {t("postOptions")}
         </Text>

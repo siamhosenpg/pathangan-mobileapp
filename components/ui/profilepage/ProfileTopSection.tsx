@@ -3,9 +3,9 @@ import { useRouter } from "expo-router";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 // import UserRating from "@/components/ui/star/UserRating"; // পরে uncomment করো
 // import FollowStats from "./FollowStats"; // পরে uncomment করো
+import QuestionIcon from "@/assets/icons/map-marker-question.svg";
 import { useGetUnreadCountQuery } from "@/redux/api/privateQuestion/privateQuestionApi";
 import type { User } from "@/types/userTypes";
-import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -100,12 +100,12 @@ const ProfileTopSection = ({ data }: Props) => {
               }
               className="flex-row items-center self-start gap-2 mt-3 px-4 py-2 rounded-full border border-border dark:border-dark-border"
             >
-              <Ionicons
-                name="mail-outline"
-                size={16}
+              <QuestionIcon
+                width={14}
+                height={14}
                 color={isDark ? "#c4c4c4" : "#3a3a3a"}
               />
-              <Text className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary">
+              <Text className=" font-semibold text-text-secondary dark:text-dark-text-secondary">
                 {t("privateQuestions")}
               </Text>
               {unreadCount > 0 && (
@@ -123,12 +123,12 @@ const ProfileTopSection = ({ data }: Props) => {
                 onPress={() => setModalVisible(true)}
                 className="flex-row items-center self-start gap-2 mt-3 px-4 py-2 rounded-full border border-border dark:border-dark-border"
               >
-                <Ionicons
-                  name="help-circle-outline"
-                  size={16}
+                <QuestionIcon
+                  width={14}
+                  height={14}
                   color={isDark ? "#c4c4c4" : "#3a3a3a"}
                 />
-                <Text className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary">
+                <Text className=" font-semibold text-text-secondary dark:text-dark-text-secondary">
                   {t("askQuestion")}
                 </Text>
               </TouchableOpacity>

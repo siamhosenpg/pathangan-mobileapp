@@ -5,7 +5,8 @@ import { useRouter } from "expo-router";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import GreenMark from "../../badges/GreenMark";
 import { useBottomSheet } from "../../bottom-sheet/BottomSheetProvider";
-import FollowButtonPost from "../../buttons/FollowButtonPost";
+
+// import FollowButtonPost from "../../buttons/FollowButtonPost";
 import TimeAgo from "../../datetime/TimeAgo";
 import PostThreeDotMenu from "../../threedotmenu/PostThreeDotMenu";
 
@@ -88,11 +89,16 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
             {user?.greenmarkVerified && (
               <GreenMark mark={!!user.greenmarkVerified} size={14} />
             )}
-            <View className="ml-1">
-              <FollowButtonPost
+            <View className="ml-1 relative items-center justify-start ">
+              {/* Follow button 
+              
+                <FollowButtonPost
                 targetUserId={user._id}
                 initialIsFollowing={(user as any).isFollowing}
               />
+              
+              
+              */}
             </View>
           </View>
           <Text className="text-text-secondary dark:text-dark-text-secondary">

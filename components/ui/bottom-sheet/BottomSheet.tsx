@@ -5,6 +5,7 @@ import {
   Keyboard,
   Platform,
   Pressable,
+  ScrollView,
   Text,
   View,
 } from "react-native";
@@ -17,15 +18,27 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 const DISMISS_THRESHOLD = 150;
 const DISMISS_VELOCITY = 800;
 
+const MAX_SHEET_RATIO = 0.85; // screen er max 85% porjonto
+const TOP_GAP = 16; // safe area top er pore extra jaiga
+const HANDLE_AREA = 34; // mt-3(12) + h-1.5(6) + mb-2(8) + pb-2(8)
+const BOTTOM_PADDING = 16; // safe area bottom er sathe jog hobe
+
 interface Props {
   visible: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  /**
+   * true (default): children ScrollView er vitore render hobe.
+   * false: children shorasori render hobe (FlatList/SectionList er jonno),
+   * tokhon oi list e nijei scroll handle korbe.
+   */
+  scrollable?: boolean;
 }
 
 const OPEN_SPRING = {
@@ -41,14 +54,20 @@ const SNAP_SPRING = {
   mass: 0.8,
 };
 
-const BottomSheet = ({ visible, onClose, children }: Props) => {
+const BottomSheet = ({
+  visible,
+  onClose,
+  children,
+  scrollable = true,
+}: Props) => {
   const [mounted, setMounted] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const backdropOpacity = useSharedValue(0);
 
-  // ✅ keyboard height track করো — sheet manually উপরে উঠবে
+  // keyboard height track kori — sheet manually upore uthbe
   React.useEffect(() => {
     const showEvent =
       Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -77,7 +96,7 @@ const BottomSheet = ({ visible, onClose, children }: Props) => {
         backdropOpacity.value = withTiming(1, { duration: 250 });
       });
     } else {
-      // close হলে keyboard dismiss করো
+      // close hole keyboard dismiss kori
       Keyboard.dismiss();
       translateY.value = withTiming(SCREEN_HEIGHT, {
         duration: 180,
@@ -124,6 +143,22 @@ const BottomSheet = ({ visible, onClose, children }: Props) => {
   const isEmpty =
     !children || (Array.isArray(children) && children.length === 0);
 
+  // keyboard open thakle bottom safe area lage na, tai tokhon choto padding
+  const bottomPadding =
+    keyboardHeight > 0 ? BOTTOM_PADDING : insets.bottom + BOTTOM_PADDING;
+
+  // Sheet er max height: screen er 85%, ar keyboard + status bar er jaiga bad diye
+  const maxSheetHeight = Math.min(
+    SCREEN_HEIGHT * MAX_SHEET_RATIO,
+    SCREEN_HEIGHT - keyboardHeight - insets.top - TOP_GAP,
+  );
+
+  // Content area er max height = sheet max - handle - bottom padding
+  const maxContentHeight = Math.max(
+    maxSheetHeight - HANDLE_AREA - bottomPadding,
+    0,
+  );
+
   return (
     <View className="absolute inset-0 z-[999] justify-end">
       {/* Backdrop */}
@@ -134,19 +169,18 @@ const BottomSheet = ({ visible, onClose, children }: Props) => {
         />
       </Pressable>
 
-      {/* Sheet — keyboard height অনুযায়ী marginBottom */}
+      {/* Sheet — content onujayi height, max porjonto */}
       <Animated.View
         style={[
           sheetStyle,
           {
-            flex: 1,
-            maxHeight: SCREEN_HEIGHT * 0.8,
+            maxHeight: maxSheetHeight,
             minHeight: isEmpty ? SCREEN_HEIGHT * 0.3 : undefined,
-            // ✅ এটাই আসল trick — sheet নিচ থেকে keyboard height সরে যায়
             marginBottom: keyboardHeight,
+            paddingBottom: bottomPadding,
           },
         ]}
-        className="bg-background dark:bg-dark-background rounded-t-3xl pb-8"
+        className="bg-background dark:bg-dark-background rounded-t-3xl"
       >
         {/* Handle bar */}
         <GestureDetector gesture={handleGesture}>
@@ -162,8 +196,21 @@ const BottomSheet = ({ visible, onClose, children }: Props) => {
               {t("noDataAvailable")}
             </Text>
           </View>
+        ) : scrollable ? (
+          <ScrollView
+            style={{ flexGrow: 0, maxHeight: maxContentHeight }}
+            bounces={false}
+            overScrollMode="never"
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled
+          >
+            {children}
+          </ScrollView>
         ) : (
-          <View className="flex-1">{children}</View>
+          <View style={{ flexShrink: 1, maxHeight: maxContentHeight }}>
+            {children}
+          </View>
         )}
       </Animated.View>
     </View>

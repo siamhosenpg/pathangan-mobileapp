@@ -9,8 +9,16 @@ import React, {
 } from "react";
 import BottomSheet from "./BottomSheet";
 
+interface OpenOptions {
+  /**
+   * true (default): content ScrollView er vitore render hobe.
+   * false: FlatList/SectionList er jonno, list nijei scroll handle korbe.
+   */
+  scrollable?: boolean;
+}
+
 interface BottomSheetContextType {
-  open: (content: React.ReactNode) => void;
+  open: (content: React.ReactNode, options?: OpenOptions) => void;
   close: () => void;
 }
 
@@ -25,12 +33,13 @@ export const BottomSheetProvider = ({
 }) => {
   const [content, setContent] = useState<React.ReactNode>(null);
   const [visible, setVisible] = useState(false);
+  const [scrollable, setScrollable] = useState(true);
 
-  // যদি rapidly open → close → open হয়, content clear না হোক
+  // rapidly open → close → open hole content clear na hoy
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const open = useCallback((node: React.ReactNode) => {
-    // পুরনো close timer cancel করো (rapid re-open case)
+  const open = useCallback((node: React.ReactNode, options?: OpenOptions) => {
+    // purono close timer cancel kori (rapid re-open case)
     if (closeTimerRef.current) {
       clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
@@ -38,33 +47,29 @@ export const BottomSheetProvider = ({
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setContent(node);
+    setScrollable(options?.scrollable ?? true);
     setVisible(true);
   }, []);
 
   const close = useCallback(() => {
     setVisible(false);
 
-    // BottomSheet এর close animation (280ms) শেষ হওয়ার পরে content clear করো
-    // এর আগে clear করলে children unmount হয়ে animation jerky দেখায়
+    // BottomSheet er close animation (180ms) shesh howar pore content clear kori.
+    // Age clear korle children unmount hoye animation jerky dekhay.
     closeTimerRef.current = setTimeout(() => {
       setContent(null);
+      setScrollable(true); // pore next open e default e ferot jabe
       closeTimerRef.current = null;
-    }, 220); // 280ms animation + 40ms buffer
+    }, 220);
   }, []);
 
-  const value = useMemo(
-    () => ({
-      open,
-      close,
-    }),
-    [open, close],
-  );
+  const value = useMemo(() => ({ open, close }), [open, close]);
 
   return (
     <BottomSheetContext.Provider value={value}>
       {children}
 
-      <BottomSheet visible={visible} onClose={close}>
+      <BottomSheet visible={visible} onClose={close} scrollable={scrollable}>
         {content}
       </BottomSheet>
     </BottomSheetContext.Provider>

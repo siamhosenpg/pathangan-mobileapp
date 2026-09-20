@@ -106,7 +106,9 @@ export function Header({ title }: { title?: string }) {
                 <AddIcon width={22} height={22} color={iconColor} />
               </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => open(<NotificationPanel />)}>
+            <TouchableOpacity
+              onPress={() => open(<NotificationPanel />, { scrollable: false })}
+            >
               <View style={{ position: "relative" }}>
                 <BellIcon width={22} height={22} color={iconColor} />
                 <NotificationBadge count={unreadCount} />

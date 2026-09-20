@@ -1,9 +1,10 @@
+import FollowAdd from "@/assets/icons/user-add.svg";
 import { useFollowUserMutation } from "@/redux/api/followApi";
 import { useAppSelector } from "@/redux/hooks";
 import * as Haptics from "expo-haptics";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from "react-native";
 import Animated, {
   runOnJS,
   useAnimatedStyle,
@@ -124,11 +125,9 @@ const FollowButtonPost = ({
       disabled={isLoading || localFollowing}
       activeOpacity={0.8}
       style={animatedStyle}
-      className="px-2 py-0.5 flex-row gap-1 items-center justify-center rounded-full bg-accent"
+      className="   flex-row gap-1 w-6 h-6 items-center justify-center rounded-full bg-accent"
     >
-      <Text className="font-semibold text-xs" style={{ color: "#fff" }}>
-        {isLoading ? "..." : t("follow")}
-      </Text>
+      <FollowAdd width={11} height={11} color="#fff" />
     </AnimatedTouchable>
   );
 };
