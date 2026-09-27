@@ -41,6 +41,12 @@
   "unfollow": "অনুসরণ বন্ধ করুন",
   "followers": "অনুসারী",
   "following": "অনুসরণ করা হচ্ছে",
+
+  "reactedToYourPost": "তোমার পোস্টে রিঅ্যাক্ট করেছে",
+  "commentedOnYourPost": "তোমার পোস্টে কমেন্ট করেছে",
+  "followingYou": "তোমাকে ফলো করেছে",
+  "sharedYourPost": "তোমার পোস্ট শেয়ার করেছে",
+
   "posts": "পোস্ট",
   "copyLink": "লিংক কপি করুন",
   "copyLinkSub": "পোস্টের লিংক কপি করে শেয়ার করুন।",
@@ -85,6 +91,7 @@
   "confirmNewPassword": "নতুন পাসওয়ার্ড নিশ্চিত করুন",
   "saveChanges": "পরিবর্তন সংরক্ষণ করুন",
   "cancel": "বাতিল",
+  "goBack": "ফিরে যান",
   "deleteAccount": "অ্যাকাউন্ট মুছে দিন",
   "delete": "মুছুন",
   "deleteing": "মুছে ফেলা হচ্ছে...",
@@ -126,5 +133,16 @@
   "websitePlaceholder": "আপনার ওয়েবসাইটের লিঙ্ক লিখুন",
   "location": "অবস্থান",
   "locationPlaceholder": "আপনার অবস্থান লিখুন",
-  "workPlaceholder": "আপনার কর্মস্থল লিখুন"
+  "workPlaceholder": "আপনার কর্মস্থল লিখুন",
+
+  "posting": "পোস্ট হচ্ছে...",
+  "post": "পোস্ট",
+  "characters": "অক্ষর",
+  "submitAnswer": "উত্তর দিন",
+
+  "answerPlaceholder": "আপনার উত্তর লিখুন...",
+  "areyouSure": "আপনি কি নিশ্চিত?",
+  "discardAnswer": "আপনার লেখা উত্তরটি মুছে যাবে। আপনি কি ফিরে যেতে চান?",
+  "somthingWentWrong": "কিছু ভুল হয়েছে। আবার চেষ্টা করুন।",
+  "alreadyAnswered": "আপনি আগেই এই প্রশ্নের উত্তর দিয়েছেন"
 }

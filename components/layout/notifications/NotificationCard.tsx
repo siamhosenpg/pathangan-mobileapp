@@ -2,7 +2,7 @@ import GreenMark from "@/components/ui/badges/GreenMark";
 import { Notification } from "@/types/notification/notificationTypes";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import { useTranslation } from "react-i18next";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 interface Props {
   item: Notification;
@@ -10,16 +10,20 @@ interface Props {
   onDelete: (id: string) => void;
 }
 
-const getText = (type: Notification["type"]) => {
+const getText = (type: Notification["type"], t: (key: string) => string) => {
   switch (type) {
     case "like":
-      return "তোমার পোস্টে রিঅ্যাক্ট করেছে";
+      return t("reactedToYourPost");
+
     case "comment":
-      return "কমেন্ট করেছে তোমার পোস্টে";
+      return t("commentedOnYourPost");
+
     case "follow":
-      return "তোমাকে ফলো করেছে";
+      return t("followingYou");
+
     case "share":
-      return "পোস্ট শেয়ার করেছে";
+      return t("sharedYourPost");
+
     default:
       return "";
   }
@@ -58,6 +62,7 @@ const getNavigationPath = (notification: Notification): string | null => {
 };
 
 const NotificationCard = ({ item, onRead, onDelete }: Props) => {
+  const { t } = useTranslation();
   const router = useRouter();
   const handlePress = () => {
     onRead(item._id);
@@ -103,7 +108,7 @@ const NotificationCard = ({ item, onRead, onDelete }: Props) => {
               size={16}
             />
           </View>
-          <Text>{getText(item.type)}</Text>
+          <Text>{getText(item.type, t)}</Text>
         </View>
 
         <Text className="text-xs font-medium text-text-tertiary dark:text-dark-text-tertiary mt-1">

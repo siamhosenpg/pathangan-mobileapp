@@ -41,6 +41,12 @@
   "unfollow": "Unfollow",
   "followers": "Followers",
   "following": "Following",
+
+  "reactedToYourPost": "reacted to your post",
+  "commentedOnYourPost": "commented on your post",
+  "followingYou": "started following you",
+  "sharedYourPost": "shared your post",
+
   "posts": "Posts",
   "noDataAvailable": "No data available",
   "noPosts": "No posts yet",
@@ -85,6 +91,7 @@
   "confirmNewPassword": "Confirm New Password",
   "saveChanges": "Save Changes",
   "cancel": "Cancel",
+  "goBack": "Go Back",
   "deleteAccount": "Delete Account",
   "delete": "Delete",
   "deleteing": "Deleteing",
@@ -140,5 +147,15 @@
   "website": "Website",
   "websitePlaceholder": "Enter the link to your website",
   "location": "Location",
-  "locationPlaceholder": "Enter your location"
+  "locationPlaceholder": "Enter your location",
+
+  "posting": "Posting...",
+  "post": "Post",
+  "characters": "Characters",
+  "submitAnswer": "Submit Answer",
+  "answerPlaceholder": "Write your answer...",
+  "areyouSure": "Are you sure?",
+  "discardAnswer": "Your written answer will be discarded. Do you want to go back?",
+  "somthingWentWrong": "Something went wrong. Please try again.",
+  "alreadyAnswered": "You have already answered this question"
 }

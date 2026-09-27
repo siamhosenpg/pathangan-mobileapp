@@ -9,11 +9,11 @@ import { toBanglaNumber } from "@/utils/toBanglaNumber";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useColorScheme } from "nativewind";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  FlatList,
+  Animated,
   Image,
   RefreshControl,
   ScrollView,
@@ -33,13 +33,10 @@ const categories: { key: HandoutCategory | null; label: string }[] = [
   { key: "onnanno", label: "অন্যান্য" },
 ];
 
-function DraftStrip({
-  isDark,
-  refreshKey,
-}: {
-  isDark: boolean;
-  refreshKey: number;
-}) {
+const CATEGORY_BAR_HEIGHT = 56;
+const HIDE_SHOW_THRESHOLD = 6;
+
+function DraftStrip({ isDark }: { isDark: boolean }) {
   const { i18n } = useTranslation();
   const isBn = i18n.language === "bn";
   const n = (num: number) => (isBn ? toBanglaNumber(num) : String(num));
@@ -47,12 +44,12 @@ function DraftStrip({
   const { data, refetch } = useGetMyHandoutsQuery({ status: "draft" });
   const drafts = data?.data ?? [];
 
-  // ✅ ফিড স্ক্রিন focus হলে draft strip ও রিফ্রেশ হবে
+  // ✅ ফিড স্ক্রিন focus হলে draft strip নিঃশব্দে (background এ) রিফ্রেশ হবে,
+  // কোনো loading UI দেখাবে না বলে flicker হবে না
   useFocusEffect(
     useCallback(() => {
       refetch();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [refreshKey]),
+    }, [refetch]),
   );
 
   if (drafts.length === 0) return null;
@@ -127,7 +124,7 @@ export default function HandoutsFeedScreen() {
   const [activeCategory, setActiveCategory] = useState<HandoutCategory | null>(
     null,
   );
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [manualRefreshing, setManualRefreshing] = useState(false);
 
   const {
     data,
@@ -142,14 +139,22 @@ export default function HandoutsFeedScreen() {
 
   const handouts: Handout[] = data?.pages?.flatMap((page) => page.data) ?? [];
 
-  // ✅ এই স্ক্রিনে যতবার ফিরে আসবেন (যেমন publish করে ব্যাক করলে), তত বার fresh data আসবে
+  // ✅ ট্যাব ফোকাস হলে ডেটা নিঃশব্দে (background এ) রিফ্রেশ হয় — data আগে থেকে
+  // থাকলে skeleton আর দেখানো হবে না, তাই "reload" এর মতো লাগবে না
   useFocusEffect(
     useCallback(() => {
       refetch();
-      setRefreshKey((k) => k + 1);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []),
+    }, [refetch]),
   );
+
+  const onManualRefresh = useCallback(async () => {
+    setManualRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setManualRefreshing(false);
+    }
+  }, [refetch]);
 
   const renderItem = useCallback(
     ({ item }: { item: Handout }) => <HandoutCard handout={item} />,
@@ -175,49 +180,102 @@ export default function HandoutsFeedScreen() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  // ✅ Scroll করলে ক্যাটাগরি বার লুকাবে/দেখাবে (Animated, নরম motion সহ)
+  const categoryTranslateY = useRef(new Animated.Value(0)).current;
+  const lastScrollY = useRef(0);
+  const isCategoryVisible = useRef(true);
+
+  const animateCategoryBar = useCallback(
+    (visible: boolean) => {
+      if (isCategoryVisible.current === visible) return;
+      isCategoryVisible.current = visible;
+      Animated.timing(categoryTranslateY, {
+        toValue: visible ? 0 : -CATEGORY_BAR_HEIGHT,
+        duration: 220,
+        useNativeDriver: true,
+      }).start();
+    },
+    [categoryTranslateY],
+  );
+
+  const handleScroll = useCallback(
+    (event: { nativeEvent: { contentOffset: { y: number } } }) => {
+      const currentY = event.nativeEvent.contentOffset.y;
+      const diff = currentY - lastScrollY.current;
+
+      if (currentY <= 0) {
+        animateCategoryBar(true);
+      } else if (diff > HIDE_SHOW_THRESHOLD) {
+        animateCategoryBar(false);
+      } else if (diff < -HIDE_SHOW_THRESHOLD) {
+        animateCategoryBar(true);
+      }
+
+      lastScrollY.current = currentY;
+    },
+    [animateCategoryBar],
+  );
+
   const renderListHeader = useCallback(
     () => (
-      <>
-        {/* ✅ ক্যাটাগরি চিপস — উপরে */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
-          className="mb-4"
-        >
-          {categories.map((cat) => {
-            const isActive = activeCategory === cat.key;
-            return (
-              <TouchableOpacity
-                key={cat.label}
-                onPress={() => setActiveCategory(cat.key)}
-                activeOpacity={0.8}
-                className={`px-4 py-2 rounded-full border ${
+      <View style={{ paddingTop: 12 }}>
+        <DraftStrip isDark={isDark} />
+      </View>
+    ),
+    [isDark],
+  );
+
+  const CategoryBar = (
+    <Animated.View
+      className="absolute top-0 left-0 right-0 z-10 bg-background dark:bg-dark-background border-b border-border dark:border-dark-border"
+      style={{
+        height: CATEGORY_BAR_HEIGHT,
+        transform: [{ translateY: categoryTranslateY }],
+      }}
+    >
+      <ScrollView
+        horizontal
+        directionalLockEnabled
+        alwaysBounceVertical={false}
+        bounces={false}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          gap: 8,
+          alignItems: "center",
+          height: CATEGORY_BAR_HEIGHT,
+        }}
+      >
+        {categories.map((cat) => {
+          const isActive = activeCategory === cat.key;
+          return (
+            <TouchableOpacity
+              key={cat.label}
+              onPress={() => setActiveCategory(cat.key)}
+              activeOpacity={0.8}
+              className={`px-4 py-2 rounded-full border ${
+                isActive
+                  ? "bg-accent border-accent"
+                  : "bg-background-secondary dark:bg-dark-background-secondary border-border dark:border-dark-border"
+              }`}
+            >
+              <Text
+                className={`text-sm font-medium ${
                   isActive
-                    ? "bg-accent border-accent"
-                    : "bg-background-secondary dark:bg-dark-background-secondary border-border dark:border-dark-border"
+                    ? "text-white"
+                    : "text-text-secondary dark:text-dark-text-secondary"
                 }`}
               >
-                <Text
-                  className={`text-sm font-medium ${
-                    isActive
-                      ? "text-white"
-                      : "text-text-secondary dark:text-dark-text-secondary"
-                  }`}
-                >
-                  {cat.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-
-        {/* ✅ ড্রাফট স্ট্রিপ — ক্যাটাগরির নিচে */}
-        <DraftStrip isDark={isDark} refreshKey={refreshKey} />
-      </>
-    ),
-    [activeCategory, isDark, refreshKey],
+                {cat.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+    </Animated.View>
   );
+
+  const showSkeleton = isLoading && handouts.length === 0;
 
   return (
     <SafeAreaView
@@ -225,13 +283,10 @@ export default function HandoutsFeedScreen() {
       className="flex-1 bg-background dark:bg-dark-background"
     >
       {/* কাস্টম হেডার */}
-      <View className="flex-row items-center justify-between px-5 pt-2 pb-4">
+      <View className="flex-row items-center justify-between px-5 pt-2 pb-2 border-b border-border dark:border-dark-border">
         <View>
           <Text className="text-2xl font-bold text-text dark:text-dark-text">
-            হ্যান্ডআউট
-          </Text>
-          <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary mt-0.5">
-            গল্প, ইতিহাস ও লেখা পড়ুন
+            Handouts
           </Text>
         </View>
 
@@ -248,91 +303,110 @@ export default function HandoutsFeedScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Loading */}
-      {isLoading && (
-        <View className="px-4 gap-3">
-          <HandoutCardSkeleton />
-          <HandoutCardSkeleton />
-          <HandoutCardSkeleton />
-        </View>
-      )}
+      {/* ক্যাটাগরি বার + কনটেন্ট — একই relative কন্টেইনারে, বার সবসময় ওভারলে হিসেবে থাকবে */}
+      <View className="flex-1 relative">
+        {CategoryBar}
 
-      {/* Error */}
-      {!isLoading && isError && (
-        <View className="flex-1 items-center justify-center gap-4 px-6">
-          <Ionicons
-            name="alert-circle-outline"
-            size={48}
-            color={isDark ? "#f87171" : "#ef4444"}
-          />
-          <Text className="text-base text-center text-text-secondary dark:text-dark-text-secondary">
-            হ্যান্ডআউট লোড করা যায়নি
-          </Text>
-          <TouchableOpacity
-            onPress={() => refetch()}
-            className="px-6 py-2 rounded-full bg-accent"
+        {/* Loading */}
+        {showSkeleton && (
+          <View
+            className="px-4 gap-3"
+            style={{ paddingTop: CATEGORY_BAR_HEIGHT + 12 }}
           >
-            <Text className="text-white font-semibold text-sm">
-              আবার চেষ্টা করুন
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
+            <HandoutCardSkeleton />
+            <HandoutCardSkeleton />
+            <HandoutCardSkeleton />
+          </View>
+        )}
 
-      {/* Empty */}
-      {!isLoading && !isError && handouts.length === 0 && (
-        <ScrollView
-          refreshControl={
-            <RefreshControl
-              refreshing={isFetching}
-              onRefresh={refetch}
-              tintColor="#00914d"
-              colors={["#00914d"]}
-            />
-          }
-          contentContainerStyle={{ flexGrow: 1 }}
-        >
-          {renderListHeader()}
-          <View className="flex-1 items-center justify-center gap-3 px-6 pb-20">
+        {/* Error */}
+        {!showSkeleton && isError && (
+          <View
+            className="flex-1 items-center justify-center gap-4 px-6"
+            style={{ paddingTop: CATEGORY_BAR_HEIGHT }}
+          >
             <Ionicons
-              name="document-text-outline"
+              name="alert-circle-outline"
               size={48}
-              color={isDark ? "#6b7280" : "#9ca3af"}
+              color={isDark ? "#f87171" : "#ef4444"}
             />
             <Text className="text-base text-center text-text-secondary dark:text-dark-text-secondary">
-              এখনো কোনো হ্যান্ডআউট নেই
+              হ্যান্ডআউট লোড করা যায়নি
             </Text>
+            <TouchableOpacity
+              onPress={() => refetch()}
+              className="px-6 py-2 rounded-full bg-accent"
+            >
+              <Text className="text-white font-semibold text-sm">
+                আবার চেষ্টা করুন
+              </Text>
+            </TouchableOpacity>
           </View>
-        </ScrollView>
-      )}
+        )}
 
-      {/* List */}
-      {!isLoading && !isError && handouts.length > 0 && (
-        <FlatList
-          data={handouts}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          ItemSeparatorComponent={renderSeparator}
-          ListHeaderComponent={renderListHeader}
-          ListFooterComponent={renderFooter}
-          onEndReached={handleEndReached}
-          onEndReachedThreshold={0.4}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={isFetching && !isFetchingNextPage}
-              onRefresh={refetch}
-              tintColor="#00914d"
-              colors={["#00914d"]}
-            />
-          }
-          contentContainerStyle={{
-            paddingBottom: 90,
+        {/* Empty */}
+        {!showSkeleton && !isError && handouts.length === 0 && (
+          <ScrollView
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            refreshControl={
+              <RefreshControl
+                refreshing={manualRefreshing}
+                onRefresh={onManualRefresh}
+                tintColor="#00914d"
+                colors={["#00914d"]}
+                progressViewOffset={CATEGORY_BAR_HEIGHT}
+              />
+            }
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingTop: CATEGORY_BAR_HEIGHT,
+            }}
+          >
+            {renderListHeader()}
+            <View className="flex-1 items-center justify-center gap-3 px-6 pb-20">
+              <Ionicons
+                name="document-text-outline"
+                size={48}
+                color={isDark ? "#6b7280" : "#9ca3af"}
+              />
+              <Text className="text-base text-center text-text-secondary dark:text-dark-text-secondary">
+                এখনো কোনো হ্যান্ডআউট নেই
+              </Text>
+            </View>
+          </ScrollView>
+        )}
 
-            paddingTop: 0,
-          }}
-        />
-      )}
+        {/* List */}
+        {!showSkeleton && !isError && handouts.length > 0 && (
+          <Animated.FlatList
+            data={handouts}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            ItemSeparatorComponent={renderSeparator}
+            ListHeaderComponent={renderListHeader}
+            ListFooterComponent={renderFooter}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.4}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={manualRefreshing}
+                onRefresh={onManualRefresh}
+                tintColor="#00914d"
+                colors={["#00914d"]}
+                progressViewOffset={CATEGORY_BAR_HEIGHT}
+              />
+            }
+            contentContainerStyle={{
+              paddingTop: CATEGORY_BAR_HEIGHT,
+              paddingBottom: 90,
+            }}
+          />
+        )}
+      </View>
 
       {/* নতুন হ্যান্ডআউট তৈরির বাটন */}
       <TouchableOpacity
