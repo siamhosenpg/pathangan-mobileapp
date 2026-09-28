@@ -95,9 +95,7 @@ const ProfileTopSection = ({ data }: Props) => {
           {!isOwnProfile && <FollowButtonProfile targetUserId={data._id} />}
           {isOwnProfile && (
             <TouchableOpacity
-              onPress={() =>
-                router.replace("/private-questions/privatequestion")
-              }
+              onPress={() => router.push("/private-questions/privatequestion")}
               className="flex-row items-center self-start gap-2 mt-3 px-4 py-2 rounded-full border border-border dark:border-dark-border"
             >
               <QuestionIcon

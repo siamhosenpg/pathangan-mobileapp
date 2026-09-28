@@ -6,7 +6,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useEffect } from "react";
-import { Appearance } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
@@ -15,7 +14,6 @@ import "../i18n";
 
 const THEME_KEY = "app_color_scheme";
 
-// AuthInitializer এর পাশে এই component বানাও
 function AppInit() {
   usePushNotification();
   return null;
@@ -25,23 +23,18 @@ export default function RootLayout() {
   const { setColorScheme } = useColorScheme();
 
   useEffect(() => {
+    let cancelled = false;
+
     AsyncStorage.getItem(THEME_KEY).then((saved) => {
-      if (saved === "dark" || saved === "light") {
-        // ✅ User manually set করেছে — এটাই final, system ignore
-        setColorScheme(saved);
-      } else {
-        // ✅ "system" বা কিছু save নেই — system theme follow করো
-        const scheme = Appearance.getColorScheme();
-        setColorScheme(scheme ?? "light");
+      if (cancelled) return;
 
-        // system change listener শুধু "system" mode এ দরকার
-        const sub = Appearance.addChangeListener(({ colorScheme }) => {
-          setColorScheme(colorScheme ?? "light");
-        });
-
-        return () => sub.remove();
-      }
+      // user manually dark/light সেট করলে সেটাই, নাহলে system follow করবে
+      setColorScheme(saved === "dark" || saved === "light" ? saved : "system");
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -51,11 +44,7 @@ export default function RootLayout() {
           <BottomSheetProvider>
             <AuthInitializer />
             <AppInit />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-              }}
-            >
+            <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="(auth)" />
               <Stack.Screen name="(pages)" />

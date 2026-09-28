@@ -96,10 +96,9 @@ const authApi = baseApi.injectEndpoints({
         } catch {}
       },
     }),
-    googleMobileAuth: builder.mutation<
-      AuthResponse,
-      { googleId: string; email: string; name: string; photo?: string }
-    >({
+
+    // ===================== গুগল লগইন (মোবাইল) =====================
+    googleMobileAuth: builder.mutation<AuthResponse, { accessToken: string }>({
       query: (body) => ({
         url: "/googleauth/google/mobile",
         method: "POST",
@@ -108,9 +107,11 @@ const authApi = baseApi.injectEndpoints({
       async onQueryStarted(_, { queryFulfilled, dispatch }) {
         try {
           const { data } = await queryFulfilled;
+
           if (data.token) {
             await SecureStore.setItemAsync("token", data.token);
           }
+
           if (data.user) {
             dispatch(setUser(data.user));
           }
@@ -125,5 +126,5 @@ export const {
   useLoginMutation,
   useGetMeQuery,
   useLogoutMutation,
-  useGoogleMobileAuthMutation, // ← নতুন
+  useGoogleMobileAuthMutation,
 } = authApi;
