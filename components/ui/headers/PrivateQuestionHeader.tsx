@@ -1,8 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
-import React from "react";
+import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   unreadCount?: number;
@@ -18,17 +17,30 @@ const PrivateQuestionHeader = ({
   onBack,
 }: Props) => {
   const { colorScheme } = useColorScheme();
-  const insets = useSafeAreaInsets();
   const isDark = colorScheme === "dark";
-
+  const { t } = useTranslation();
   const isInbox = activeTab === "inbox";
   const isSent = activeTab === "sent";
 
+  const activeColor = "#00914d";
+  const inactiveColor = isDark ? "#8a8a8a" : "#6d6d6d";
+
+  // সক্রিয় ট্যাবের shadow
+  const activeTabStyle = {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  };
+
+  // নিষ্ক্রিয় ট্যাবে background সরানো হচ্ছে
+  const inactiveTabStyle = {
+    backgroundColor: "transparent",
+  };
+
   return (
-    <View
-      style={{ paddingTop: insets.top }}
-      className="bg-background dark:bg-dark-background "
-    >
+    <View className="bg-background dark:bg-dark-background">
       {/* ── TOP BAR ── */}
       <View className="px-4 pt-3 pb-2 flex-row items-center mb-3">
         {/* BACK BUTTON */}
@@ -46,7 +58,7 @@ const PrivateQuestionHeader = ({
 
         {/* TITLE */}
         <Text className="text-lg font-bold text-text dark:text-dark-text flex-1">
-          প্রশ্নসমূহ
+          {t("questions")}
         </Text>
 
         {/* UNREAD BADGE */}
@@ -65,24 +77,20 @@ const PrivateQuestionHeader = ({
         <TouchableOpacity
           onPress={() => onTabChange("inbox")}
           activeOpacity={0.8}
-          className={`flex-1 flex-row items-center justify-center py-2 rounded-lg gap-1 ${
-            isInbox ? "bg-background dark:bg-dark-background shadow-sm" : ""
-          }`}
+          className="flex-1 flex-row items-center justify-center py-2 rounded-lg gap-1 bg-background dark:bg-dark-background"
+          style={isInbox ? activeTabStyle : inactiveTabStyle}
         >
           <Ionicons
             name={isInbox ? "mail" : "mail-outline"}
             size={16}
-            color={isInbox ? "#00914d" : isDark ? "#aaa" : "#666"}
+            color={isInbox ? activeColor : inactiveColor}
           />
 
           <Text
-            className={`text-sm font-medium ${
-              isInbox
-                ? "text-accent"
-                : "text-text-tertiary dark:text-dark-text-tertiary"
-            }`}
+            className="text-sm font-medium"
+            style={{ color: isInbox ? activeColor : inactiveColor }}
           >
-            ইনবক্স
+            {t("inbox")}
           </Text>
         </TouchableOpacity>
 
@@ -90,24 +98,20 @@ const PrivateQuestionHeader = ({
         <TouchableOpacity
           onPress={() => onTabChange("sent")}
           activeOpacity={0.8}
-          className={`flex-1 flex-row items-center justify-center py-2 rounded-lg gap-1 ${
-            isSent ? "bg-background dark:bg-dark-background shadow-sm" : ""
-          }`}
+          className="flex-1 flex-row items-center justify-center py-2 rounded-lg gap-1 bg-background dark:bg-dark-background"
+          style={isSent ? activeTabStyle : inactiveTabStyle}
         >
           <Ionicons
             name={isSent ? "send" : "send-outline"}
             size={16}
-            color={isSent ? "#00914d" : isDark ? "#aaa" : "#666"}
+            color={isSent ? activeColor : inactiveColor}
           />
 
           <Text
-            className={`text-sm font-medium ${
-              isSent
-                ? "text-accent"
-                : "text-text-tertiary dark:text-dark-text-tertiary"
-            }`}
+            className="text-sm font-medium"
+            style={{ color: isSent ? activeColor : inactiveColor }}
           >
-            পাঠানো
+            {t("sent")}
           </Text>
         </TouchableOpacity>
       </View>

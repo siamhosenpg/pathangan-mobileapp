@@ -1,34 +1,36 @@
 import type { PrivateQuestion } from "@/types/privateQuestionTypes";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
 interface PrivateQuestionCardProps {
   question: PrivateQuestion;
   mode: "inbox" | "sent";
-  onPress: (id: string) => void; // ✅ router বাইরে, callback ভেতরে
+  onPress: (id: string) => void;
   onStatusChange?: (id: string, status: "answered" | "ignored") => void;
 }
 
+// label এর বদলে এখন translation key
 const statusConfig = {
   pending: {
-    label: "অপেক্ষমান",
+    labelKey: "questionStatus.pending",
     badgeClass: "bg-yellow-100 dark:bg-yellow-900/30",
     textClass: "text-yellow-700 dark:text-yellow-400",
     dot: "bg-yellow-400",
   },
   answered: {
-    label: "উত্তর দেওয়া হয়েছে",
+    labelKey: "questionStatus.answered",
     badgeClass: "bg-accent/10",
     textClass: "text-accent",
     dot: "bg-accent",
   },
   ignored: {
-    label: "উপেক্ষা করা হয়েছে",
+    labelKey: "questionStatus.ignored",
     badgeClass: "bg-red-100 dark:bg-red-900/30",
     textClass: "text-red-500 dark:text-red-400",
     dot: "bg-red-400",
   },
-};
+} as const;
 
 const Avatar = ({
   name,
@@ -67,13 +69,17 @@ const PrivateQuestionCard: React.FC<PrivateQuestionCardProps> = ({
   onPress,
   onStatusChange,
 }) => {
+  const { t, i18n } = useTranslation();
   const config = statusConfig[question.status];
   const otherUser = mode === "inbox" ? question.senderId : question.receiverId;
   const isUnread = mode === "inbox" && !question.isRead;
 
+  // ভাষা অনুযায়ী তারিখের ফরম্যাট
+  const dateLocale = i18n.language === "bn" ? "bn-BD" : "en-US";
+
   return (
     <TouchableOpacity
-      onPress={() => onPress(question._id)} // ✅ parent থেকে আসা callback
+      onPress={() => onPress(question._id)}
       activeOpacity={0.72}
       className={`mx-4 mb-3 rounded-2xl border p-4 ${
         isUnread
@@ -108,7 +114,7 @@ const PrivateQuestionCard: React.FC<PrivateQuestionCardProps> = ({
         >
           <View className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
           <Text className={`text-xs font-medium ${config.textClass}`}>
-            {config.label}
+            {t(config.labelKey)}
           </Text>
         </View>
       </View>
@@ -126,7 +132,7 @@ const PrivateQuestionCard: React.FC<PrivateQuestionCardProps> = ({
       {/* ── Footer ── */}
       <View className="flex-row items-center justify-between">
         <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
-          {new Date(question.createdAt).toLocaleDateString("bn-BD", {
+          {new Date(question.createdAt).toLocaleDateString(dateLocale, {
             day: "numeric",
             month: "short",
             year: "numeric",
@@ -145,18 +151,18 @@ const PrivateQuestionCard: React.FC<PrivateQuestionCardProps> = ({
                 className="px-3 py-1.5 rounded-full border border-border dark:border-dark-border"
               >
                 <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
-                  উপেক্ষা
+                  {t("ignore")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={(e) => {
                   e.stopPropagation();
-                  onPress(question._id); // ✅ একই callback
+                  onPress(question._id);
                 }}
                 className="px-3 py-1.5 rounded-full bg-accent"
               >
                 <Text className="text-xs font-semibold text-white">
-                  উত্তর দাও
+                  {t("submitAnswer")}
                 </Text>
               </TouchableOpacity>
             </View>

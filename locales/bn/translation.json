@@ -77,9 +77,19 @@
   "profile": "প্রোফাইল",
   "notificationsTab": "নোটিফিকেশন",
   "messages": "বার্তা",
-
+  "inbox": "ইনবক্স",
+  "sent": "প্রেরিত",
   "privateQuestions": "প্রাইভেট প্রশ্ন",
   "askQuestion": "প্রশ্ন করুন",
+  "askQuestionModal": {
+    "subtitle": "{{name}}-কে একটি প্রশ্ন পাঠান",
+    "placeholder": "{{name}}-কে কিছু জিজ্ঞেস করুন...",
+    "send": "প্রশ্ন পাঠান",
+    "discardTitle": "প্রশ্নটি বাতিল করবেন?",
+    "discardMessage": "আপনি কিছু লিখেছেন। এখন বের হয়ে গেলে লেখা সব মুছে যাবে।",
+    "keepEditing": "লেখা চালিয়ে যান",
+    "discard": "বাতিল করুন"
+  },
   "noMessages": "এখনও কোন বার্তা নেই",
   "sendMessage": "বার্তা পাঠান",
   "typeMessage": "আপনার বার্তা টাইপ করুন...",
@@ -140,6 +150,14 @@
   "characters": "অক্ষর",
   "submitAnswer": "উত্তর দিন",
 
+  "questionStatus": {
+    "pending": "অপেক্ষমান",
+    "answered": "উত্তর দেওয়া হয়েছে",
+    "ignored": "উপেক্ষা করা হয়েছে"
+  },
+
+  "ignore": "উপেক্ষা করুন",
+  "pending": "অপেক্ষমান",
   "answerPlaceholder": "আপনার উত্তর লিখুন...",
   "areyouSure": "আপনি কি নিশ্চিত?",
   "discardAnswer": "আপনার লেখা উত্তরটি মুছে যাবে। আপনি কি ফিরে যেতে চান?",

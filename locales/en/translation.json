@@ -46,7 +46,8 @@
   "commentedOnYourPost": "commented on your post",
   "followingYou": "started following you",
   "sharedYourPost": "shared your post",
-
+  "inbox": "Inbox",
+  "sent": "Sent",
   "posts": "Posts",
   "noDataAvailable": "No data available",
   "noPosts": "No posts yet",
@@ -121,6 +122,15 @@
   "noQuestions": "No questions yet",
   "privateQuestions": "Private Questions",
   "askQuestion": "Ask Question",
+  "askQuestionModal": {
+    "subtitle": "Send a question to {{name}}",
+    "placeholder": "Ask {{name}} something...",
+    "send": "Send question",
+    "discardTitle": "Discard question?",
+    "discardMessage": "You have unsaved text. If you leave now, everything you wrote will be lost.",
+    "keepEditing": "Keep writing",
+    "discard": "Discard"
+  },
   "privacyPolicy": "Privacy Policy",
   "termsAndConditions": "Terms and Conditions",
   "pressAgainToExit": "Press again to exit.",
@@ -149,6 +159,13 @@
   "location": "Location",
   "locationPlaceholder": "Enter your location",
 
+  "questionStatus": {
+    "pending": "Pending",
+    "answered": "Answered",
+    "ignored": "Ignored"
+  },
+  "ignore": "Ignore",
+  "pending": "Pending",
   "posting": "Posting...",
   "post": "Post",
   "characters": "Characters",
