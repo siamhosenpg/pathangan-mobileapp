@@ -4,6 +4,7 @@ import {
   ReportTargetType,
   useCreateReportMutation,
 } from "@/redux/api/others/reportApi";
+import { getErrorMessage } from "@/utils/getErrorMessage"; // ফাইলটা যেখানে রেখেছো সেই path দাও
 
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
@@ -170,7 +171,7 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
           "তুমি এই কনটেন্টটি ইতিমধ্যে রিপোর্ট করেছো।",
         );
       } else {
-        Alert.alert("সমস্যা হয়েছে", "রিপোর্ট পাঠানো যায়নি, আবার চেষ্টা করো।");
+        Alert.alert("সমস্যা হয়েছে", getErrorMessage(err));
       }
     }
   };

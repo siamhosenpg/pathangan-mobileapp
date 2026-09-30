@@ -1,18 +1,22 @@
+import ErrorState from "@/components/error/ErrorState";
 import HandoutCard from "@/components/ui/card/handout/HandoutCard";
 import HandoutCardSkeleton from "@/components/ui/card/handout/HandoutCardSkeleton";
+
 import {
   useGetAllHandoutsInfiniteInfiniteQuery,
   useGetMyHandoutsQuery,
 } from "@/redux/api/handout/handoutApi";
 import type { Handout, HandoutCategory } from "@/types/handoutTypes";
+import { getErrorMessage } from "@/utils/getErrorMessage"; // path ঠিক করে নিও
 import { toBanglaNumber } from "@/utils/toBanglaNumber";
 import { Ionicons } from "@expo/vector-icons";
+import NetInfo from "@react-native-community/netinfo";
 import { router, useFocusEffect } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ActivityIndicator,
+  Alert,
   Animated,
   Image,
   RefreshControl,
@@ -36,6 +40,13 @@ const categories: { key: HandoutCategory | null; label: string }[] = [
 const CATEGORY_BAR_HEIGHT = 56;
 const HIDE_SHOW_THRESHOLD = 6;
 
+// net ache kina check kori. null (ekhono jani na) hole online dhori,
+// shudhu shpostho vabe offline hole false dei
+const isOnline = async () => {
+  const net = await NetInfo.fetch();
+  return !(net.isConnected === false || net.isInternetReachable === false);
+};
+
 function DraftStrip({ isDark }: { isDark: boolean }) {
   const { i18n } = useTranslation();
   const isBn = i18n.language === "bn";
@@ -46,9 +57,12 @@ function DraftStrip({ isDark }: { isDark: boolean }) {
 
   // ✅ ফিড স্ক্রিন focus হলে draft strip নিঃশব্দে (background এ) রিফ্রেশ হবে,
   // কোনো loading UI দেখাবে না বলে flicker হবে না
+  // net na thakle refetch chalabo na (oshotheo retry hoto)
   useFocusEffect(
     useCallback(() => {
-      refetch();
+      (async () => {
+        if (await isOnline()) refetch();
+      })();
     }, [refetch]),
   );
 
@@ -128,12 +142,13 @@ export default function HandoutsFeedScreen() {
 
   const {
     data,
+    error,
     isLoading,
     isError,
-    isFetching,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    isFetchNextPageError,
     refetch,
   } = useGetAllHandoutsInfiniteInfiniteQuery({ category: activeCategory });
 
@@ -141,20 +156,31 @@ export default function HandoutsFeedScreen() {
 
   // ✅ ট্যাব ফোকাস হলে ডেটা নিঃশব্দে (background এ) রিফ্রেশ হয় — data আগে থেকে
   // থাকলে skeleton আর দেখানো হবে না, তাই "reload" এর মতো লাগবে না
+  // net na thakle refetch chalabo na, noyto fail hoye list er jaigay error ashto
   useFocusEffect(
     useCallback(() => {
-      refetch();
+      (async () => {
+        if (await isOnline()) refetch();
+      })();
     }, [refetch]),
   );
 
   const onManualRefresh = useCallback(async () => {
+    // net na thakle refetch chalabo na (upore NetworkBanner already dekhacche)
+    if (!(await isOnline())) return;
+
     setManualRefreshing(true);
     try {
-      await refetch();
+      const result = await refetch();
+
+      // refresh fail holeo purono handout gulo thakbe, shudhu user ke jani
+      if (result.isError && handouts.length > 0) {
+        Alert.alert("রিফ্রেশ হয়নি", getErrorMessage(result.error));
+      }
     } finally {
       setManualRefreshing(false);
     }
-  }, [refetch]);
+  }, [refetch, handouts.length]);
 
   const renderItem = useCallback(
     ({ item }: { item: Handout }) => <HandoutCard handout={item} />,
@@ -166,19 +192,46 @@ export default function HandoutsFeedScreen() {
   const renderSeparator = useCallback(() => <View className="h-4" />, []);
 
   const renderFooter = useCallback(() => {
-    if (!isFetchingNextPage) return null;
-    return (
-      <View className="py-4 items-center justify-center">
-        <ActivityIndicator size="small" color="#00914d" />
-      </View>
-    );
-  }, [isFetchingNextPage]);
+    // 1) next page ashchhe -> skeleton
+    if (isFetchingNextPage) {
+      return (
+        <View className="px-4 pt-4">
+          <HandoutCardSkeleton />
+        </View>
+      );
+    }
+
+    // 2) next page fail -> purono handout thakbe, niche shudhu chhoto retry
+    if (isFetchNextPageError) {
+      return (
+        <View className="py-6 px-8 items-center gap-3">
+          <Text className="text-sm text-center text-text-secondary dark:text-dark-text-secondary">
+            আরও হ্যান্ডআউট লোড করা যায়নি
+          </Text>
+          <TouchableOpacity
+            onPress={() => fetchNextPage()}
+            activeOpacity={0.8}
+            className="px-5 py-2.5 rounded-full border border-border dark:border-dark-border"
+          >
+            <Text className="text-sm font-semibold text-text dark:text-dark-text">
+              আবার চেষ্টা করো
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return null;
+  }, [isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
 
   const handleEndReached = useCallback(() => {
+    // next page er error thakle nije nije abar chalabo na,
+    // user "আবার চেষ্টা করো" chaple tokhon chalbe
+    if (isFetchNextPageError) return;
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
 
   // ✅ Scroll করলে ক্যাটাগরি বার লুকাবে/দেখাবে (Animated, নরম motion সহ)
   const categoryTranslateY = useRef(new Animated.Value(0)).current;
@@ -319,28 +372,10 @@ export default function HandoutsFeedScreen() {
           </View>
         )}
 
-        {/* Error */}
-        {!showSkeleton && isError && (
-          <View
-            className="flex-1 items-center justify-center gap-4 px-6"
-            style={{ paddingTop: CATEGORY_BAR_HEIGHT }}
-          >
-            <Ionicons
-              name="alert-circle-outline"
-              size={48}
-              color={isDark ? "#f87171" : "#ef4444"}
-            />
-            <Text className="text-base text-center text-text-secondary dark:text-dark-text-secondary">
-              হ্যান্ডআউট লোড করা যায়নি
-            </Text>
-            <TouchableOpacity
-              onPress={() => refetch()}
-              className="px-6 py-2 rounded-full bg-accent"
-            >
-              <Text className="text-white font-semibold text-sm">
-                আবার চেষ্টা করুন
-              </Text>
-            </TouchableOpacity>
+        {/* Error — শুধু তখনই full-screen, যখন দেখানোর মতো একটা handout-ও নেই */}
+        {!showSkeleton && isError && handouts.length === 0 && (
+          <View className="flex-1" style={{ paddingTop: CATEGORY_BAR_HEIGHT }}>
+            <ErrorState message={getErrorMessage(error)} onRetry={refetch} />
           </View>
         )}
 
@@ -377,8 +412,8 @@ export default function HandoutsFeedScreen() {
           </ScrollView>
         )}
 
-        {/* List */}
-        {!showSkeleton && !isError && handouts.length > 0 && (
+        {/* List — next page / background refetch error হলেও পুরনো handout গুলো থাকবে */}
+        {!showSkeleton && handouts.length > 0 && (
           <Animated.FlatList
             data={handouts}
             renderItem={renderItem}

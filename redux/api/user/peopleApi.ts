@@ -34,8 +34,19 @@ const peopleApi = baseApi.injectEndpoints({
       serializeQueryArgs: ({ endpointName }) => endpointName,
 
       // নতুন ব্যাচ এলে আগের users এর সাথে জুড়ে দেওয়া
-      merge: (currentCache, newItems) => {
+      merge: (currentCache, newItems, { arg }) => {
         if (!newItems?.users) return currentCache;
+
+        // প্রথম page (cursor নেই) এলে cache নতুন করে শুরু হবে,
+        // তাহলে list আর nextCursor সবসময় মিলে থাকবে
+        // (screen এ ফিরলে cursor আবার null থেকে শুরু হয়, তাই এটা দরকার)
+        if (!arg?.cursor) {
+          currentCache.users = newItems.users;
+          currentCache.nextCursor = newItems.nextCursor;
+          currentCache.hasMore = newItems.hasMore;
+          currentCache.count = newItems.users.length;
+          return;
+        }
 
         const existingIds = new Set(currentCache.users.map((u) => u._id));
         const uniqueNewUsers = newItems.users.filter(

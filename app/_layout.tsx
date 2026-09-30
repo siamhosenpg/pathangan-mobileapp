@@ -1,3 +1,4 @@
+import NetworkBanner from "@/components/error/NetworkBanner";
 import AuthInitializer from "@/components/ui/AuthInitializer";
 import { BottomSheetProvider } from "@/components/ui/bottom-sheet/BottomSheetProvider";
 import { usePushNotification } from "@/hooks/notification/usePushNotification";
@@ -50,6 +51,7 @@ export default function RootLayout() {
               <Stack.Screen name="(pages)" />
               <Stack.Screen name="user/[username]" />
             </Stack>
+            <NetworkBanner />
           </BottomSheetProvider>
         </GestureHandlerRootView>
       </Provider>

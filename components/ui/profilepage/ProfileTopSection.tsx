@@ -3,7 +3,9 @@ import { useRouter } from "expo-router";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 // import UserRating from "@/components/ui/star/UserRating"; // পরে uncomment করো
 // import FollowStats from "./FollowStats"; // পরে uncomment করো
+import FileEditIcon from "@/assets/icons/file-edit.svg";
 import QuestionIcon from "@/assets/icons/map-marker-question.svg";
+import MenuDotsIcon from "@/assets/icons/menu-dots.svg";
 import { useGetUnreadCountQuery } from "@/redux/api/privateQuestion/privateQuestionApi";
 import type { User } from "@/types/userTypes";
 import { useColorScheme } from "nativewind";
@@ -15,6 +17,9 @@ import AskQuestionModal from "../card/questioncard/AskQuestionModal";
 import UserRating from "../rating/UserRating";
 import FollowStats from "./FollowStats";
 
+import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
+import ProfileMenuSheet from "./ProfileMenuSheet";
+
 interface Props {
   data: User;
 }
@@ -23,6 +28,7 @@ const ProfileTopSection = ({ data }: Props) => {
   const { t } = useTranslation();
   const router = useRouter();
   const { colorScheme } = useColorScheme();
+  const { open } = useBottomSheet();
   const isDark = colorScheme === "dark";
   const [modalVisible, setModalVisible] = useState(false);
   const currentUser = useAppSelector((state) => state.auth.user);
@@ -115,6 +121,20 @@ const ProfileTopSection = ({ data }: Props) => {
               )}
             </TouchableOpacity>
           )}
+
+          {isOwnProfile && (
+            <TouchableOpacity
+              onPress={() => router.push("/(pages)/profile/editprofile")}
+              className="flex-row items-center self-start gap-2 mt-3 px-4 py-2 rounded-full border border-border dark:border-dark-border"
+            >
+              <FileEditIcon
+                width={15}
+                height={15}
+                color={isDark ? "#c4c4c4" : "#3a3a3a"}
+              />
+            </TouchableOpacity>
+          )}
+
           {!isOwnProfile && (
             <>
               <TouchableOpacity
@@ -138,6 +158,27 @@ const ProfileTopSection = ({ data }: Props) => {
                 receiverName={data.name}
               />
             </>
+          )}
+
+          {!isOwnProfile && (
+            <TouchableOpacity
+              onPress={() =>
+                open(
+                  <ProfileMenuSheet
+                    userId={data._id}
+                    username={data.username}
+                    name={data.name}
+                  />,
+                )
+              }
+              className="flex-row items-center self-start gap-2 mt-3 px-4 py-2 rounded-full border border-border dark:border-dark-border"
+            >
+              <MenuDotsIcon
+                width={15}
+                height={15}
+                color={isDark ? "#c4c4c4" : "#3a3a3a"}
+              />
+            </TouchableOpacity>
           )}
         </View>
 

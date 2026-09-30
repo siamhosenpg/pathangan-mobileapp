@@ -1,15 +1,25 @@
+import ErrorState from "@/components/error/ErrorState";
 import CourseCardFeed from "@/components/ui/card/course/CourseCardFeed";
 import Postcard from "@/components/ui/card/postcard/Postcard";
 import PostCardSkeleton from "@/components/ui/card/postcard/PostCardSkeleton";
 import QuestionCard from "@/components/ui/card/questioncard/QuestionCard";
+
 import UploadProgressBar from "@/components/ui/upload/UploadProgressBar";
 import usePostViewTracker from "@/hooks/viewcount/usePostViewTracker";
 import { postApi, useGetPostsInfiniteQuery } from "@/redux/api/postApi";
 import type { Post } from "@/types/postTypes";
+import { getErrorMessage } from "@/utils/getErrorMessage"; // path ঠিক করে নিও
+import NetInfo from "@react-native-community/netinfo";
 import { FlashList } from "@shopify/flash-list";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { RefreshControl, Text, View } from "react-native";
+import {
+  Alert,
+  RefreshControl,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useDispatch } from "react-redux";
 
 interface HomeFeedProps {
@@ -34,9 +44,11 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
 
   const {
     data,
+    error,
     isLoading,
     isError,
     isFetchingNextPage,
+    isFetchNextPageError,
     hasNextPage,
     fetchNextPage,
     refetch,
@@ -66,7 +78,21 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
   // ── Pull to refresh ──
   const handleRefresh = useCallback(async () => {
     if (isRefreshing) return;
+
+    // net na thakle cache kate felbo na, purono post gulo thakbe
+    // (upore NetworkBanner already offline dekhacche)
+    const net = await NetInfo.fetch();
+    if (net.isConnected === false || net.isInternetReachable === false) {
+      return;
+    }
+
     setIsRefreshing(true);
+
+    // refetch fail korle ferot dewar jonno age theke snapshot rakhi
+    const snapshot = data
+      ? { pages: data.pages, pageParams: data.pageParams }
+      : null;
+
     try {
       clearAllTimers();
       lastVisibleIndexRef.current = null;
@@ -80,15 +106,35 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
         }),
       );
 
-      await refetch();
+      const result = await refetch();
+
+      if (result.isError && snapshot) {
+        // refetch fail -> agey je post gulo chilo segulo ferot dei
+        dispatch(
+          postApi.util.updateQueryData("getPosts", QUERY_ARGS, (draft) => {
+            draft.pages = snapshot.pages;
+            draft.pageParams = snapshot.pageParams;
+          }),
+        );
+        Alert.alert("রিফ্রেশ হয়নি", getErrorMessage(result.error));
+      }
     } finally {
       setIsRefreshing(false);
     }
-  }, [isRefreshing, clearAllTimers, dispatch, refetch]);
+  }, [isRefreshing, data, clearAllTimers, dispatch, refetch]);
 
   const handleEndReached = useCallback(() => {
+    // next page er error thakle nije nije abar chalabo na,
+    // user "আবার চেষ্টা করো" chaple tokhon chalbe
+    if (isFetchNextPageError) return;
     if (hasNextPage && !isFetchingNextPage && !isRefreshing) fetchNextPage();
-  }, [hasNextPage, isFetchingNextPage, isRefreshing, fetchNextPage]);
+  }, [
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+    isRefreshing,
+    fetchNextPage,
+  ]);
 
   // ── Existing + view tracker একসাথে ──
   const handleViewableItemsChanged = useCallback(
@@ -127,6 +173,7 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
   );
 
   const renderFooter = useCallback(() => {
+    // 1) next page ashchhe -> skeleton
     if (isFetchingNextPage) {
       return (
         <View className="">
@@ -134,6 +181,28 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
         </View>
       );
     }
+
+    // 2) next page fail -> purono post thakbe, niche shudhu chhoto retry
+    if (isFetchNextPageError) {
+      return (
+        <View className="py-6 px-8 items-center gap-3">
+          <Text className="text-text-secondary dark:text-dark-text-secondary text-sm text-center">
+            আরও পোস্ট লোড করা যায়নি
+          </Text>
+          <TouchableOpacity
+            onPress={() => fetchNextPage()}
+            activeOpacity={0.8}
+            className="px-5 py-2.5 rounded-full border border-border dark:border-dark-border"
+          >
+            <Text className="text-sm font-semibold text-text dark:text-dark-text">
+              আবার চেষ্টা করো
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    // 3) sob post shesh
     if (!hasNextPage && posts.length > 0) {
       return (
         <View className="py-6 items-center">
@@ -143,8 +212,15 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
         </View>
       );
     }
+
     return null;
-  }, [isFetchingNextPage, hasNextPage, posts.length]);
+  }, [
+    isFetchingNextPage,
+    isFetchNextPageError,
+    hasNextPage,
+    posts.length,
+    fetchNextPage,
+  ]);
 
   if (isLoading) {
     return (
@@ -155,12 +231,11 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
     );
   }
 
-  if (isError) {
+  // শুধু তখনই full-screen error, যখন দেখানোর মতো একটা post-ও নেই
+  if (isError && posts.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-950 dark:bg-dark-background-secondary">
-        <Text className="text-gray-400 dark:text-dark-text text-sm">
-          পোস্ট লোড করতে সমস্যা হয়েছে
-        </Text>
+      <View className="flex-1 bg-background-secondary dark:bg-dark-background-secondary">
+        <ErrorState message={getErrorMessage(error)} onRetry={refetch} />
       </View>
     );
   }
