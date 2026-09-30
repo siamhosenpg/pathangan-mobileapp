@@ -6,17 +6,16 @@ import ProfilePosts from "@/components/ui/profilepage/ProfilePosts";
 import ProfileTopSection from "@/components/ui/profilepage/ProfileTopSection";
 import ProfileTopSectionSkeleton from "@/components/ui/profilepage/ProfileTopSectionSkeleton";
 import { useGetUserByUsernameQuery } from "@/redux/api/userApi";
-import { useAppSelector } from "@/redux/hooks";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function UserProfileScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
-  const router = useRouter();
 
+  // currentData: only data for the current username (never stale data of another user)
   const {
-    data: user,
+    currentData: user,
     isLoading,
     isFetching,
     isError,
@@ -25,10 +24,11 @@ export default function UserProfileScreen() {
     refetchOnMountOrArgChange: true,
   });
 
-  const currentUser = useAppSelector((state) => state.auth.user);
-  const isOwnProfile = currentUser?.username === user?.username;
+  // Skeleton only when there is nothing to show yet.
+  // Background refetches (e.g. after follow) must not replace the page.
+  const showSkeleton = isLoading || (!user && isFetching);
 
-  if (isLoading || isFetching) {
+  if (showSkeleton) {
     return (
       <SafeAreaView
         edges={["top"]}
@@ -51,9 +51,9 @@ export default function UserProfileScreen() {
     );
   }
 
-  // ProfilePosts এর ListHeaderComponent হিসেবে পাঠাবো
-  // এতে ScrollView + FlatList nesting সমস্যা থাকবে না
-  // আর FlatList নিজেই scroll করবে — onViewableItemsChanged কাজ করবে
+  // Passed as ListHeaderComponent of ProfilePosts:
+  // avoids ScrollView + FlatList nesting, and FlatList scrolls by itself
+  // so onViewableItemsChanged keeps working
   const profileHeader = (
     <View>
       <ProfileTopSection data={user} />
@@ -74,8 +74,7 @@ export default function UserProfileScreen() {
       edges={["top"]}
       className="flex-1 bg-background dark:bg-dark-background"
     >
-      {isOwnProfile ? <BackHeader /> : <BackHeader />}
-
+      <BackHeader />
       <ProfilePosts userid={user._id} listHeader={profileHeader} />
     </SafeAreaView>
   );

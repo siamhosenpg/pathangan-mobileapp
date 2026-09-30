@@ -17,8 +17,10 @@ const userApi = baseApi.injectEndpoints({
         url: `/users/user/${username}`,
         method: "GET",
       }),
-      providesTags: (_result, _error, username) => [
+      providesTags: (result, _error, username) => [
         { type: "User", id: username },
+        // also tagged by _id so follow/unfollow can refresh follower counts
+        ...(result?._id ? [{ type: "User" as const, id: result._id }] : []),
       ],
     }),
 
@@ -54,7 +56,6 @@ const userApi = baseApi.injectEndpoints({
       invalidatesTags: ["User"],
     }),
 
-    // ✅ নতুন এটা যোগ হলো
     savePushToken: builder.mutation<{ message: string }, { pushToken: string }>(
       {
         query: (body) => ({
@@ -73,5 +74,5 @@ export const {
   useGetPeopleSuggestionsQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
-  useSavePushTokenMutation, // ✅ এটাও export হলো
+  useSavePushTokenMutation,
 } = userApi;

@@ -3,16 +3,17 @@ import {
   useGetCommentsByPostQuery,
 } from "@/redux/api/commentsApi";
 import type { Comment } from "@/types/commentsTypes";
-import { getErrorMessage } from "@/utils/getErrorMessage"; // path ঠিক করে নিও
+import { getErrorMessage } from "@/utils/getErrorMessage";
+import { Ionicons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   Animated,
   Keyboard,
   Text,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import CommentCard from "./CommentCard";
@@ -22,23 +23,28 @@ interface Props {
   postId: string;
 }
 
+const ACCENT = "#00914d";
+const PAGE_SIZE = 10;
+
+// English digits -> Bengali digits
+const toBn = (n: number | string) =>
+  String(n).replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]);
+
 // ===================== SKELETON =====================
-// halka pulse animation. Tomar nijer comment skeleton thakle
-// CommentSkeletonItem er jaigay seta boshate paro.
 const Pulse = ({ children }: { children: React.ReactNode }) => {
-  const opacity = useRef(new Animated.Value(0.5)).current;
+  const opacity = useRef(new Animated.Value(0.45)).current;
 
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(opacity, {
           toValue: 1,
-          duration: 700,
+          duration: 800,
           useNativeDriver: true,
         }),
         Animated.timing(opacity, {
-          toValue: 0.5,
-          duration: 700,
+          toValue: 0.45,
+          duration: 800,
           useNativeDriver: true,
         }),
       ]),
@@ -50,14 +56,24 @@ const Pulse = ({ children }: { children: React.ReactNode }) => {
   return <Animated.View style={{ opacity }}>{children}</Animated.View>;
 };
 
+const Bone = ({ className }: { className: string }) => (
+  <View
+    className={`bg-background-secondary dark:bg-dark-background-secondary ${className}`}
+  />
+);
+
 const CommentSkeletonItem = () => (
   <Pulse>
     <View className="flex-row gap-3 px-1 py-3">
-      <View className="w-9 h-9 rounded-full bg-background-secondary dark:bg-dark-background-secondary" />
+      <Bone className="w-9 h-9 rounded-full" />
       <View className="flex-1 gap-2">
-        <View className="h-3 w-1/3 rounded-full bg-background-secondary dark:bg-dark-background-secondary" />
-        <View className="h-3 w-4/5 rounded-full bg-background-secondary dark:bg-dark-background-secondary" />
-        <View className="h-3 w-3/5 rounded-full bg-background-secondary dark:bg-dark-background-secondary" />
+        <Bone className="h-3 w-1/3 rounded-full" />
+        <Bone className="h-3 w-full rounded-full" />
+        <Bone className="h-3 w-3/5 rounded-full" />
+        <View className="flex-row gap-4 mt-1">
+          <Bone className="h-2.5 w-10 rounded-full" />
+          <Bone className="h-2.5 w-12 rounded-full" />
+        </View>
       </View>
     </View>
   </Pulse>
@@ -72,16 +88,69 @@ const CommentSkeletonList = () => (
   </View>
 );
 
-const EmptyComments = () => (
-  <View className="flex-1 items-center justify-center gap-2 py-16">
-    <Text className="text-3xl">💬</Text>
-    <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
-      এখনো কোনো মন্তব্য নেই
-    </Text>
+// ===================== SMALL PIECES =====================
+const IconBubble = ({
+  name,
+  size = 30,
+}: {
+  name: keyof typeof Ionicons.glyphMap;
+  size?: number;
+}) => (
+  <View className="w-16 h-16 rounded-full bg-accent/10 items-center justify-center">
+    <Ionicons name={name} size={size} color={ACCENT} />
   </View>
 );
 
+const RetryButton = ({ onPress }: { onPress: () => void }) => (
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.8}
+    className="flex-row items-center gap-2 px-5 py-2.5 rounded-full bg-accent"
+  >
+    <Ionicons name="refresh" size={15} color="#fff" />
+    <Text className="text-sm font-semibold text-white">আবার চেষ্টা করো</Text>
+  </TouchableOpacity>
+);
+
+const EmptyComments = () => (
+  <View className="flex-1 items-center justify-center gap-3 py-16 px-8">
+    <IconBubble name="chatbubble-ellipses-outline" />
+    <View className="items-center gap-1">
+      <Text className="text-base font-semibold text-text dark:text-dark-text">
+        এখনো কোনো মন্তব্য নেই
+      </Text>
+      <Text className="text-sm text-center text-text-secondary dark:text-dark-text-secondary">
+        প্রথম মন্তব্যটি আপনিই করুন
+      </Text>
+    </View>
+  </View>
+);
+
+const ErrorState = ({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) => (
+  <View className="items-center justify-center py-16 px-8 gap-4">
+    <IconBubble name="cloud-offline-outline" />
+    <View className="items-center gap-1">
+      <Text className="text-base font-semibold text-text dark:text-dark-text">
+        কিছু একটা সমস্যা হয়েছে
+      </Text>
+      <Text className="text-sm text-center text-text-secondary dark:text-dark-text-secondary">
+        {message}
+      </Text>
+    </View>
+    <RetryButton onPress={onRetry} />
+  </View>
+);
+
+// ===================== MAIN =====================
 const CommentSheet = ({ postId }: Props) => {
+  const { t } = useTranslation();
+
   const [text, setText] = useState("");
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
   const [page, setPage] = useState(1);
@@ -90,7 +159,7 @@ const CommentSheet = ({ postId }: Props) => {
     useGetCommentsByPostQuery({
       postId,
       page,
-      limit: 10,
+      limit: PAGE_SIZE,
     });
 
   const [createComment, { isLoading: isSubmitting }] =
@@ -98,7 +167,7 @@ const CommentSheet = ({ postId }: Props) => {
 
   const comments = data?.data ?? [];
 
-  // শুধু তখনই full error, যখন দেখানোর মতো একটা মন্তব্যও নেই
+  // Full-screen error only when there is nothing to show
   const showFullError = !isLoading && isError && comments.length === 0;
 
   const handleSubmit = async () => {
@@ -113,7 +182,7 @@ const CommentSheet = ({ postId }: Props) => {
       setReplyingTo(null);
       Keyboard.dismiss();
     } catch (err) {
-      // text ar replyingTo thakbe, user abar chesta korte pare
+      // text and replyingTo are kept so the user can retry
       Alert.alert("মন্তব্য পাঠানো যায়নি", getErrorMessage(err));
     }
   };
@@ -134,8 +203,7 @@ const CommentSheet = ({ postId }: Props) => {
   );
 
   const handleEndReached = useCallback(() => {
-    // error thakle nije nije abar chalabo na,
-    // user "আবার চেষ্টা করো" chaple tokhon chalbe
+    // On error, don't auto-retry; the user taps the retry button
     if (isError) return;
     if (data?.hasMore && !isFetching) {
       setPage((prev) => prev + 1);
@@ -143,101 +211,90 @@ const CommentSheet = ({ postId }: Props) => {
   }, [isError, data?.hasMore, isFetching]);
 
   const renderFooter = useCallback(() => {
-    // 1) notun mantobbo ashchhe -> skeleton
+    // 1) Loading next page -> skeleton
     if (isFetching && comments.length > 0) {
       return <CommentSkeletonItem />;
     }
 
-    // 2) load more fail -> purono mantobbo thakbe, niche shudhu chhoto retry
-    // (page already barano hoyeche, tai refetch sei fail hoya page-i abar anbe)
+    // 2) Load more failed -> keep existing comments, small retry below
     if (isError && comments.length > 0) {
       return (
         <View className="py-6 px-8 items-center gap-3">
           <Text className="text-sm text-center text-text-secondary dark:text-dark-text-secondary">
             আরও মন্তব্য লোড করা যায়নি
           </Text>
-          <TouchableOpacity
-            onPress={() => refetch()}
-            activeOpacity={0.8}
-            className="px-5 py-2.5 rounded-full border border-border dark:border-dark-border"
-          >
-            <Text className="text-sm font-semibold text-text dark:text-dark-text">
-              আবার চেষ্টা করো
-            </Text>
-          </TouchableOpacity>
+          <RetryButton onPress={() => refetch()} />
+        </View>
+      );
+    }
+
+    // 3) Reached the end of a long list
+    if (!data?.hasMore && comments.length >= PAGE_SIZE) {
+      return (
+        <View className="py-6 items-center">
+          <View className="w-1.5 h-1.5 rounded-full bg-border dark:bg-dark-border" />
         </View>
       );
     }
 
     return null;
-  }, [isFetching, isError, comments.length, refetch]);
+  }, [isFetching, isError, comments.length, data?.hasMore, refetch]);
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View className="flex-1">
-        {/* Header */}
-        <View className="px-4 py-3 border-b border-border dark:border-dark-border">
-          <View className="flex-row items-center justify-between">
+    <View className="flex-1 bg-background dark:bg-dark-background">
+      {/* Header */}
+      <View className="px-4 py-3.5 border-b border-border dark:border-dark-border">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center gap-2">
             <Text className="text-base font-bold text-text dark:text-dark-text">
-              মন্তব্য
+              {t("comments")}
             </Text>
             {data?.total ? (
-              <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
-                {data.total}টি মন্তব্য
-              </Text>
+              <View className="px-2 py-0.5 rounded-full bg-accent/10">
+                <Text className="text-xs font-semibold text-accent">
+                  {toBn(data.total)}
+                </Text>
+              </View>
             ) : null}
           </View>
         </View>
-
-        {/* Content */}
-        {isLoading ? (
-          <CommentSkeletonList />
-        ) : showFullError ? (
-          <View className="items-center justify-center py-16 px-8 gap-3">
-            <Text className="text-4xl">📡</Text>
-            <Text className="text-sm text-center text-text-secondary dark:text-dark-text-secondary">
-              {getErrorMessage(error)}
-            </Text>
-            <TouchableOpacity
-              onPress={() => refetch()}
-              activeOpacity={0.8}
-              className="px-5 py-2.5 rounded-full border border-border dark:border-dark-border"
-            >
-              <Text className="text-sm font-semibold text-text dark:text-dark-text">
-                আবার চেষ্টা করো
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <FlashList
-            data={comments}
-            keyExtractor={(item) => item._id}
-            renderItem={renderItem}
-            ListEmptyComponent={EmptyComments}
-            ListFooterComponent={renderFooter}
-            onEndReached={handleEndReached}
-            onEndReachedThreshold={0.5}
-            contentContainerStyle={{
-              paddingHorizontal: 12,
-              paddingBottom: 8,
-              paddingTop: 4,
-            }}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          />
-        )}
-
-        {/* Input */}
-        <CommentFeedInput
-          value={text}
-          onChangeText={setText}
-          onSubmit={handleSubmit}
-          isLoading={isSubmitting}
-          replyingTo={replyingTo}
-          onCancelReply={handleCancelReply}
-        />
       </View>
-    </TouchableWithoutFeedback>
+
+      {/* Content */}
+      {isLoading ? (
+        <CommentSkeletonList />
+      ) : showFullError ? (
+        <ErrorState message={getErrorMessage(error)} onRetry={refetch} />
+      ) : (
+        <FlashList
+          data={comments}
+          keyExtractor={(item) => item._id}
+          renderItem={renderItem}
+          ListEmptyComponent={EmptyComments}
+          ListFooterComponent={renderFooter}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.5}
+          contentContainerStyle={{
+            paddingHorizontal: 12,
+            paddingBottom: 8,
+            paddingTop: 4,
+          }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+
+      {/* Input */}
+      <CommentFeedInput
+        value={text}
+        onChangeText={setText}
+        onSubmit={handleSubmit}
+        isLoading={isSubmitting}
+        replyingTo={replyingTo}
+        onCancelReply={handleCancelReply}
+      />
+    </View>
   );
 };
 

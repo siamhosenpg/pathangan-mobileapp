@@ -1,13 +1,7 @@
 import FollowIcon from "@/assets/icons/user-add.svg";
-import {
-  useFollowUserMutation,
-  useGetFollowersQuery,
-  useUnfollowUserMutation,
-} from "@/redux/api/followApi";
+import { useFollowState } from "@/hooks/useFollowState";
 import { useAppSelector } from "@/redux/hooks";
 import * as Haptics from "expo-haptics";
-import { useColorScheme } from "nativewind";
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity } from "react-native";
 
@@ -17,92 +11,39 @@ interface Props {
 
 const FollowButtonProfile = ({ targetUserId }: Props) => {
   const { t } = useTranslation();
-
   const currentUser = useAppSelector((state) => state.auth.user);
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
 
-  const { data, isLoading: checkingFollow } =
-    useGetFollowersQuery(targetUserId);
+  const { isFollowing, isReady, toggle } = useFollowState(targetUserId);
 
-  const followers = data?.followers ?? [];
+  const handleFollow = async () => {
+    if (!currentUser) return;
 
-  // ✅ id এবং _id দুইটাই check
-  const serverFollowing = followers.some((f: any) => {
-    const followerId =
-      typeof f.followerId === "object" ? f.followerId._id : f.followerId;
-    return (
-      followerId === currentUser?.id || followerId === (currentUser as any)?._id
-    );
-  });
-
-  const [localFollowing, setLocalFollowing] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setLocalFollowing(serverFollowing);
-    setMounted(true);
-  }, [serverFollowing]);
-
-  const [followUser, { isLoading: following }] = useFollowUserMutation();
-  const [unfollowUser, { isLoading: unfollowing }] = useUnfollowUserMutation();
-
-  const isLoading = checkingFollow || following || unfollowing;
-
-  const handleToggle = async () => {
-    if (!currentUser || isLoading) return;
-
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    // Optimistic update
-    setLocalFollowing((prev) => !prev);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     try {
-      if (localFollowing) {
-        await unfollowUser(targetUserId).unwrap();
-      } else {
-        await followUser(targetUserId).unwrap();
-      }
+      await toggle(); // UI updates instantly, rolls back on failure
     } catch {
-      // rollback
-      setLocalFollowing((prev) => !prev);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
   };
 
-  // নিজের profile-এ show করবে না
+  // Hide on own profile
   if (currentUser?.id === targetUserId) return null;
 
-  // server data আসার আগে hide
-  if (!mounted) return null;
+  // Hide until follow status is known
+  if (!isReady) return null;
 
-  // ✅ already follow করা থাকলে button দেখাবে না
-  if (localFollowing) return null;
+  // Already following: the button disappears (unfollow lives in the menu sheet)
+  if (isFollowing) return null;
 
   return (
     <TouchableOpacity
-      onPress={handleToggle}
-      disabled={isLoading}
+      onPress={handleFollow}
       activeOpacity={0.7}
-      className={`flex-row items-center self-start gap-2 mt-3 px-4 py-2 rounded-full border ${
-        localFollowing
-          ? "bg-background-secondary dark:bg-dark-background-secondary border-border dark:border-dark-border"
-          : "bg-accent border-accent"
-      }`}
+      className="flex-row items-center self-start gap-2 mt-3 px-4 py-2 rounded-full border bg-accent border-accent"
     >
-      <FollowIcon
-        width={14}
-        height={14}
-        color={localFollowing ? (isDark ? "#8a8a8a" : "#6b7280") : "#fff"}
-      />
-      <Text
-        className={` font-semibold ${
-          localFollowing
-            ? "text-text-secondary dark:text-dark-text-secondary"
-            : "text-white"
-        }`}
-      >
-        {isLoading ? "..." : localFollowing ? t("unfollow") : t("follow")}
-      </Text>
+      <FollowIcon width={14} height={14} color="#fff" />
+      <Text className="font-semibold text-white">{t("follow")}</Text>
     </TouchableOpacity>
   );
 };

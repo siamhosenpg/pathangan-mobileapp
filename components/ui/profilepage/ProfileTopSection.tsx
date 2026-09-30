@@ -1,23 +1,20 @@
-import { useAppSelector } from "@/redux/hooks";
-import { useRouter } from "expo-router";
-import { Image, Text, TouchableOpacity, View } from "react-native";
-// import UserRating from "@/components/ui/star/UserRating"; // পরে uncomment করো
-// import FollowStats from "./FollowStats"; // পরে uncomment করো
 import FileEditIcon from "@/assets/icons/file-edit.svg";
 import QuestionIcon from "@/assets/icons/map-marker-question.svg";
 import MenuDotsIcon from "@/assets/icons/menu-dots.svg";
+import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
 import { useGetUnreadCountQuery } from "@/redux/api/privateQuestion/privateQuestionApi";
+import { useAppSelector } from "@/redux/hooks";
 import type { User } from "@/types/userTypes";
+import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 import GreenMark from "../badges/GreenMark";
 import FollowButtonProfile from "../buttons/FollowButtonProfile";
 import AskQuestionModal from "../card/questioncard/AskQuestionModal";
 import UserRating from "../rating/UserRating";
 import FollowStats from "./FollowStats";
-
-import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
 import ProfileMenuSheet from "./ProfileMenuSheet";
 
 interface Props {
@@ -97,8 +94,10 @@ const ProfileTopSection = ({ data }: Props) => {
             </View>
           </View>
         </View>
+
         <View className="mt-1 flex-row items-center gap-2">
           {!isOwnProfile && <FollowButtonProfile targetUserId={data._id} />}
+
           {isOwnProfile && (
             <TouchableOpacity
               onPress={() => router.push("/private-questions/privatequestion")}
@@ -186,6 +185,7 @@ const ProfileTopSection = ({ data }: Props) => {
         <View className="mt-4">
           <FollowStats activityStats={data.activityStats} />
         </View>
+
         {/* Bio + About */}
         {data.bio && (
           <Text className="mt-3 font-semibold text-base text-text dark:text-dark-text">
