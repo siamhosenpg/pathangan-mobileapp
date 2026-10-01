@@ -1,31 +1,40 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity, View } from "react-native";
 
+type Privacy = "public" | "friends" | "private";
+
 interface Props {
-  value: "public" | "friends" | "private";
-  onChange: (v: "public" | "friends" | "private") => void;
+  value: Privacy;
+  onChange: (v: Privacy) => void;
   isDark: boolean;
 }
 
 const options = [
-  { value: "public" as const, label: "সবাই", icon: "earth-outline" as const },
+  {
+    value: "public" as const,
+    labelKey: "privacyPublic",
+    icon: "earth-outline" as const,
+  },
   {
     value: "friends" as const,
-    label: "বন্ধুরা",
+    labelKey: "privacyFriends",
     icon: "people-outline" as const,
   },
   {
     value: "private" as const,
-    label: "শুধু আমি",
+    labelKey: "privacyPrivate",
     icon: "lock-closed-outline" as const,
   },
 ];
 
 const PrivacySelector = ({ value, onChange, isDark }: Props) => {
+  const { t } = useTranslation();
+
   return (
     <View className="gap-2">
       <Text className="text-text dark:text-dark-text text-sm font-semibold">
-        কে দেখতে পাবে?
+        {t("postData.privacyTitle")}
       </Text>
       <View className="flex-row gap-2">
         {options.map((opt) => {
@@ -34,6 +43,9 @@ const PrivacySelector = ({ value, onChange, isDark }: Props) => {
             <TouchableOpacity
               key={opt.value}
               onPress={() => onChange(opt.value)}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
               className={`flex-1 flex-row items-center justify-center gap-1.5 py-2.5 rounded-xl border ${
                 active
                   ? "bg-accent border-accent"
@@ -52,7 +64,7 @@ const PrivacySelector = ({ value, onChange, isDark }: Props) => {
                     : "text-text-secondary dark:text-dark-text-secondary"
                 }`}
               >
-                {opt.label}
+                {t(`postData.${opt.labelKey}`)}
               </Text>
             </TouchableOpacity>
           );

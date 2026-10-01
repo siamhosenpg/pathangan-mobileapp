@@ -1,0 +1,81 @@
+<svg width="100%" height="100%" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Loading">
+  <defs>
+    <!-- আপনার green gradient -->
+    <linearGradient id="grad" gradientUnits="userSpaceOnUse" x1="40" y1="0" x2="160" y2="0">
+      <stop offset="0" stop-color="#00914d" />
+      <stop offset="0.5" stop-color="#009439" />
+      <stop offset="1" stop-color="#00914d" />
+    </linearGradient>
+
+    <!-- Gooey (মিশে যাওয়ার) effect -->
+    <filter id="goo" filterUnits="userSpaceOnUse" x="0" y="0" width="200" height="200" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
+      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" result="goo" />
+      <feBlend in="SourceGraphic" in2="goo" />
+    </filter>
+
+    <!-- Shadow-এর জন্য blur -->
+    <filter id="soft" x="-50%" y="-200%" width="200%" height="500%">
+      <feGaussianBlur stdDeviation="4" />
+    </filter>
+
+    <!-- হালকা glow -->
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#00914d" stop-opacity="0.25" />
+      <stop offset="1" stop-color="#00914d" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- পেছনের glow -->
+  <circle cx="100" cy="88" r="60" fill="url(#glow)">
+    <animate attributeName="r" values="52;66;52" keyTimes="0;0.5;1" dur="1.6s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.65 0 0.35 1; 0.65 0 0.35 1" />
+  </circle>
+
+  <!-- নিচের shadow -->
+  <ellipse cx="100" cy="142" ry="4" fill="#003d22" opacity="0.22" filter="url(#soft)">
+    <animate attributeName="rx" values="38;20;38" keyTimes="0;0.5;1" dur="1.6s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.65 0 0.35 1; 0.65 0 0.35 1" />
+    <animate attributeName="opacity" values="0.15;0.3;0.15" keyTimes="0;0.5;1" dur="1.6s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.65 0 0.35 1; 0.65 0 0.35 1" />
+  </ellipse>
+
+  <!-- মূল gooey blob -->
+  <g filter="url(#goo)" fill="url(#grad)">
+    <!-- মাঝের বড় ফোঁটা -->
+    <circle cx="100" cy="90" r="16">
+      <animate attributeName="r" values="14;21;14" keyTimes="0;0.5;1" dur="1.6s" repeatCount="indefinite"
+        calcMode="spline" keySplines="0.65 0 0.35 1; 0.65 0 0.35 1" />
+    </circle>
+
+    <!-- বাম ফোঁটা -->
+    <circle cx="48" cy="90" r="11">
+      <animate attributeName="cx" values="48;100;48" keyTimes="0;0.5;1" dur="1.6s" repeatCount="indefinite"
+        calcMode="spline" keySplines="0.65 0 0.35 1; 0.65 0 0.35 1" />
+      <animate attributeName="r" values="11;7;11" keyTimes="0;0.5;1" dur="1.6s" repeatCount="indefinite"
+        calcMode="spline" keySplines="0.65 0 0.35 1; 0.65 0 0.35 1" />
+    </circle>
+
+    <!-- ডান ফোঁটা -->
+    <circle cx="152" cy="90" r="11">
+      <animate attributeName="cx" values="152;100;152" keyTimes="0;0.5;1" dur="1.6s" repeatCount="indefinite"
+        calcMode="spline" keySplines="0.65 0 0.35 1; 0.65 0 0.35 1" />
+      <animate attributeName="r" values="11;7;11" keyTimes="0;0.5;1" dur="1.6s" repeatCount="indefinite"
+        calcMode="spline" keySplines="0.65 0 0.35 1; 0.65 0 0.35 1" />
+    </circle>
+
+    <!-- ছোট ২টা ফোঁটা: একটু delay দিয়ে ওপর-নিচে ভাসে -->
+    <circle cx="74" cy="90" r="5">
+      <animate attributeName="cy" values="90;72;90" keyTimes="0;0.5;1" dur="1.6s" begin="0.2s" repeatCount="indefinite"
+        calcMode="spline" keySplines="0.65 0 0.35 1; 0.65 0 0.35 1" />
+      <animate attributeName="cx" values="74;100;74" keyTimes="0;0.5;1" dur="1.6s" begin="0.2s" repeatCount="indefinite"
+        calcMode="spline" keySplines="0.65 0 0.35 1; 0.65 0 0.35 1" />
+    </circle>
+    <circle cx="126" cy="90" r="5">
+      <animate attributeName="cy" values="90;108;90" keyTimes="0;0.5;1" dur="1.6s" begin="0.2s" repeatCount="indefinite"
+        calcMode="spline" keySplines="0.65 0 0.35 1; 0.65 0 0.35 1" />
+      <animate attributeName="cx" values="126;100;126" keyTimes="0;0.5;1" dur="1.6s" begin="0.2s" repeatCount="indefinite"
+        calcMode="spline" keySplines="0.65 0 0.35 1; 0.65 0 0.35 1" />
+    </circle>
+  </g>
+</svg>

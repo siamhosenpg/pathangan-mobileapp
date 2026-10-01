@@ -3,6 +3,8 @@ import QuestionCard from "@/components/ui/card/questioncard/QuestionCard";
 import QuestionCardSkeleton from "@/components/ui/card/questioncard/QuestionCardSkeleton";
 import { Header } from "@/components/ui/headers/Header";
 
+// ✅ পরিবর্তন ১: loader import
+import PullRefreshLoader from "@/components/ui/Loader/PullRefreshLoader";
 import { useGetAllQuestionsInfiniteQuery } from "@/redux/api/post/questionApi";
 import { getErrorMessage } from "@/utils/getErrorMessage"; // path ঠিক করে নিও
 import { Ionicons } from "@expo/vector-icons";
@@ -12,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import {
   Alert,
   FlatList,
+  Platform, // ✅ পরিবর্তন ২: Platform import
   RefreshControl,
   Text,
   TouchableOpacity,
@@ -97,6 +100,21 @@ export default function QuestionScreen() {
   // প্রথম load বাদে, refetch চলাকালীন refreshing true থাকবে
   const isRefreshing = !isLoading && isFetching && !isFetchingNextPage;
 
+  // ✅ পরিবর্তন ৩: Refresh loader — list-এর header-এর ভেতরে, তাই প্রশ্নের সাথে scroll করবে
+  const refreshLoader = isRefreshing ? (
+    Platform.OS === "ios" ? (
+      // iOS: pull করলে ওপরে যে ফাঁকা জায়গা তৈরি হয়, loader সেই জায়গায় বসে
+      <View style={{ height: 0 }} pointerEvents="none">
+        <View style={{ position: "absolute", top: -64, left: 0, right: 0 }}>
+          <PullRefreshLoader />
+        </View>
+      </View>
+    ) : (
+      // Android: list-এর ওপরে নিজের জায়গা নিয়ে বসে
+      <PullRefreshLoader />
+    )
+  ) : null;
+
   return (
     <SafeAreaView
       edges={["top"]}
@@ -141,13 +159,17 @@ export default function QuestionScreen() {
           showsVerticalScrollIndicator={false}
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.5}
+          // ✅ পরিবর্তন ৪: header-এ loader বসানো হয়েছে
+          ListHeaderComponent={refreshLoader}
           ListFooterComponent={renderFooter}
           refreshControl={
+            // ✅ পরিবর্তন ৫: default spinner লুকানো, gesture আগের মতোই কাজ করবে
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
-              colors={["#00914d"]} // Android spinner color
-              tintColor={"#00914d"} // iOS spinner color
+              colors={["transparent"]} // Android spinner লুকানো
+              progressBackgroundColor="transparent" // Android spinner-এর গোল background লুকানো
+              tintColor="transparent" // iOS spinner লুকানো
             />
           }
         />

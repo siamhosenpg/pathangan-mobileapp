@@ -2,11 +2,14 @@ import type {
   FollowersCountResponse,
   FollowingCountResponse,
   FollowingListResponse,
+  FollowListArgs,
   FollowListResponse,
   FollowResponse,
   UnfollowResponse,
 } from "@/types/followTypes";
 import { baseApi } from "./baseApi";
+
+const DEFAULT_LIMIT = 20;
 
 export const followApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -38,19 +41,24 @@ export const followApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // ✅ return type এখন FollowListResponse
-    getFollowers: builder.query<FollowListResponse, string>({
-      query: (userId) => `/follows/followers/${userId}`,
-      providesTags: (_result, _error, userId) => [
+    // ✅ Cursor pagination: ?limit=20&cursor=<lastId>
+    getFollowers: builder.query<FollowListResponse, FollowListArgs>({
+      query: ({ userId, cursor, limit = DEFAULT_LIMIT }) => ({
+        url: `/follows/followers/${userId}`,
+        params: { limit, ...(cursor ? { cursor } : {}) },
+      }),
+      providesTags: (_result, _error, { userId }) => [
         { type: "Follow", id: "FOLLOWERS_LIST" },
         { type: "Follow", id: userId },
       ],
     }),
 
-    // ✅ return type এখন FollowingListResponse
-    getFollowing: builder.query<FollowingListResponse, string>({
-      query: (userId) => `/follows/following/${userId}`,
-      providesTags: (_result, _error, userId) => [
+    getFollowing: builder.query<FollowingListResponse, FollowListArgs>({
+      query: ({ userId, cursor, limit = DEFAULT_LIMIT }) => ({
+        url: `/follows/following/${userId}`,
+        params: { limit, ...(cursor ? { cursor } : {}) },
+      }),
+      providesTags: (_result, _error, { userId }) => [
         { type: "Follow", id: "FOLLOWING_LIST" },
         { type: "Follow", id: userId },
       ],
@@ -80,6 +88,8 @@ export const {
   useUnfollowUserMutation,
   useGetFollowersQuery,
   useGetFollowingQuery,
+  useLazyGetFollowersQuery,
+  useLazyGetFollowingQuery,
   useGetFollowersCountQuery,
   useGetFollowingCountQuery,
 } = followApi;

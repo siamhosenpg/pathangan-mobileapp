@@ -1,4 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Text, TextInput, View } from "react-native";
 
 interface Props {
@@ -9,6 +11,8 @@ interface Props {
   isDark: boolean;
 }
 
+const ACCENT = "#00914d";
+
 const QuestionPostForm = ({
   questionText,
   setQuestionText,
@@ -16,31 +20,41 @@ const QuestionPostForm = ({
   setTags,
   isDark,
 }: Props) => {
+  const { t } = useTranslation();
   const ph = isDark ? "#4a4a4a" : "#a0a0a0";
   const bg = "bg-background-secondary dark:bg-dark-background-secondary";
   const border = "border border-border dark:border-dark-border";
 
+  // Tag preview chips
+  const parsedTags = useMemo(
+    () =>
+      tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+    [tags],
+  );
+
   return (
     <View className="gap-4">
       {/* Info banner */}
-      <View className="flex-row items-start gap-3 bg-accent/8 border border-accent/20 rounded-2xl px-4 py-3">
-        <Ionicons name="help-circle" size={20} color="#6366f1" />
+      <View className="flex-row items-start gap-3 bg-accent/10 border border-accent/20 rounded-2xl px-4 py-3">
+        <Ionicons name="help-circle" size={20} color={ACCENT} />
         <Text className="text-text-secondary dark:text-dark-text-secondary text-sm flex-1 leading-5">
-          একটি ভালো প্রশ্ন করুন — বিস্তারিত লিখলে ভালো উত্তর পাওয়ার সম্ভাবনা
-          বেশি।
+          {t("postData.questionBanner")}
         </Text>
       </View>
 
       {/* Question */}
       <View className="gap-2">
         <Text className="text-text dark:text-dark-text text-sm font-semibold px-1">
-          প্রশ্ন *
+          {t("postData.questionLabel")}
         </Text>
         <View className={`${border} ${bg} rounded-2xl px-4 py-3`}>
           <TextInput
             value={questionText}
             onChangeText={setQuestionText}
-            placeholder="আপনার প্রশ্নটি বিস্তারিতভাবে লিখুন..."
+            placeholder={t("postData.questionPlaceholder")}
             placeholderTextColor={ph}
             multiline
             numberOfLines={5}
@@ -54,7 +68,7 @@ const QuestionPostForm = ({
       {/* Tags */}
       <View className="gap-2">
         <Text className="text-text dark:text-dark-text text-sm font-semibold px-1">
-          ট্যাগ
+          {t("postData.tagsLabel")}
         </Text>
         <View
           className={`flex-row items-center ${border} ${bg} rounded-2xl px-4 gap-3`}
@@ -67,11 +81,26 @@ const QuestionPostForm = ({
           <TextInput
             value={tags}
             onChangeText={setTags}
-            placeholder="react, nextjs (কমা দিয়ে আলাদা করুন)"
+            placeholder={t("postData.tagsPlaceholder")}
             placeholderTextColor={ph}
+            autoCapitalize="none"
+            autoCorrect={false}
             className="flex-1 text-text dark:text-dark-text text-sm py-3.5"
           />
         </View>
+
+        {parsedTags.length > 0 && (
+          <View className="flex-row flex-wrap gap-2 px-1">
+            {parsedTags.map((tag, i) => (
+              <View
+                key={`${tag}-${i}`}
+                className="flex-row items-center gap-1 bg-accent/10 px-2.5 py-1 rounded-full"
+              >
+                <Text className="text-accent text-xs font-medium">#{tag}</Text>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
     </View>
   );

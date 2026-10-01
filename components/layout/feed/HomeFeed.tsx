@@ -4,6 +4,7 @@ import Postcard from "@/components/ui/card/postcard/Postcard";
 import PostCardSkeleton from "@/components/ui/card/postcard/PostCardSkeleton";
 import QuestionCard from "@/components/ui/card/questioncard/QuestionCard";
 
+import PullRefreshLoader from "@/components/ui/Loader/PullRefreshLoader";
 import UploadProgressBar from "@/components/ui/upload/UploadProgressBar";
 import usePostViewTracker from "@/hooks/viewcount/usePostViewTracker";
 import { postApi, useGetPostsInfiniteQuery } from "@/redux/api/postApi";
@@ -15,6 +16,7 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
   Alert,
+  Platform,
   RefreshControl,
   Text,
   TouchableOpacity,
@@ -240,6 +242,21 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
     );
   }
 
+  // ✅ Refresh loader — list-এর header-এর ভেতরে, তাই post-এর সাথে scroll করবে
+  const refreshLoader = isRefreshing ? (
+    Platform.OS === "ios" ? (
+      // iOS: pull করলে ওপরে যে ফাঁকা জায়গা তৈরি হয়, loader সেই জায়গায় বসে
+      <View style={{ height: 0 }} pointerEvents="none">
+        <View style={{ position: "absolute", top: -64, left: 0, right: 0 }}>
+          <PullRefreshLoader />
+        </View>
+      </View>
+    ) : (
+      // Android: list-এর ওপরে নিজের জায়গা নিয়ে বসে, post একটু নিচে নামে
+      <PullRefreshLoader />
+    )
+  ) : null;
+
   return (
     <FlashList
       onScroll={(e) => onScroll?.(Math.max(0, e.nativeEvent.contentOffset.y))}
@@ -251,6 +268,7 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
       viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
       ListHeaderComponent={
         <View className="">
+          {refreshLoader}
           <UploadProgressBar />
         </View>
       }
@@ -262,11 +280,13 @@ export default function HomeFeed({ onScroll }: HomeFeedProps) {
       contentContainerStyle={{ paddingBottom: 10 }}
       ItemSeparatorComponent={ItemSeparator}
       refreshControl={
+        // default spinner লুকানো, gesture আগের মতোই কাজ করবে
         <RefreshControl
           refreshing={isRefreshing}
           onRefresh={handleRefresh}
-          colors={["#00914d"]} // Android spinner color
-          tintColor="#00914d" // iOS spinner color
+          colors={["transparent"]} // Android spinner লুকানো
+          progressBackgroundColor="transparent" // Android spinner-এর গোল background লুকানো
+          tintColor="transparent" // iOS spinner লুকানো
         />
       }
     />

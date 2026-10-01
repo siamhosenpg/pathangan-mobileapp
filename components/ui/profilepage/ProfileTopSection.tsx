@@ -167,6 +167,7 @@ const ProfileTopSection = ({ data }: Props) => {
                     userId={data._id}
                     username={data.username}
                     name={data.name}
+                    bio={data?.bio}
                   />,
                 )
               }
@@ -183,7 +184,7 @@ const ProfileTopSection = ({ data }: Props) => {
 
         {/* Follow Stats */}
         <View className="mt-4">
-          <FollowStats activityStats={data.activityStats} />
+          <FollowStats activityStats={data.activityStats} userId={data._id} />
         </View>
 
         {/* Bio + About */}

@@ -20,123 +20,80 @@ interface Props {
   postAuthorId: string;
 }
 
-interface MenuItem {
-  key: string;
+interface MenuItemProps {
   Icon: React.FC<SvgProps>;
   title: string;
   subtitle: string;
   onPress: () => void;
   danger?: boolean;
   loading?: boolean;
+  disabled?: boolean;
 }
 
-const ICON_SIZE = 22;
+const ICON_SIZE = 18;
 const DANGER_COLOR = "#EF4444";
 
 /* ───────────── Single row ───────────── */
-const MenuRow = ({
-  item,
-  isLast,
-  iconColor,
-  chevronColor,
+const MenuItem = ({
+  Icon,
+  title,
+  subtitle,
+  onPress,
+  danger,
+  loading,
   disabled,
-}: {
-  item: MenuItem;
-  isLast: boolean;
-  iconColor: string;
-  chevronColor: string;
-  disabled: boolean;
-}) => {
-  const color = item.danger ? DANGER_COLOR : iconColor;
+}: MenuItemProps) => {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  const iconColor = danger ? DANGER_COLOR : isDark ? "#9CA3AF" : "#6B7280";
+
+  const iconBg = danger
+    ? "bg-red-500/10"
+    : "bg-gray-500/10 dark:bg-gray-400/10";
+
+  const titleColor = danger ? "text-red-500" : "text-text dark:text-dark-text";
+
+  const subtitleColor = danger
+    ? "text-red-500/70"
+    : "text-text-tertiary dark:text-dark-text-tertiary";
 
   return (
-    <>
-      <TouchableOpacity
-        onPress={item.onPress}
-        activeOpacity={0.6}
-        disabled={disabled}
-        className="flex-row items-center gap-3.5 px-4 py-3.5"
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={disabled || loading}
+      activeOpacity={0.7}
+      className="flex-row items-center gap-3 px-3 py-3 rounded-2xl active:bg-background-secondary dark:active:bg-dark-background-secondary"
+    >
+      <View
+        className={`w-9 h-9 rounded-full items-center justify-center ${iconBg}`}
       >
-        {/* Icon (no background) */}
-        <View className="w-6 items-center justify-center">
-          {item.loading ? (
-            <ActivityIndicator size="small" color={DANGER_COLOR} />
-          ) : (
-            <item.Icon
-              width={ICON_SIZE}
-              height={ICON_SIZE}
-              color={color}
-              fill={color}
-            />
-          )}
-        </View>
-
-        {/* Title + subtitle */}
-        <View className="flex-1">
-          <Text
-            className={`text-[15px] font-semibold ${
-              item.danger ? "text-red-500" : "text-text dark:text-dark-text"
-            }`}
-            numberOfLines={1}
-          >
-            {item.title}
-          </Text>
-          <Text
-            className={`text-xs mt-0.5 ${
-              item.danger
-                ? "text-red-500/70"
-                : "text-text-tertiary dark:text-dark-text-tertiary"
-            }`}
-            numberOfLines={2}
-          >
-            {item.subtitle}
-          </Text>
-        </View>
-
-        {/* Chevron */}
-        {!item.loading && (
-          <Ionicons name="chevron-forward" size={16} color={chevronColor} />
+        {loading ? (
+          <ActivityIndicator size="small" color={iconColor} />
+        ) : (
+          <Icon
+            width={ICON_SIZE}
+            height={ICON_SIZE}
+            color={iconColor}
+            fill={iconColor}
+          />
         )}
-      </TouchableOpacity>
+      </View>
 
-      {/* Divider, text er sathe align kora */}
-      {!isLast && (
-        <View
-          className="h-px bg-border/60 dark:bg-dark-border/60"
-          style={{ marginLeft: 16 + 24 + 14 }}
+      <View className="flex-1">
+        <Text className={` font-semibold ${titleColor}`} numberOfLines={1}>
+          {title}
+        </Text>
+      </View>
+
+      {!loading && (
+        <Ionicons
+          name="chevron-forward"
+          size={16}
+          color={isDark ? "#6B7280" : "#9CA3AF"}
         />
       )}
-    </>
-  );
-};
-
-/* ───────────── Card (group of rows) ───────────── */
-const MenuCard = ({
-  items,
-  iconColor,
-  chevronColor,
-  disabled,
-}: {
-  items: MenuItem[];
-  iconColor: string;
-  chevronColor: string;
-  disabled: boolean;
-}) => {
-  if (items.length === 0) return null;
-
-  return (
-    <View className="rounded-3xl overflow-hidden bg-background-secondary dark:bg-dark-background-secondary">
-      {items.map((item, index) => (
-        <MenuRow
-          key={item.key}
-          item={item}
-          isLast={index === items.length - 1}
-          iconColor={iconColor}
-          chevronColor={chevronColor}
-          disabled={disabled}
-        />
-      ))}
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -145,8 +102,6 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
   const { close, open } = useBottomSheet();
   const router = useRouter();
   const currentUser = useAppSelector((state) => state.auth.user);
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
   const { t } = useTranslation();
 
   const isOwnPost =
@@ -164,6 +119,14 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
     router.push(`/post/edit/${postId}` as any);
   };
 
+  const handleReport = () => {
+    // Replace the menu content with the report sheet
+    // (close + reopen causes flicker, so replace directly)
+    open(<ReportSheet targetType="post" targetId={postId} />, {
+      scrollable: false,
+    });
+  };
+
   const handleDeletePost = async () => {
     try {
       await deletePost(postId).unwrap();
@@ -171,77 +134,56 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
     } catch {}
   };
 
-  const iconColor = isDark ? "#E5E7EB" : "#1F2937";
-  const chevronColor = isDark ? "#4B5563" : "#C4C9D0";
-
-  // Prothom card: shobar jonno action
-  const mainItems: MenuItem[] = [
-    {
-      key: "copy",
-      Icon: CopyIcon,
-      title: t("copyLink"),
-      subtitle: t("copyLinkSub"),
-      onPress: handleCopyLink,
-    },
-    {
-      key: "not-interested",
-      Icon: NotInterestedIcon,
-      title: t("notInterested"),
-      subtitle: t("notInterestedSub"),
-      onPress: close,
-    },
-    {
-      key: "report",
-      Icon: FlagIcon,
-      title: t("reportPost"),
-      subtitle: t("reportPostSub"),
-      onPress: () =>
-        open(<ReportSheet targetType="post" targetId={postId} />, {
-          scrollable: false,
-        }),
-    },
-  ];
-
-  if (isOwnPost) {
-    mainItems.push({
-      key: "edit",
-      Icon: EditIcon,
-      title: t("editPost"),
-      subtitle: t("editPostSub"),
-      onPress: handleEditPost,
-    });
-  }
-
-  // Dwitiyo card: shudhu nijer post hole Delete
-  const dangerItems: MenuItem[] = isOwnPost
-    ? [
-        {
-          key: "delete",
-          Icon: DeleteIcon,
-          title: isDeleting ? t("deleteing") : t("deletePost"),
-          subtitle: t("deletePostSub"),
-          onPress: handleDeletePost,
-          danger: true,
-          loading: isDeleting,
-        },
-      ]
-    : [];
-
   return (
     <View className="px-4 pt-1 pb-2">
-      <View className="gap-3">
-        <MenuCard
-          items={mainItems}
-          iconColor={iconColor}
-          chevronColor={chevronColor}
+      <View className="flex flex-col gap-1">
+        <MenuItem
+          Icon={CopyIcon}
+          title={t("copyLink")}
+          subtitle={t("copyLinkSub")}
+          onPress={handleCopyLink}
           disabled={isDeleting}
         />
-        <MenuCard
-          items={dangerItems}
-          iconColor={iconColor}
-          chevronColor={chevronColor}
+
+        <MenuItem
+          Icon={NotInterestedIcon}
+          title={t("notInterested")}
+          subtitle={t("notInterestedSub")}
+          onPress={close}
           disabled={isDeleting}
         />
+
+        {isOwnPost && (
+          <MenuItem
+            Icon={EditIcon}
+            title={t("editPost")}
+            subtitle={t("editPostSub")}
+            onPress={handleEditPost}
+            disabled={isDeleting}
+          />
+        )}
+
+        <View className="h-px bg-border dark:bg-dark-border my-1 mx-3" />
+
+        <MenuItem
+          Icon={FlagIcon}
+          title={t("reportPost")}
+          subtitle={t("reportPostSub")}
+          onPress={handleReport}
+          disabled={isDeleting}
+          danger
+        />
+
+        {isOwnPost && (
+          <MenuItem
+            Icon={DeleteIcon}
+            title={isDeleting ? t("deleteing") : t("deletePost")}
+            subtitle={t("deletePostSub")}
+            onPress={handleDeletePost}
+            loading={isDeleting}
+            danger
+          />
+        )}
       </View>
     </View>
   );

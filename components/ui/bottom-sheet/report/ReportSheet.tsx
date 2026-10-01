@@ -4,11 +4,11 @@ import {
   ReportTargetType,
   useCreateReportMutation,
 } from "@/redux/api/others/reportApi";
-import { getErrorMessage } from "@/utils/getErrorMessage"; // ফাইলটা যেখানে রেখেছো সেই path দাও
-
+import { getErrorMessage } from "@/utils/getErrorMessage";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -38,43 +38,55 @@ interface Props {
 
 interface ReasonOption {
   value: ReportReason;
-  label: string;
+  labelKey: string; // i18n key (reportdata.*)
   icon: keyof typeof Ionicons.glyphMap;
 }
 
 const REASONS: ReasonOption[] = [
-  { value: "spam", label: "স্প্যাম", icon: "megaphone-outline" },
+  { value: "spam", labelKey: "spam", icon: "megaphone-outline" },
   {
     value: "harassment",
-    label: "হয়রানি বা উত্যক্ত করা",
+    labelKey: "harassment",
     icon: "hand-left-outline",
   },
-  { value: "hate_speech", label: "ঘৃণামূলক বক্তব্য", icon: "warning-outline" },
-  { value: "violence", label: "সহিংসতার হুমকি", icon: "alert-circle-outline" },
+  {
+    value: "hate_speech",
+    labelKey: "hateSpeech",
+    icon: "warning-outline",
+  },
+  {
+    value: "violence",
+    labelKey: "violence",
+    icon: "alert-circle-outline",
+  },
   {
     value: "self_harm",
-    label: "আত্মক্ষতি / আত্মহত্যা সংক্রান্ত",
+    labelKey: "selfHarm",
     icon: "medkit-outline",
   },
   {
     value: "misinformation",
-    label: "ভুল বা বিভ্রান্তিকর তথ্য",
+    labelKey: "misinformation",
     icon: "help-circle-outline",
   },
   {
     value: "impersonation",
-    label: "পরিচয় জালিয়াতি",
+    labelKey: "impersonation",
     icon: "person-remove-outline",
   },
-  { value: "copyright", label: "কপিরাইট লঙ্ঘন", icon: "document-lock-outline" },
+  {
+    value: "copyright",
+    labelKey: "copyright",
+    icon: "document-lock-outline",
+  },
   {
     value: "inappropriate_content",
-    label: "অনুপযুক্ত কনটেন্ট",
+    labelKey: "inappropriateContent",
     icon: "eye-off-outline",
   },
   {
     value: "other",
-    label: "অন্যান্য কারণ",
+    labelKey: "other",
     icon: "ellipsis-horizontal-circle-outline",
   },
 ];
@@ -93,7 +105,7 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
   const { close } = useBottomSheet();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-
+  const { t } = useTranslation();
   const scrollRef = useRef<ScrollView>(null);
   const inputRef = useRef<TextInput>(null);
 
@@ -162,16 +174,19 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
 
       close();
       setTimeout(() => {
-        Alert.alert("রিপোর্ট জমা হয়েছে", "আমাদের টিম শীঘ্রই এটি রিভিউ করবে।");
+        Alert.alert(
+          t("reportdata.successTitle"),
+          t("reportdata.successMessage"),
+        );
       }, 300);
     } catch (err: any) {
       if (err?.status === 409) {
         Alert.alert(
-          "আগেই রিপোর্ট করা হয়েছে",
-          "তুমি এই কনটেন্টটি ইতিমধ্যে রিপোর্ট করেছো।",
+          t("reportdata.alreadyReportedTitle"),
+          t("reportdata.alreadyReportedMessage"),
         );
       } else {
-        Alert.alert("সমস্যা হয়েছে", getErrorMessage(err));
+        Alert.alert(t("reportdata.errorTitle"), getErrorMessage(err));
       }
     }
   };
@@ -183,10 +198,10 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View className="items-center pb-3 px-4">
           <Text className="text-base font-bold text-text dark:text-dark-text">
-            কেন রিপোর্ট করছো?
+            {t("reportdata.whyReport")}
           </Text>
           <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary mt-0.5">
-            একটি কারণ বেছে নাও
+            {t("reportdata.chooseReason")}
           </Text>
         </View>
       </TouchableWithoutFeedback>
@@ -238,7 +253,7 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
                     isSelected ? "text-accent" : "text-text dark:text-dark-text"
                   }`}
                 >
-                  {reason.label}
+                  {t(`reportdata.${reason.labelKey}`)}
                 </Text>
 
                 <View
@@ -256,14 +271,16 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
             );
           })}
 
-          {/* "অন্যান্য কারণ" select korle shudhu ei input dekha jabe */}
+          {/* "Other" select korle shudhu ei input dekha jabe */}
           {isOtherSelected && (
             <View className="mt-2 mb-1">
               <TextInput
                 ref={inputRef}
                 value={description}
                 onChangeText={setDescription}
-                placeholder="বিস্তারিত লিখো, কমপক্ষে ৫ ক্যারেক্টার"
+                placeholder={t("reportdata.descriptionPlaceholder", {
+                  min: MIN_OTHER_DESCRIPTION_LENGTH,
+                })}
                 placeholderTextColor={isDark ? "#6B7280" : "#9CA3AF"}
                 multiline
                 maxLength={500}
@@ -285,8 +302,10 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
                     : "text-accent"
                 }`}
               >
-                {trimmedDescription.length}/{MIN_OTHER_DESCRIPTION_LENGTH} অক্ষর
-                সম্পন্ন
+                {t("reportdata.charCount", {
+                  current: trimmedDescription.length,
+                  min: MIN_OTHER_DESCRIPTION_LENGTH,
+                })}
               </Text>
             </View>
           )}
@@ -310,7 +329,7 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
             <ActivityIndicator size="small" color="#fff" />
           ) : (
             <Text className="text-white font-semibold text-sm">
-              রিপোর্ট জমা দাও
+              {t("reportdata.submit")}
             </Text>
           )}
         </TouchableOpacity>

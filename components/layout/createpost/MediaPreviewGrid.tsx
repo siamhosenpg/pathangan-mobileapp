@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
 export interface MediaItem {
@@ -15,13 +16,15 @@ interface Props {
 }
 
 const MediaPreviewGrid = ({ media, onRemove }: Props) => {
+  const { t } = useTranslation();
+
   if (media.length === 0) return null;
 
   return (
     <View className={`gap-2 ${media.length === 1 ? "" : "flex-row flex-wrap"}`}>
       {media.map((m, i) => (
         <View
-          key={i}
+          key={`${m.uri}-${i}`}
           style={{
             width: media.length === 1 ? "100%" : "48.5%",
             aspectRatio: m.type === "video" && media.length === 1 ? 16 / 9 : 1,
@@ -45,7 +48,9 @@ const MediaPreviewGrid = ({ media, onRemove }: Props) => {
               </View>
               <View className="absolute bottom-2 left-2 bg-black/60 px-2 py-0.5 rounded-full flex-row items-center gap-1">
                 <Ionicons name="videocam" size={11} color="#fff" />
-                <Text className="text-white text-xs font-medium">ভিডিও</Text>
+                <Text className="text-white text-xs font-medium">
+                  {t("postData.video")}
+                </Text>
               </View>
             </>
           )}
@@ -61,6 +66,10 @@ const MediaPreviewGrid = ({ media, onRemove }: Props) => {
           {/* remove button */}
           <TouchableOpacity
             onPress={() => onRemove(i)}
+            hitSlop={8}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={t("postData.removeMedia")}
             className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 items-center justify-center"
           >
             <Ionicons name="close" size={14} color="#fff" />

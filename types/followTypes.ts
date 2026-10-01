@@ -5,6 +5,7 @@ export interface FollowUser {
   profileImage?: string;
   profilePicture?: string;
   bio?: string;
+  greenmarkVerified?: boolean; // backend populate-e select korle tabei ashbe
 }
 
 export interface FollowRecord {
@@ -13,18 +14,6 @@ export interface FollowRecord {
   followingId: string | FollowUser;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface FollowListResponse {
-  success: boolean;
-  count: number;
-  followers: FollowRecord[];
-}
-
-export interface FollowingListResponse {
-  success: boolean;
-  count: number;
-  following: FollowRecord[];
 }
 
 export interface FollowResponse {
@@ -50,4 +39,40 @@ export interface FollowingCountResponse {
 
 export interface FollowErrorResponse {
   message: string;
+}
+
+export interface FollowerItem {
+  _id: string; // follow document id (cursor eta theke ashe)
+  followerId: FollowUser; // populated
+  followingId: string;
+  createdAt?: string;
+}
+
+export interface FollowingItem {
+  _id: string;
+  followerId: string;
+  followingId: FollowUser; // populated
+  createdAt?: string;
+}
+
+export interface FollowListResponse {
+  success: boolean;
+  count: number;
+  followers: FollowerItem[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
+export interface FollowingListResponse {
+  success: boolean;
+  count: number;
+  following: FollowingItem[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
+export interface FollowListArgs {
+  userId: string;
+  cursor?: string;
+  limit?: number;
 }

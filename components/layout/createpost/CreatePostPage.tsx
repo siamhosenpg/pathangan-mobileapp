@@ -15,6 +15,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useNavigation, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   Image,
@@ -29,22 +30,19 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
 import { MediaItem } from "./MediaPreviewGrid";
 import NormalPostForm from "./NormalPostForm";
+import PostTypeSelector from "./PostTypeSelector";
 import PrivacySelector from "./PrivacySelector";
 import QuestionPostForm from "./QuestionPostForm";
 
 type PostType = "post" | "question";
 type Privacy = "public" | "friends" | "private";
+type ErrorKey =
+  | "errMixedMedia"
+  | "errPickFailed"
+  | "errEmptyPost"
+  | "errEmptyQuestion";
 
 const ACCENT = "#00914d";
-
-const POST_TYPES: {
-  key: PostType;
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-}[] = [
-  { key: "post", label: "পোস্ট", icon: "create-outline" },
-  { key: "question", label: "প্রশ্ন", icon: "help-circle-outline" },
-];
 
 const SAFE_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
 
@@ -59,6 +57,7 @@ export default function CreatePostPage() {
   const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const { user } = useAppSelector((state) => state.auth);
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -66,7 +65,8 @@ export default function CreatePostPage() {
 
   const [activeType, setActiveType] = useState<PostType>("post");
   const [privacy, setPrivacy] = useState<Privacy>("public");
-  const [error, setError] = useState("");
+  // error er key rakhi, render e translate kori (language bodlale o thik thake)
+  const [errorKey, setErrorKey] = useState<ErrorKey | "">("");
 
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
@@ -109,7 +109,7 @@ export default function CreatePostPage() {
     setQuestionTags("");
     setActiveType("post");
     setPrivacy("public");
-    setError("");
+    setErrorKey("");
     setFormKey((k) => k + 1); // form remount, input clear
   }, []);
 
@@ -128,22 +128,18 @@ export default function CreatePostPage() {
 
       e.preventDefault();
 
-      Alert.alert(
-        "পোস্ট বাতিল করবেন?",
-        "আপনার লেখা সংরক্ষিত হয়নি। এখন বেরিয়ে গেলে সব মুছে যাবে।",
-        [
-          { text: "থাকুন", style: "cancel" },
-          {
-            text: "বাদ দিন",
-            style: "destructive",
-            onPress: () => navigation.dispatch(e.data.action),
-          },
-        ],
-      );
+      Alert.alert(t("postData.discardTitle"), t("postData.discardMessage"), [
+        { text: t("postData.stay"), style: "cancel" },
+        {
+          text: t("postData.discard"),
+          style: "destructive",
+          onPress: () => navigation.dispatch(e.data.action),
+        },
+      ]);
     });
 
     return unsubscribe;
-  }, [navigation, hasUnsavedChanges]);
+  }, [navigation, hasUnsavedChanges, t]);
 
   /* ─────────── Media ─────────── */
   const pickMedia = async () => {
@@ -170,14 +166,14 @@ export default function CreatePostPage() {
       const hasVideo = selected.some((m) => m.type === "video");
       const hasImage = selected.some((m) => m.type === "image");
       if (hasVideo && hasImage) {
-        setError("ছবি এবং ভিডিও একসাথে দেওয়া যাবে না");
+        setErrorKey("errMixedMedia");
         return;
       }
 
-      setError("");
+      setErrorKey("");
       setMedia(selected);
     } catch {
-      setError("মিডিয়া নির্বাচন করা যায়নি, আবার চেষ্টা করুন");
+      setErrorKey("errPickFailed");
     }
   };
 
@@ -194,14 +190,14 @@ export default function CreatePostPage() {
   /* ─────────── Submit ─────────── */
   const handleSubmit = async () => {
     if (submitLockRef.current) return;
-    setError("");
+    setErrorKey("");
 
     if (activeType === "post" && !text.trim() && media.length === 0) {
-      setError("কিছু একটা লিখুন অথবা ছবি/ভিডিও যোগ করুন");
+      setErrorKey("errEmptyPost");
       return;
     }
     if (activeType === "question" && !questionText.trim()) {
-      setError("প্রশ্ন লিখুন");
+      setErrorKey("errEmptyQuestion");
       return;
     }
 
@@ -216,7 +212,7 @@ export default function CreatePostPage() {
       questionText: questionText.trim(),
       tags: questionTags
         .split(",")
-        .map((t) => t.trim())
+        .map((tag) => tag.trim())
         .filter(Boolean),
       privacy,
     };
@@ -286,6 +282,8 @@ export default function CreatePostPage() {
         <TouchableOpacity
           onPress={() => router.back()}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={t("postData.close")}
           className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
         >
           <Ionicons
@@ -296,12 +294,15 @@ export default function CreatePostPage() {
         </TouchableOpacity>
 
         <Text className="flex-1 text-lg font-bold text-text dark:text-dark-text">
-          {activeType === "post" ? "নতুন পোস্ট" : "নতুন প্রশ্ন"}
+          {activeType === "post"
+            ? t("postData.newPost")
+            : t("postData.newQuestion")}
         </Text>
 
         <TouchableOpacity
           onPress={handleSubmit}
           activeOpacity={0.85}
+          accessibilityRole="button"
           style={{
             backgroundColor: ACCENT,
             opacity: hasContent ? 1 : 0.45,
@@ -311,7 +312,9 @@ export default function CreatePostPage() {
           }}
         >
           <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700" }}>
-            {activeType === "post" ? "পোস্ট" : "জিজ্ঞাসা"}
+            {activeType === "post"
+              ? t("postData.submitPost")
+              : t("postData.submitQuestion")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -330,46 +333,15 @@ export default function CreatePostPage() {
           }}
         >
           {/* ───────── Type selector (segmented) ───────── */}
-          <View className="flex-row p-1 rounded-2xl bg-background-secondary dark:bg-dark-background-secondary">
-            {POST_TYPES.map((t) => {
-              const isActive = activeType === t.key;
-              return (
-                <TouchableOpacity
-                  key={t.key}
-                  onPress={() => {
-                    setActiveType(t.key);
-                    setError("");
-                  }}
-                  activeOpacity={0.8}
-                  style={{
-                    flex: 1,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    paddingVertical: 10,
-                    borderRadius: 12,
-                    backgroundColor: isActive ? ACCENT : "transparent",
-                  }}
-                >
-                  <Ionicons
-                    name={t.icon}
-                    size={18}
-                    color={isActive ? "#fff" : isDark ? "#9CA3AF" : "#6B7280"}
-                  />
-                  <Text
-                    className={`text-sm font-semibold ${
-                      isActive
-                        ? "text-white"
-                        : "text-text-secondary dark:text-dark-text-secondary"
-                    }`}
-                  >
-                    {t.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <PostTypeSelector
+            active={activeType}
+            types={["post", "question"]}
+            onChange={(next) => {
+              setActiveType(next as PostType);
+              setErrorKey("");
+            }}
+            isDark={isDark}
+          />
 
           {/* ───────── User row ───────── */}
           <View className="flex-row items-center gap-3">
@@ -403,11 +375,13 @@ export default function CreatePostPage() {
           </View>
 
           {/* ───────── Error ───────── */}
-          {error ? (
+          {errorKey ? (
             <View className="flex-row items-center gap-2 bg-red-500/10 border border-red-500/30 px-4 py-3 rounded-2xl">
               <Ionicons name="alert-circle-outline" size={18} color="#f87171" />
-              <Text className="text-red-400 text-sm flex-1">{error}</Text>
-              <TouchableOpacity onPress={() => setError("")} hitSlop={10}>
+              <Text className="text-red-400 text-sm flex-1">
+                {t(`postData.${errorKey}`)}
+              </Text>
+              <TouchableOpacity onPress={() => setErrorKey("")} hitSlop={10}>
                 <Ionicons name="close" size={16} color="#f87171" />
               </TouchableOpacity>
             </View>

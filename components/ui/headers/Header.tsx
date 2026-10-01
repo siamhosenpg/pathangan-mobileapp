@@ -27,7 +27,7 @@ export function Header({ title }: { title?: string }) {
   const unreadCount = data?.count ?? 0;
 
   const handleCreatePost = () => {
-    router.push("/create");
+    router.push("/(pages)/post/create");
   };
 
   return (

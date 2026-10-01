@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import MediaPreviewGrid, { MediaItem } from "./MediaPreviewGrid";
 
@@ -13,6 +14,8 @@ interface Props {
   isDark: boolean;
 }
 
+const ACCENT = "#00914d";
+
 const NormalPostForm = ({
   title,
   setTitle,
@@ -23,6 +26,7 @@ const NormalPostForm = ({
   onPickMedia,
   isDark,
 }: Props) => {
+  const { t } = useTranslation();
   const ph = isDark ? "#4a4a4a" : "#a0a0a0";
   const bg = "bg-background-secondary dark:bg-dark-background-secondary";
   const border = "border border-border dark:border-dark-border";
@@ -34,9 +38,9 @@ const NormalPostForm = ({
         <TextInput
           value={title}
           onChangeText={setTitle}
-          placeholder="শিরোনাম লিখুন (ঐচ্ছিক)"
+          placeholder={t("postData.titlePlaceholder")}
           placeholderTextColor={ph}
-          className="text-text dark:text-dark-text text-sm font-medium py-3.5"
+          className="text-text dark:text-dark-text  font-medium py-3.5"
         />
       </View>
 
@@ -45,12 +49,12 @@ const NormalPostForm = ({
         <TextInput
           value={text}
           onChangeText={setText}
-          placeholder="আপনার মনের কথা লিখুন..."
+          placeholder={t("postData.bodyPlaceholder")}
           placeholderTextColor={ph}
           multiline
           numberOfLines={5}
           textAlignVertical="top"
-          className="text-text dark:text-dark-text text-sm"
+          className="text-text dark:text-dark-text "
           style={{ minHeight: 110 }}
         />
       </View>
@@ -61,13 +65,16 @@ const NormalPostForm = ({
       {/* Pick media */}
       <TouchableOpacity
         onPress={onPickMedia}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel={t("postData.addMedia")}
         className={`flex-row items-center gap-3 px-4 py-3.5 rounded-2xl ${border} ${bg}`}
       >
         <View className="w-8 h-8 rounded-xl bg-accent/10 items-center justify-center">
-          <Ionicons name="image-outline" size={18} color="#6366f1" />
+          <Ionicons name="image-outline" size={18} color={ACCENT} />
         </View>
         <Text className="text-text-secondary dark:text-dark-text-secondary text-sm flex-1">
-          ছবি বা ভিডিও যোগ করুন
+          {t("postData.addMedia")}
         </Text>
         <Ionicons
           name="chevron-forward"

@@ -3,6 +3,7 @@ import { useFollowState } from "@/hooks/useFollowState";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -21,6 +22,7 @@ interface Props {
   userId: string; // mongo _id (used for follow/unfollow and report targetId)
   username: string;
   name: string;
+  bio?: string;
 }
 
 interface MenuItemProps {
@@ -76,9 +78,7 @@ const MenuItem = ({
         <Ionicons name={icon} size={18} color={iconColor} />
       </View>
 
-      <Text className={`flex-1 text-sm font-medium ${labelColor}`}>
-        {label}
-      </Text>
+      <Text className={`flex-1  font-semibold ${labelColor}`}>{label}</Text>
 
       {loading ? (
         <ActivityIndicator size="small" color={iconColor} />
@@ -93,8 +93,9 @@ const MenuItem = ({
   );
 };
 
-const ProfileMenuSheet = ({ userId, username, name }: Props) => {
+const ProfileMenuSheet = ({ userId, username, name, bio }: Props) => {
   const { open, close } = useBottomSheet();
+  const { t } = useTranslation();
 
   // Live follow state, shared with FollowButtonProfile
   const { isFollowing, isReady, toggle } = useFollowState(userId);
@@ -106,7 +107,9 @@ const ProfileMenuSheet = ({ userId, username, name }: Props) => {
       await toggle();
     } catch (err) {
       Alert.alert(
-        wasFollowing ? "আনফলো করা যায়নি" : "ফলো করা যায়নি",
+        wasFollowing
+          ? t("profileMenu.unfollowFailed")
+          : t("profileMenu.followFailed"),
         getErrorMessage(err),
       );
     }
@@ -117,10 +120,18 @@ const ProfileMenuSheet = ({ userId, username, name }: Props) => {
 
     if (isFollowing) {
       // Confirm before unfollowing
-      Alert.alert("আনফলো করবেন?", `${name} কে আনফলো করতে চান?`, [
-        { text: "বাতিল", style: "cancel" },
-        { text: "আনফলো", style: "destructive", onPress: runToggle },
-      ]);
+      Alert.alert(
+        t("profileMenu.unfollowConfirmTitle"),
+        t("profileMenu.unfollowConfirmMessage", { name }),
+        [
+          { text: t("profileMenu.cancel"), style: "cancel" },
+          {
+            text: t("profileMenu.unfollowAction"),
+            style: "destructive",
+            onPress: runToggle,
+          },
+        ],
+      );
       return;
     }
 
@@ -131,7 +142,11 @@ const ProfileMenuSheet = ({ userId, username, name }: Props) => {
     close();
     try {
       await Share.share({
-        message: `${name} (@${username}) এর প্রোফাইল দেখো: ${PROFILE_BASE_URL}/${username}`,
+        message: t("profileMenu.shareMessage", {
+          name,
+          username,
+          url: `${PROFILE_BASE_URL}/${username}`,
+        }),
       });
     } catch {
       // nothing to do if the user cancels or sharing fails
@@ -154,14 +169,24 @@ const ProfileMenuSheet = ({ userId, username, name }: Props) => {
           {name}
         </Text>
         <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary mt-0.5">
-          @{username}
+          {bio ? (
+            <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
+              {bio}
+            </Text>
+          ) : (
+            <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
+              @{username}
+            </Text>
+          )}
         </Text>
       </View>
 
       <View className="flex flex-col gap-1">
         <MenuItem
           icon={isFollowing ? "person-remove-outline" : "person-add-outline"}
-          label={isFollowing ? "আনফলো করুন" : "ফলো করুন"}
+          label={
+            isFollowing ? t("profileMenu.unfollow") : t("profileMenu.follow")
+          }
           onPress={handleFollowPress}
           accent={!isFollowing}
           loading={!isReady}
@@ -169,7 +194,7 @@ const ProfileMenuSheet = ({ userId, username, name }: Props) => {
 
         <MenuItem
           icon="share-social-outline"
-          label="প্রোফাইল শেয়ার করো"
+          label={t("profileMenu.shareProfile")}
           onPress={handleShare}
         />
 
@@ -177,7 +202,7 @@ const ProfileMenuSheet = ({ userId, username, name }: Props) => {
 
         <MenuItem
           icon="flag-outline"
-          label="প্রোফাইল রিপোর্ট করো"
+          label={t("profileMenu.reportProfile")}
           onPress={handleReport}
           danger
         />
