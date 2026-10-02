@@ -235,5 +235,23 @@
   "alreadyAnswered": "আপনি আগেই এই প্রশ্নের উত্তর দিয়েছেন",
 
   "retry": "আবার চেষ্টা করুন",
-  "somethingWentWrong": "কিছু একটা ভুল হয়েছে"
+  "somethingWentWrong": "কিছু একটা ভুল হয়েছে",
+
+  "searchData": {
+    "tabAll": "সব",
+    "tabAccounts": "অ্যাকাউন্ট",
+    "tabPosts": "পোস্ট",
+    "tabHandouts": "হ্যান্ডআউট",
+    "sectionAccounts": "অ্যাকাউন্ট",
+    "sectionPosts": "পোস্ট",
+    "sectionHandouts": "হ্যান্ডআউট",
+    "seeAll": "সব দেখুন",
+    "noResults": "কিছু পাওয়া যায়নি",
+    "noAccounts": "কোনো অ্যাকাউন্ট পাওয়া যায়নি",
+    "noPosts": "কোনো পোস্ট পাওয়া যায়নি",
+    "noHandouts": "কোনো হ্যান্ডআউট পাওয়া যায়নি",
+    "error": "সার্চ করতে সমস্যা হয়েছে",
+    "retry": "আবার চেষ্টা করুন",
+    "emptyHint": "অ্যাকাউন্ট, পোস্ট বা হ্যান্ডআউট খুঁজুন"
+  }
 }

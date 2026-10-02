@@ -1,8 +1,10 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
 import {
   Alert,
   Animated,
   FlatList,
+  LayoutAnimation,
   Text,
   TouchableOpacity,
   View,
@@ -14,14 +16,13 @@ import {
   useDeleteAllNotificationsMutation,
   useDeleteNotificationMutation,
   useGetMyNotificationsInfiniteQuery,
+  useGetUnreadNotificationCountQuery,
   useMarkAllAsReadMutation,
   useMarkAsReadMutation,
 } from "@/redux/api/notification/notificationApi";
-import { getErrorMessage } from "@/utils/getErrorMessage"; // path ঠিক করে নিও
+import { getErrorMessage } from "@/utils/getErrorMessage";
 
 // ===================== SKELETON =====================
-// halka pulse animation. Tomar nijer skeleton component thakle
-// NotificationSkeletonItem er jaigay seta boshate paro.
 const Pulse = ({ children }: { children: React.ReactNode }) => {
   const opacity = useRef(new Animated.Value(0.5)).current;
 
@@ -68,15 +69,62 @@ const NotificationSkeletonList = () => (
   </View>
 );
 
+// ===================== HEADER ICON BUTTON =====================
+// disabled হলে button থাকবে, শুধু হালকা (ফিকে) দেখাবে
+interface IconButtonProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  onPress: () => void;
+  disabled?: boolean;
+  borderClass: string;
+}
+
+const HeaderIconButton = ({
+  icon,
+  color,
+  onPress,
+  disabled,
+  borderClass,
+}: IconButtonProps) => {
+  const opacity = useRef(new Animated.Value(disabled ? 0.3 : 1)).current;
+
+  useEffect(() => {
+    Animated.timing(opacity, {
+      toValue: disabled ? 0.3 : 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [disabled, opacity]);
+
+  return (
+    <Animated.View style={{ opacity }}>
+      <TouchableOpacity
+        onPress={onPress}
+        disabled={disabled}
+        activeOpacity={0.7}
+        hitSlop={6}
+        className={`w-9 h-9 rounded-full border items-center justify-center ${borderClass}`}
+      >
+        <Ionicons name={icon} size={18} color={color} />
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
 // ===================== ACTION HELPER =====================
-// mutation fail korle user ke jani (age kichu dekhato na)
-const runAction = async (action: () => Promise<unknown>) => {
+// সফল হলে true, fail করলে alert দেখিয়ে false
+const runAction = async (action: () => Promise<unknown>): Promise<boolean> => {
   try {
     await action();
+    return true;
   } catch (err) {
     Alert.alert("সমস্যা হয়েছে", getErrorMessage(err));
+    return false;
   }
 };
+
+const animateLayout = () =>
+  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
 const NotificationPanel = () => {
   const {
@@ -91,35 +139,61 @@ const NotificationPanel = () => {
     refetch,
   } = useGetMyNotificationsInfiniteQuery({ limit: 10 });
 
+  // badge-এর সাথে একই count (optimistic update-এ এটাও বদলায়)
+  const { data: countData } = useGetUnreadNotificationCountQuery();
+
   const [markAsRead] = useMarkAsReadMutation();
-  const [markAllAsRead, { isLoading: isMarkingAll }] =
-    useMarkAllAsReadMutation();
+  const [markAllAsRead] = useMarkAllAsReadMutation();
   const [deleteNotification] = useDeleteNotificationMutation();
-  const [deleteAllNotifications, { isLoading: isDeletingAll }] =
-    useDeleteAllNotificationsMutation();
+  const [deleteAllNotifications] = useDeleteAllNotificationsMutation();
 
   const notifications = data?.pages.flatMap((p) => p.notifications) ?? [];
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
-  // শুধু তখনই full error, যখন দেখানোর মতো একটা বিজ্ঞপ্তিও নেই
+  const hasUnread =
+    notifications.some((n) => !n.read) || (countData?.count ?? 0) > 0;
+  const hasAny = notifications.length > 0;
+
   const showFullError = !isLoading && isError && notifications.length === 0;
 
   const handleEndReached = () => {
-    // next page er error thakle nije nije abar chalabo na,
-    // user "আবার চেষ্টা করো" chaple tokhon chalbe
     if (isFetchNextPageError) return;
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   };
 
+  // ---------- handlers ----------
+  const handleMarkAll = () => {
+    if (!hasUnread) return;
+    runAction(() => markAllAsRead().unwrap());
+  };
+
+  const handleDeleteAll = () => {
+    if (!hasAny) return;
+
+    Alert.alert("সব বিজ্ঞপ্তি মুছবে?", "এই কাজটি আর ফেরানো যাবে না।", [
+      { text: "বাতিল", style: "cancel" },
+      {
+        text: "মুছে ফেলো",
+        style: "destructive",
+        onPress: () => {
+          animateLayout();
+          runAction(() => deleteAllNotifications().unwrap());
+        },
+      },
+    ]);
+  };
+
+  const handleDelete = async (id: string) => {
+    animateLayout(); // নিচের item গুলো মসৃণভাবে উপরে উঠে আসবে
+    return runAction(() => deleteNotification(id).unwrap());
+  };
+
   const renderFooter = () => {
-    // 1) next page ashchhe -> skeleton
     if (isFetchingNextPage) {
       return <NotificationSkeletonItem />;
     }
 
-    // 2) next page fail -> purono bijnopti thakbe, niche shudhu chhoto retry
     if (isFetchNextPageError) {
       return (
         <View className="py-6 px-8 items-center gap-3">
@@ -143,47 +217,35 @@ const NotificationPanel = () => {
   };
 
   return (
-    // flex-1 remove, flexShrink diye sheet er max height er moddhe shrink hobe
     <View style={{ flexShrink: 1 }} className="pt-2">
-      {/* HEADER — loading er somoyo thakbe */}
+      {/* HEADER */}
       <View className="flex-row items-center justify-between px-4 pb-4 border-border/60 border-b dark:border-dark-border/60">
         <Text className="text-lg font-bold text-text dark:text-dark-text">
           Notifications
         </Text>
 
-        <View className="flex-row gap-3 items-center">
-          {unreadCount > 0 && (
-            <TouchableOpacity
-              onPress={() => runAction(() => markAllAsRead().unwrap())}
-              disabled={isMarkingAll}
-              className={`border border-accent rounded-full px-2 py-1 ${
-                isMarkingAll ? "opacity-50" : ""
-              }`}
-            >
-              <Text className="text-accent text-sm font-semibold">
-                Read all
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {notifications.length > 0 && (
-            <TouchableOpacity
-              onPress={() => runAction(() => deleteAllNotifications().unwrap())}
-              disabled={isDeletingAll}
-              className={`border border-red-500 rounded-full px-2 py-1 ${
-                isDeletingAll ? "opacity-50" : ""
-              }`}
-            >
-              <Text className="text-red-500 text-sm font-semibold">Clear</Text>
-            </TouchableOpacity>
-          )}
+        <View className="flex-row gap-2 items-center">
+          <HeaderIconButton
+            icon="checkmark-done-outline"
+            color="#00914d"
+            borderClass="border-accent"
+            onPress={handleMarkAll}
+            disabled={!hasUnread}
+          />
+          <HeaderIconButton
+            icon="trash-outline"
+            color="#EF4444"
+            borderClass="border-red-500"
+            onPress={handleDeleteAll}
+            disabled={!hasAny}
+          />
         </View>
       </View>
 
       {/* Loading */}
       {isLoading && <NotificationSkeletonList />}
 
-      {/* Error — প্রথমবারেই load fail */}
+      {/* Error */}
       {showFullError && (
         <View className="items-center justify-center py-16 px-8 gap-3">
           <Text className="text-4xl">📡</Text>
@@ -202,7 +264,7 @@ const NotificationPanel = () => {
         </View>
       )}
 
-      {/* LIST — next page error হলেও পুরনো বিজ্ঞপ্তি গুলো থাকবে */}
+      {/* LIST */}
       {!isLoading && !showFullError && (
         <FlatList
           style={{ flexShrink: 1 }}
@@ -216,11 +278,11 @@ const NotificationPanel = () => {
           renderItem={({ item }) => (
             <NotificationCard
               item={item}
-              // "read" mark fail holeo chupchap, eta chhoto kaj, alert birokto korbe
-              onRead={(id) => markAsRead(id)}
-              onDelete={(id) =>
-                runAction(() => deleteNotification(id).unwrap())
-              }
+              // fail করলে optimistic update নিজেই rollback হয়, তাই চুপচাপ
+              onRead={(id) => {
+                markAsRead(id);
+              }}
+              onDelete={handleDelete}
             />
           )}
           ListFooterComponent={renderFooter}

@@ -1,59 +1,44 @@
 import {
   followApi,
+  useCheckIsFollowingQuery,
   useFollowUserMutation,
-  useGetFollowersQuery,
   useUnfollowUserMutation,
 } from "@/redux/api/followApi";
 import { useAppSelector } from "@/redux/hooks";
 import { useCallback, useRef } from "react";
 import { useDispatch } from "react-redux";
 
-// followerId can be a populated object or a plain id string
-const extractId = (value: any): string | undefined =>
-  value && typeof value === "object" ? (value._id ?? value.id) : value;
-
 export const useFollowState = (targetUserId: string) => {
   const dispatch = useDispatch<any>();
   const currentUser = useAppSelector((state) => state.auth.user);
   const inFlight = useRef(false);
 
-  const myIds = [(currentUser as any)?.id, (currentUser as any)?._id].filter(
-    Boolean,
-  ) as string[];
+  const isLoggedIn = !!currentUser;
 
-  const { data, isLoading } = useGetFollowersQuery(targetUserId, {
-    skip: !targetUserId,
+  const { data, isLoading } = useCheckIsFollowingQuery(targetUserId, {
+    skip: !targetUserId || !isLoggedIn,
   });
 
   const [followUser] = useFollowUserMutation();
   const [unfollowUser] = useUnfollowUserMutation();
 
-  const isReady = !isLoading && !!data;
-
-  const isFollowing = (data?.followers ?? []).some((f: any) =>
-    myIds.includes(extractId(f.followerId) as string),
-  );
+  // success বা error দুই ক্ষেত্রেই ready, যাতে UI আটকে না থাকে
+  const isReady = !isLoading;
+  const isFollowing = data?.isFollowing ?? false;
 
   const toggle = useCallback(async () => {
-    if (!myIds.length || !isReady || inFlight.current) return;
+    if (!isLoggedIn || !isReady || inFlight.current) return;
 
     inFlight.current = true;
     const wasFollowing = isFollowing;
 
-    // Optimistic update: patch the cache instantly
+    // Optimistic update: cache instantly patch
     const patch = dispatch(
       followApi.util.updateQueryData(
-        "getFollowers",
+        "checkIsFollowing",
         targetUserId,
         (draft: any) => {
-          if (!Array.isArray(draft.followers)) return;
-          if (wasFollowing) {
-            draft.followers = draft.followers.filter(
-              (f: any) => !myIds.includes(extractId(f.followerId) as string),
-            );
-          } else {
-            draft.followers.push({ followerId: myIds[0] });
-          }
+          draft.isFollowing = !wasFollowing;
         },
       ),
     );
@@ -71,7 +56,7 @@ export const useFollowState = (targetUserId: string) => {
       inFlight.current = false;
     }
   }, [
-    myIds,
+    isLoggedIn,
     isReady,
     isFollowing,
     dispatch,

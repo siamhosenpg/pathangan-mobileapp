@@ -247,5 +247,22 @@
   "alreadyAnswered": "You have already answered this question",
 
   "retry": "Try again",
-  "somethingWentWrong": "Something went wrong"
+  "somethingWentWrong": "Something went wrong",
+  "searchData": {
+    "tabAll": "All",
+    "tabAccounts": "Accounts",
+    "tabPosts": "Posts",
+    "tabHandouts": "Handouts",
+    "sectionAccounts": "Accounts",
+    "sectionPosts": "Posts",
+    "sectionHandouts": "Handouts",
+    "seeAll": "See all",
+    "noResults": "No results found",
+    "noAccounts": "No accounts found",
+    "noPosts": "No posts found",
+    "noHandouts": "No handouts found",
+    "error": "Search failed",
+    "retry": "Try again",
+    "emptyHint": "Search accounts, posts or handouts"
+  }
 }

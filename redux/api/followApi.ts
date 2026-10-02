@@ -79,6 +79,17 @@ export const followApi = baseApi.injectEndpoints({
         { type: "Follow", id: userId },
       ],
     }),
+
+    // ✅ নতুন: আমি এই user-কে follow করি কিনা
+    checkIsFollowing: builder.query<
+      { success: boolean; isFollowing: boolean },
+      string
+    >({
+      query: (userId) => `/follows/is-following/${userId}`,
+      providesTags: (_result, _error, userId) => [
+        { type: "Follow", id: userId },
+      ],
+    }),
   }),
   overrideExisting: false,
 });
@@ -92,4 +103,5 @@ export const {
   useLazyGetFollowingQuery,
   useGetFollowersCountQuery,
   useGetFollowingCountQuery,
+  useCheckIsFollowingQuery,
 } = followApi;
