@@ -2,12 +2,27 @@ import { useGetUserAverageRatingQuery } from "@/redux/api/rating/rattingApi";
 import { ActivityIndicator, Text, View } from "react-native";
 import StarRating from "./StarRating";
 
-const UserRating = ({ userId }: { userId: string }) => {
-  const { data, isLoading, isError } = useGetUserAverageRatingQuery(userId, {
-    skip: !userId,
-  });
+interface Props {
+  userId?: string;
+  // ✅ profile data থেকে সরাসরি দিলে আলাদা API call হবে না
+  averageRating?: number;
+  totalRatingCount?: number;
+}
 
-  if (isLoading) {
+const UserRating = ({ userId, averageRating, totalRatingCount }: Props) => {
+  // props এ rating থাকলে query skip হবে (profile page এ এটাই হবে)
+  const hasInlineData =
+    averageRating !== undefined && totalRatingCount !== undefined;
+
+  const { data, isLoading, isError } = useGetUserAverageRatingQuery(
+    userId as string,
+    { skip: hasInlineData || !userId },
+  );
+
+  const avg = hasInlineData ? averageRating : data?.averageRating;
+  const total = hasInlineData ? totalRatingCount : data?.totalRatingCount;
+
+  if (!hasInlineData && isLoading) {
     return (
       <View className="flex-row items-center gap-3 opacity-30">
         <ActivityIndicator size="small" color="#00914d" />
@@ -16,7 +31,7 @@ const UserRating = ({ userId }: { userId: string }) => {
     );
   }
 
-  if (isError || !data) {
+  if (!hasInlineData && (isError || !data)) {
     return (
       <View className="flex-row items-center gap-3">
         <StarRating rating={0} />
@@ -27,12 +42,11 @@ const UserRating = ({ userId }: { userId: string }) => {
     );
   }
 
-  const totalBangla = toBanglaNumber(data?.totalRatingCount || 0);
-  const avgBangla = toBanglaNumber(data?.averageRating || 0);
+  const totalBangla = toBanglaNumber(total || 0);
 
   return (
     <View className="flex-row items-center gap-3">
-      <StarRating rating={data?.averageRating || 0} />
+      <StarRating rating={avg || 0} />
       <Text className="text-sm font-medium text-text-secondary dark:text-dark-text-secondary">
         {totalBangla} জন রেটিং দিয়েছে
       </Text>

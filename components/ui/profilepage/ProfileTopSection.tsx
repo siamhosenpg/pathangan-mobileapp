@@ -90,7 +90,11 @@ const ProfileTopSection = ({ data }: Props) => {
               )}
             </View>
             <View className="mt-1">
-              <UserRating userId={data._id} />
+              {/* ✅ আলাদা API call নেই — profile data থেকেই rating আসছে */}
+              <UserRating
+                averageRating={data.activityStats?.averageRating ?? 0}
+                totalRatingCount={data.activityStats?.totalRating ?? 0}
+              />
             </View>
           </View>
         </View>

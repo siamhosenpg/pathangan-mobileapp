@@ -13,6 +13,7 @@ export interface GiveRatingResponse {
   userRating: number;
   averageRating: number;
   ratingCount: number;
+  answerUserId?: string; // ✅ নতুন: যার answer এ rating পড়েছে তার _id
 }
 
 export interface GiveRatingRequest {
@@ -28,6 +29,7 @@ export interface MyRatingResponse {
 export interface DeleteRatingResponse {
   success: boolean;
   message: string;
+  answerUserId?: string; // ✅ নতুন
 }
 
 export interface AnswerRatingItem {
@@ -59,9 +61,16 @@ export const ratingApi = baseApi.injectEndpoints({
         method: "POST",
         body: { rating },
       }),
-      invalidatesTags: (_result, _error, { answerId }) => [
+      invalidatesTags: (result, _error, { answerId }) => [
         { type: "Rating", id: answerId },
-        { type: "Rating", id: `MY_${answerId}` }, // ← এইটা missing ছিল
+        { type: "Rating", id: `MY_${answerId}` },
+        // ✅ profile data (getUserByUsername) refresh করার জন্য
+        ...(result?.answerUserId
+          ? [
+              { type: "User" as const, id: result.answerUserId },
+              { type: "Rating" as const, id: `USER_${result.answerUserId}` },
+            ]
+          : []),
       ],
     }),
 
@@ -87,9 +96,16 @@ export const ratingApi = baseApi.injectEndpoints({
         url: `/ratings/answer/${answerId}`,
         method: "DELETE",
       }),
-      invalidatesTags: (_result, _error, answerId) => [
+      invalidatesTags: (result, _error, answerId) => [
         { type: "Rating", id: answerId },
         { type: "Rating", id: `MY_${answerId}` },
+        // ✅ profile data (getUserByUsername) refresh করার জন্য
+        ...(result?.answerUserId
+          ? [
+              { type: "User" as const, id: result.answerUserId },
+              { type: "Rating" as const, id: `USER_${result.answerUserId}` },
+            ]
+          : []),
       ],
     }),
 
@@ -101,6 +117,7 @@ export const ratingApi = baseApi.injectEndpoints({
       ],
     }),
 
+    // GET /ratings/user/:userId — user এর average rating (পুরোনো জায়গার fallback)
     getUserAverageRating: builder.query<UserAverageRatingResponse, string>({
       query: (userId) => `/ratings/user/${userId}`,
       providesTags: (_result, _error, userId) => [
