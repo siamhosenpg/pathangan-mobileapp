@@ -27,6 +27,7 @@
     },
     "android": {
       "package": "com.siamhosenpg.pathangan",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -34,7 +35,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": []
+      "permissions": ["POST_NOTIFICATIONS"]
     },
     "web": {
       "output": "static",
@@ -45,10 +46,9 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/android-icon-foreground.png",
+          "icon": "./assets/images/android-icon-monochrome.png",
           "color": "#E6F4FE",
-          "androidMode": "default",
-          "androidCollapsedTitle": "%(count)s নতুন নোটিফিকেশন"
+          "defaultChannel": "default"
         }
       ],
       [

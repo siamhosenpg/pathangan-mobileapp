@@ -19,17 +19,14 @@ const userApi = baseApi.injectEndpoints({
       }),
       providesTags: (result, _error, username) => [
         { type: "User", id: username },
-        // also tagged by _id so follow/unfollow can refresh follower counts
         ...(result?._id ? [{ type: "User" as const, id: result._id }] : []),
       ],
     }),
 
-    // suggested users
     getPeopleSuggestions: builder.query<SuggestedUsersResponse, void>({
       query: () => ({ url: "/peoples/suggestions", method: "GET" }),
     }),
 
-    // ⚠️ Mobile এ FormData image upload এভাবে করতে হয়
     updateUser: builder.mutation<
       { message: string; user: User },
       UpdateUserRequest
@@ -40,7 +37,7 @@ const userApi = baseApi.injectEndpoints({
         body: formData,
         headers: {
           Accept: "application/json",
-          // Content-Type দেবে না — React Native নিজে boundary set করবে
+          // Content-Type debi na — React Native nije boundary set korbe
         },
       }),
       invalidatesTags: (_result, _error, { userid }) => [
@@ -65,6 +62,14 @@ const userApi = baseApi.injectEndpoints({
         }),
       },
     ),
+
+    // logout-er somoy call korbi
+    removePushToken: builder.mutation<{ message: string }, void>({
+      query: () => ({
+        url: "/users/push-token",
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
@@ -75,4 +80,5 @@ export const {
   useUpdateUserMutation,
   useDeleteUserMutation,
   useSavePushTokenMutation,
+  useRemovePushTokenMutation,
 } = userApi;

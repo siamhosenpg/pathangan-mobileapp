@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "85571556582",
+    "project_id": "pathangan-cd730",
+    "storage_bucket": "pathangan-cd730.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:85571556582:android:abcae2bf72c258eb285727",
+        "android_client_info": {
+          "package_name": "com.siamhosenpg.pathangan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArQhGaheUlqRuWqMTn4dIJsqeg3qCjJIc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

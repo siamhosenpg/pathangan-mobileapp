@@ -7,18 +7,18 @@ import {
 } from "./../../../types/notification/notificationTypes";
 
 // ===================== OPTIMISTIC HELPERS =====================
-// notificationApi নিজের ভেতরে নিজেকে reference করলে TypeScript circular error দেয়,
-// তাই baseApi.util ব্যবহার করা হয়েছে (injectEndpoints একই api-তে endpoint বসায়)
+// notificationApi nijer bhitore nijeke reference korle TS circular error dey,
+// tai baseApi.util use kora hoyeche
 const util = baseApi.util as any;
 
 type Patch = { undo: () => void };
 type Pages = GetNotificationsResponse[];
 
-// cache-এ যতগুলো getMyNotifications entry আছে (limit ভেদে), সবগুলোর arg
+// cache-e joto gulo getMyNotifications entry ache (limit bhede), shobgulor arg
 const getCachedArgs = (getState: () => unknown): { limit?: number }[] =>
   util.selectCachedArgsForQuery(getState(), "getMyNotifications") ?? [];
 
-// সব cached list-এ একসাথে change বসায়
+// shob cached list-e ekshathe change boshay
 const patchLists = (
   dispatch: any,
   getState: () => unknown,
@@ -47,15 +47,9 @@ const patchCount = (
     ),
   );
 
-// cache থেকে একটা notification খুঁজে বের করে (আগে unread ছিল কিনা জানার জন্য)
+// cache theke ekta notification khuje ber kore (age unread chhilo kina jante)
 const findInCache = (getState: () => unknown, id: string) => {
   for (const arg of getCachedArgs(getState)) {
-    const entry = util.selectCachedArgsForQuery
-      ? util.selectInvalidatedBy
-        ? undefined
-        : undefined
-      : undefined;
-    void entry;
     const sel = (baseApi.endpoints as any).getMyNotifications.select(arg);
     const pages: Pages | undefined = sel(getState() as any)?.data?.pages;
     for (const page of pages ?? []) {
@@ -122,7 +116,6 @@ const notificationApi = baseApi.injectEndpoints({
           }
         });
 
-        // আগে থেকেই read থাকলে count কমাবো না
         if (wasUnread) {
           patches.push(patchCount(dispatch, (c) => Math.max(0, c - 1)));
         }
