@@ -7,6 +7,8 @@ import type {
   GetAnswerCountResponse,
   GetAnswersQueryParams,
   GetAnswersResponse,
+  UpdateAnswerPayload,
+  UpdateAnswerResponse,
   VoteAnswerPayload,
   VoteAnswerResponse,
 } from "@/types/answerTypes";
@@ -53,16 +55,33 @@ const answersApi = baseApi.injectEndpoints({
         { type: "Answer", id: `count-${questionId}` },
       ],
     }),
+
+    // ✅ নতুন: answer edit
+    updateAnswer: builder.mutation<UpdateAnswerResponse, UpdateAnswerPayload>({
+      query: ({ answerId, text }) => ({
+        url: `/answers/${answerId}`,
+        method: "PUT",
+        body: { text },
+      }),
+      invalidatesTags: (_result, _error, { answerId, questionId }) => [
+        { type: "Answer", id: answerId },
+        { type: "Answer", id: questionId },
+      ],
+    }),
+
+    // ✅ questionId যোগ করা হয়েছে যাতে list ও count দুটোই refresh হয়
     deleteAnswer: builder.mutation<
       { success: boolean; message?: string },
-      string
+      { answerId: string; questionId: string }
     >({
-      query: (answerId) => ({
+      query: ({ answerId }) => ({
         url: `/answers/${answerId}`,
         method: "DELETE",
       }),
-      invalidatesTags: (_result, _error, answerId) => [
+      invalidatesTags: (_result, _error, { answerId, questionId }) => [
         { type: "Answer", id: answerId },
+        { type: "Answer", id: questionId },
+        { type: "Answer", id: `count-${questionId}` },
       ],
     }),
 
@@ -106,6 +125,7 @@ export const {
   useGetAnswerCountQuery,
   useGetAnswerByIdQuery,
   useCreateAnswerMutation,
+  useUpdateAnswerMutation,
   useDeleteAnswerMutation,
   useVoteAnswerMutation,
 } = answersApi;

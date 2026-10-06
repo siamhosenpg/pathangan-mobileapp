@@ -58,3 +58,15 @@ export interface VoteAnswerPayload {
   voteType: "upvote" | "downvote";
   questionId: string;
 }
+
+export interface UpdateAnswerPayload {
+  answerId: string;
+  questionId: string;
+  text: string;
+}
+
+export interface UpdateAnswerResponse {
+  success: boolean;
+  message: string;
+  answer: Answer;
+}

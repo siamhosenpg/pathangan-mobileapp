@@ -8,9 +8,20 @@ import TimeAgo from "../../datetime/TimeAgo";
 import Entypo from "@expo/vector-icons/Entypo";
 import AnswerThreeDotMenu from "./AnswerThreeDotMenu";
 
-export function AnswerUserCard({ answer }: { answer: Answer }) {
+export function AnswerUserCard({
+  answer,
+  questionText = "",
+}: {
+  answer: Answer;
+  questionText?: string;
+}) {
   const router = useRouter();
   const { open } = useBottomSheet();
+
+  // questionId string বা populated object দুটোই handle করা
+  const questionId = String(
+    (answer.questionId as any)?._id ?? answer.questionId,
+  );
 
   const handlePress = () => {
     router.push(`/${answer.userId.username}`);
@@ -60,6 +71,9 @@ export function AnswerUserCard({ answer }: { answer: Answer }) {
               answerAuthorId={
                 (answer.userId as any)._id ?? (answer.userId as any).id
               }
+              questionId={questionId}
+              questionText={questionText}
+              answerText={answer.text}
             />,
           )
         }

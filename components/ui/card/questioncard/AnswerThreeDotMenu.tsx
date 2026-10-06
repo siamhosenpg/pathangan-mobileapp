@@ -1,14 +1,25 @@
 import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
 import { useDeleteAnswerMutation } from "@/redux/api/answer/answersApi";
-
 import { useAppSelector } from "@/redux/hooks";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
+import {
+  ActivityIndicator,
+  Alert,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import AnswerPopupContent from "./AnswerPopupContent";
 
 interface Props {
   answerId: string;
   answerAuthorId: string;
+  questionId: string;
+  questionText: string;
+  answerText: string;
 }
 
 interface MenuItem {
@@ -19,8 +30,16 @@ interface MenuItem {
   danger?: boolean;
 }
 
-const AnswerThreeDotMenu = ({ answerId, answerAuthorId }: Props) => {
-  const { close } = useBottomSheet();
+const AnswerThreeDotMenu = ({
+  answerId,
+  answerAuthorId,
+  questionId,
+  questionText,
+  answerText,
+}: Props) => {
+  const { close, open } = useBottomSheet();
+  const router = useRouter();
+  const { t } = useTranslation();
   const currentUser = useAppSelector((state) => state.auth.user);
 
   const isOwnAnswer =
@@ -33,33 +52,77 @@ const AnswerThreeDotMenu = ({ answerId, answerAuthorId }: Props) => {
     close();
   };
 
-  const handleDeleteAnswer = async () => {
-    try {
-      await deleteAnswer(answerId).unwrap();
-      close();
-    } catch {}
+  // menu বন্ধ করে edit popup খোলা
+  const handleEditAnswer = () => {
+    close();
+    // bottom sheet এর close animation শেষ হওয়ার জন্য একটু অপেক্ষা
+    setTimeout(() => {
+      open(
+        <AnswerPopupContent
+          questionId={questionId}
+          questionText={questionText}
+          answerId={answerId}
+          initialText={answerText}
+        />,
+      );
+    }, 300);
   };
 
-  const menuItems: MenuItem[] = [
+  const handleDeleteAnswer = () => {
+    Alert.alert(
+      t("answerData.deleteAnswer"),
+      t("answerData.deleteAnswerConfirm"),
+      [
+        { text: t("answerData.cancel"), style: "cancel" },
+        {
+          text: t("answerData.delete"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteAnswer({ answerId, questionId }).unwrap();
+              close();
+              if (router.canGoBack()) router.back();
+            } catch {
+              Alert.alert(t("answerData.somethingWentWrong"));
+            }
+          },
+        },
+      ],
+      { cancelable: true },
+    );
+  };
+
+  const menuItems: MenuItem[] = [];
+
+  if (isOwnAnswer) {
+    menuItems.push({
+      icon: "create-outline",
+      title: t("answerData.editAnswer"),
+      subtitle: t("answerData.editAnswerSub"),
+      onPress: handleEditAnswer,
+    });
+  }
+
+  menuItems.push(
     {
       icon: "link-outline",
-      title: "লিংক কপি করুন",
-      subtitle: "এই উত্তরের লিংক কপি করুন",
+      title: t("answerData.copyLink"),
+      subtitle: t("answerData.copyLinkSub"),
       onPress: handleCopyLink,
     },
     {
       icon: "flag-outline",
-      title: "উত্তর রিপোর্ট করুন",
-      subtitle: "এই উত্তরটি নিয়ে আমি উদ্বিগ্ন",
+      title: t("answerData.reportAnswer"),
+      subtitle: t("answerData.reportAnswerSub"),
       onPress: close,
     },
-  ];
+  );
 
   if (isOwnAnswer) {
     menuItems.push({
       icon: "trash-outline",
-      title: "উত্তর ডিলিট করুন",
-      subtitle: "এই উত্তরটি স্থায়ীভাবে মুছে ফেলুন",
+      title: t("answerData.deleteAnswer"),
+      subtitle: t("answerData.deleteAnswerSub"),
       onPress: handleDeleteAnswer,
       danger: true,
     });
@@ -70,7 +133,7 @@ const AnswerThreeDotMenu = ({ answerId, answerAuthorId }: Props) => {
       {/* Header */}
       <View className="px-4 py-3 mb-1 border-b border-border dark:border-dark-border flex-row items-center justify-between">
         <Text className="text-base font-bold text-text dark:text-dark-text">
-          উত্তর অপশন
+          {t("answerData.answerOptions")}
         </Text>
         <View className="w-9 h-1 rounded-full bg-border dark:bg-dark-border opacity-0" />
       </View>
@@ -117,7 +180,7 @@ const AnswerThreeDotMenu = ({ answerId, answerAuthorId }: Props) => {
                   }`}
                 >
                   {item.danger && isDeleting
-                    ? "মুছে ফেলা হচ্ছে..."
+                    ? t("answerData.deleting")
                     : item.title}
                 </Text>
                 <Text
