@@ -40,9 +40,11 @@ type ErrorKey =
   | "errMixedMedia"
   | "errPickFailed"
   | "errEmptyPost"
-  | "errEmptyQuestion";
+  | "errEmptyQuestion"
+  | "errMaxMedia";
 
 const ACCENT = "#00914d";
+const MAX_MEDIA = 10;
 
 const SAFE_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
 
@@ -144,9 +146,16 @@ export default function CreatePostPage() {
   /* ─────────── Media ─────────── */
   const pickMedia = async () => {
     try {
+      const remaining = MAX_MEDIA - media.length;
+      if (remaining <= 0) {
+        setErrorKey("errMaxMedia");
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images", "videos"],
         allowsMultipleSelection: true,
+        selectionLimit: remaining,
         quality: 0.85,
         exif: false,
         // iPhone er HEIC auto JPG hoye jay
@@ -155,23 +164,30 @@ export default function CreatePostPage() {
       });
       if (result.canceled) return;
 
-      const selected: MediaItem[] = result.assets.map((a) => ({
-        uri: a.uri,
-        type: a.type === "video" ? "video" : "image",
-        fileName: a.fileName ?? undefined,
-        mimeType: a.mimeType ?? undefined,
-        thumbnail: a.type === "video" ? (a.uri ?? undefined) : undefined,
-      }));
+      const picked: MediaItem[] = result.assets
+        .filter((a) => !media.some((m) => m.uri === a.uri)) // duplicate bad
+        .map((a) => ({
+          uri: a.uri,
+          type: a.type === "video" ? "video" : "image",
+          fileName: a.fileName ?? undefined,
+          mimeType: a.mimeType ?? undefined,
+          thumbnail: a.type === "video" ? (a.uri ?? undefined) : undefined,
+        }));
 
-      const hasVideo = selected.some((m) => m.type === "video");
-      const hasImage = selected.some((m) => m.type === "image");
+      if (picked.length === 0) return;
+
+      // ager media'r sathe notun gulo jog hobe
+      const merged = [...media, ...picked];
+
+      const hasVideo = merged.some((m) => m.type === "video");
+      const hasImage = merged.some((m) => m.type === "image");
       if (hasVideo && hasImage) {
         setErrorKey("errMixedMedia");
         return;
       }
 
       setErrorKey("");
-      setMedia(selected);
+      setMedia(merged.slice(0, MAX_MEDIA));
     } catch {
       setErrorKey("errPickFailed");
     }
@@ -278,7 +294,7 @@ export default function CreatePostPage() {
       style={{ paddingTop: insets.top }}
     >
       {/* ───────── Header ───────── */}
-      <View className="flex-row items-center gap-3 px-4 py-3 border-b border-border/60 dark:border-dark-border/60">
+      <View className="flex-row items-center gap-3 px-4 py-3">
         <TouchableOpacity
           onPress={() => router.back()}
           activeOpacity={0.7}
@@ -319,6 +335,16 @@ export default function CreatePostPage() {
         </TouchableOpacity>
       </View>
 
+      {/* ───────── Type selector (full width) ───────── */}
+      <PostTypeSelector
+        active={activeType}
+        types={["post", "question"]}
+        onChange={(next) => {
+          setActiveType(next as PostType);
+          setErrorKey("");
+        }}
+      />
+
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -332,18 +358,7 @@ export default function CreatePostPage() {
             paddingBottom: insets.bottom + 40,
           }}
         >
-          {/* ───────── Type selector (segmented) ───────── */}
-          <PostTypeSelector
-            active={activeType}
-            types={["post", "question"]}
-            onChange={(next) => {
-              setActiveType(next as PostType);
-              setErrorKey("");
-            }}
-            isDark={isDark}
-          />
-
-          {/* ───────── User row ───────── */}
+          {/* ───────── User row + Privacy select ───────── */}
           <View className="flex-row items-center gap-3">
             <View className="w-12 h-12 rounded-full overflow-hidden bg-accent/20 items-center justify-center border border-border dark:border-dark-border">
               {user?.profileImage ? (
@@ -358,19 +373,19 @@ export default function CreatePostPage() {
                 </Text>
               )}
             </View>
-            <View className="flex-1">
+
+            <View className="flex-1 gap-1">
               <Text
                 className="text-text dark:text-dark-text text-[15px] font-semibold"
                 numberOfLines={1}
               >
                 {user?.name}
               </Text>
-              <Text
-                className="text-text-tertiary dark:text-dark-text-tertiary text-xs mt-0.5"
-                numberOfLines={1}
-              >
-                @{user?.username}
-              </Text>
+              <PrivacySelector
+                value={privacy}
+                onChange={setPrivacy}
+                isDark={isDark}
+              />
             </View>
           </View>
 
@@ -412,13 +427,6 @@ export default function CreatePostPage() {
               isDark={isDark}
             />
           )}
-
-          {/* ───────── Privacy ───────── */}
-          <PrivacySelector
-            value={privacy}
-            onChange={setPrivacy}
-            isDark={isDark}
-          />
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

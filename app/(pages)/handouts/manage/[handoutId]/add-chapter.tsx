@@ -6,7 +6,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useColorScheme } from "nativewind";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -21,6 +22,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AddEditChapterScreen() {
+  const { t } = useTranslation();
   const { handoutId, chapterId } = useLocalSearchParams<{
     handoutId: string;
     chapterId?: string;
@@ -33,7 +35,7 @@ export default function AddEditChapterScreen() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
-  // Edit mode e server theke ashа original value. Change hoyeche kina bujhte lage.
+  // Edit mode e server theke asha original value. Change hoyeche kina bujhte lage.
   const [original, setOriginal] = useState({ title: "", content: "" });
 
   // Save successful hole confirm popup skip korar jonno
@@ -62,6 +64,11 @@ export default function AddEditChapterScreen() {
     }
   }, [isEditing, chaptersData, chapterId]);
 
+  const wordCount = useMemo(
+    () => content.trim().split(/\s+/).filter(Boolean).length,
+    [content],
+  );
+
   const hasUnsavedChanges = isEditing
     ? title.trim() !== original.title.trim() ||
       content.trim() !== original.content.trim()
@@ -75,12 +82,12 @@ export default function AddEditChapterScreen() {
       e.preventDefault();
 
       Alert.alert(
-        "পরিবর্তন বাতিল করবেন?",
-        "আপনার লেখা সংরক্ষিত হয়নি। এখন বেরিয়ে গেলে সব মুছে যাবে।",
+        t("handoutData.discardTitle"),
+        t("handoutData.discardChapterMessage"),
         [
-          { text: "থাকুন", style: "cancel" },
+          { text: t("handoutData.stay"), style: "cancel" },
           {
-            text: "বাদ দিন",
+            text: t("handoutData.discard"),
             style: "destructive",
             onPress: () => navigation.dispatch(e.data.action),
           },
@@ -89,15 +96,19 @@ export default function AddEditChapterScreen() {
     });
 
     return unsubscribe;
-  }, [navigation, hasUnsavedChanges]);
+  }, [navigation, hasUnsavedChanges, t]);
 
   const isSaving = isAdding || isUpdating;
+  const placeholderColor = isDark ? "#8a8a8a" : "#6d6d6d";
 
   const handleSubmit = async () => {
     if (isSaving) return;
 
     if (!title.trim() || !content.trim()) {
-      Alert.alert("তথ্য অসম্পূর্ণ", "অধ্যায়ের টাইটেল ও কনটেন্ট দিন");
+      Alert.alert(
+        t("handoutData.incompleteTitle"),
+        t("handoutData.chapterIncompleteMessage"),
+      );
       return;
     }
 
@@ -121,7 +132,10 @@ export default function AddEditChapterScreen() {
       allowLeaveRef.current = true;
       router.back();
     } catch {
-      Alert.alert("সমস্যা হয়েছে", "অধ্যায় সেভ করা যায়নি");
+      Alert.alert(
+        t("handoutData.errorTitle"),
+        t("handoutData.chapterSaveFailed"),
+      );
     }
   };
 
@@ -134,6 +148,7 @@ export default function AddEditChapterScreen() {
       <View className="flex-row items-center px-4 py-3">
         <TouchableOpacity
           onPress={() => router.back()}
+          accessibilityRole="button"
           className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
         >
           <Ionicons
@@ -143,7 +158,9 @@ export default function AddEditChapterScreen() {
           />
         </TouchableOpacity>
         <Text className="flex-1 text-center text-base font-bold text-text dark:text-dark-text mr-9">
-          {isEditing ? "অধ্যায় সম্পাদনা" : "নতুন অধ্যায়"}
+          {isEditing
+            ? t("handoutData.editChapter")
+            : t("handoutData.newChapter")}
         </Text>
       </View>
 
@@ -154,43 +171,41 @@ export default function AddEditChapterScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 40 }}
+          contentContainerStyle={{ padding: 20, gap: 12, paddingBottom: 40 }}
         >
-          <View className="gap-2">
-            <Text className="text-sm font-semibold text-text dark:text-dark-text">
-              অধ্যায়ের টাইটেল
-            </Text>
+          {/* টাইটেল */}
+          <View className="border-b border-border dark:border-dark-border">
             <TextInput
               value={title}
               onChangeText={setTitle}
-              placeholder="যেমনঃ প্রথম অধ্যায় - সূচনা"
-              placeholderTextColor={isDark ? "#8a8a8a" : "#6d6d6d"}
-              className="px-4 py-3 rounded-xl bg-background-secondary dark:bg-dark-background-secondary text-text dark:text-dark-text border border-border dark:border-dark-border"
+              placeholder={t("handoutData.chapterTitlePlaceholder")}
+              placeholderTextColor={placeholderColor}
+              className=" font-bold text-text dark:text-dark-text py-3"
             />
           </View>
 
-          <View className="gap-2">
-            <Text className="text-sm font-semibold text-text dark:text-dark-text">
-              অধ্যায়ের বিষয়বস্তু
-            </Text>
-            <TextInput
-              value={content}
-              onChangeText={setContent}
-              placeholder="এখানে আপনার লেখা শুরু করুন..."
-              placeholderTextColor={isDark ? "#8a8a8a" : "#6d6d6d"}
-              multiline
-              textAlignVertical="top"
-              className="px-4 py-3 rounded-xl bg-background-secondary dark:bg-dark-background-secondary text-text dark:text-dark-text border border-border dark:border-dark-border min-h-[300px]"
-            />
-          </View>
+          {/* বিষয়বস্তু */}
+          <TextInput
+            value={content}
+            onChangeText={setContent}
+            placeholder={t("handoutData.chapterContentPlaceholder")}
+            placeholderTextColor={placeholderColor}
+            multiline
+            textAlignVertical="top"
+            className="text-base text-text dark:text-dark-text leading-7 min-h-[320px]"
+          />
         </ScrollView>
 
-        {/* সাবমিট বাটন (KeyboardAvoidingView er vitore, tai keyboard er upore thake) */}
-        <View className="px-5 pb-3 pt-2 border-t border-border dark:border-dark-border">
+        {/* ফুটার: শব্দ গণনা + সাবমিট */}
+        <View className="px-5 pb-3 pt-2 border-t border-border dark:border-dark-border gap-2">
+          <Text className="text-xs text-center text-text-tertiary dark:text-dark-text-tertiary">
+            {t("handoutData.words", { value: wordCount })}
+          </Text>
           <TouchableOpacity
             onPress={handleSubmit}
             disabled={isSaving}
-            className="bg-accent rounded-xl py-4 items-center justify-center flex-row gap-2"
+            activeOpacity={0.85}
+            className="bg-accent rounded-2xl py-4 items-center justify-center flex-row gap-2"
           >
             {isSaving ? (
               <ActivityIndicator size="small" color="#fff" />
@@ -198,7 +213,9 @@ export default function AddEditChapterScreen() {
               <>
                 <Ionicons name="save-outline" size={18} color="#fff" />
                 <Text className="text-white font-bold text-base">
-                  {isEditing ? "আপডেট করুন" : "অধ্যায় যোগ করুন"}
+                  {isEditing
+                    ? t("handoutData.updateChapter")
+                    : t("handoutData.addChapterBtn")}
                 </Text>
               </>
             )}

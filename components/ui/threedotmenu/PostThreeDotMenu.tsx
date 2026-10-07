@@ -17,7 +17,8 @@ import ReportSheet from "../bottom-sheet/report/ReportSheet";
 
 interface Props {
   postId: string;
-  postAuthorId: string;
+  // author ডিলিট হয়ে গেলে null আসতে পারে
+  postAuthorId?: string | null;
 }
 
 interface MenuItemProps {
@@ -104,9 +105,10 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
   const currentUser = useAppSelector((state) => state.auth.user);
   const { t } = useTranslation();
 
+  // author না থাকলে (ডিলিট করা user) কখনোই নিজের পোস্ট না
+  const currentUserId = currentUser?.id ?? (currentUser as any)?._id;
   const isOwnPost =
-    currentUser?.id === postAuthorId ||
-    (currentUser as any)?._id === postAuthorId;
+    !!postAuthorId && !!currentUserId && currentUserId === postAuthorId;
 
   const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
 

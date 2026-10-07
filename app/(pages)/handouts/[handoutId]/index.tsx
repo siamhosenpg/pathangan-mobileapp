@@ -2,7 +2,6 @@ import GreenMark from "@/components/ui/badges/GreenMark";
 import TimeAgo from "@/components/ui/datetime/TimeAgo";
 import BackHeader from "@/components/ui/headers/BackHeader";
 import { useGetHandoutBySlugQuery } from "@/redux/api/handout/handoutApi";
-import { toBanglaNumber } from "@/utils/toBanglaNumber";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useColorScheme } from "nativewind";
@@ -17,23 +16,29 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const categoryLabels: Record<string, string> = {
-  golpo: "গল্প",
-  itihash: "ইতিহাস",
-  dharmiyo: "ধর্মীয়",
-  kobita: "কবিতা",
-  ovizoggota: "অভিজ্ঞতা",
-  onnanno: "অন্যান্য",
-};
+interface StatItemProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+}
+
+const StatItem = ({ icon, label }: StatItemProps) => (
+  <View className="items-center gap-1.5 flex-1">
+    <Ionicons name={icon} size={18} color="#00914d" />
+    <Text
+      numberOfLines={1}
+      className="text-xs font-medium text-text-secondary dark:text-dark-text-secondary"
+    >
+      {label}
+    </Text>
+  </View>
+);
 
 export default function HandoutDetailScreen() {
+  const { t } = useTranslation();
   // নোট: এই param আসলে handout.slug — নাম শুধু route ফোল্ডার অনুযায়ী "handoutId"
   const { handoutId: slug } = useLocalSearchParams<{ handoutId: string }>();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { i18n } = useTranslation();
-  const isBn = i18n.language === "bn";
-  const n = (num: number) => (isBn ? toBanglaNumber(num) : String(num));
 
   const { data, isLoading, isError, refetch } = useGetHandoutBySlugQuery(
     slug ?? "",
@@ -61,14 +66,14 @@ export default function HandoutDetailScreen() {
           color={isDark ? "#f87171" : "#ef4444"}
         />
         <Text className="text-base text-center text-text-secondary dark:text-dark-text-secondary">
-          হ্যান্ডআউট পাওয়া যায়নি
+          {t("handoutData.notFound")}
         </Text>
         <TouchableOpacity
           onPress={() => refetch()}
-          className="px-6 py-2 rounded-full bg-accent"
+          className="px-6 py-2.5 rounded-full bg-accent"
         >
           <Text className="text-white font-semibold text-sm">
-            আবার চেষ্টা করুন
+            {t("handoutData.retry")}
           </Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -90,7 +95,7 @@ export default function HandoutDetailScreen() {
         <View className="px-5">
           {/* কভার (বামে) + টাইটেল/ক্যাটাগরি/ইউজার (ডানে) */}
           <View className="flex-row gap-4">
-            <View className="w-28 aspect-[2/3] rounded-xl overflow-hidden bg-background-tertiary dark:bg-dark-background-tertiary">
+            <View className="w-28 aspect-[2/3] rounded-2xl overflow-hidden bg-background-tertiary dark:bg-dark-background-tertiary">
               {handout.coverImage ? (
                 <Image
                   source={{ uri: handout.coverImage }}
@@ -116,17 +121,20 @@ export default function HandoutDetailScreen() {
               >
                 {handout.title}
               </Text>
+
               {/* ক্যাটাগরি ব্যাজ */}
               <View className="flex-row items-center gap-2">
                 <View className="bg-accent-transparent px-3 py-1 rounded-full self-start">
                   <Text className="text-accent text-xs font-semibold">
-                    {categoryLabels[handout.category] ?? handout.category}
+                    {t(`handoutData.categories.${handout.category}`, {
+                      defaultValue: handout.category,
+                    })}
                   </Text>
                 </View>
                 {handout.status === "draft" && (
                   <View className="bg-yellow-500/15 px-3 py-1 rounded-full self-start">
                     <Text className="text-yellow-600 dark:text-yellow-400 text-xs font-semibold">
-                      ড্রাফট
+                      {t("handoutData.status.draft")}
                     </Text>
                   </View>
                 )}
@@ -144,11 +152,11 @@ export default function HandoutDetailScreen() {
                     <Ionicons name="person" size={13} color="#00914d" />
                   </View>
                 )}
-                <View>
+                <View className="flex-1">
                   <View className="flex-row items-center gap-1">
                     <Text
                       numberOfLines={1}
-                      className="text-xs font-semibold text-text dark:text-dark-text"
+                      className="text-xs font-semibold text-text dark:text-dark-text flex-shrink"
                     >
                       {handout.user?.name ?? handout.user?.username}
                     </Text>
@@ -168,7 +176,7 @@ export default function HandoutDetailScreen() {
             </View>
           </View>
 
-          <View className="pt-5 gap-4">
+          <View className="pt-6 gap-5">
             {/* বর্ণনা */}
             <Text className="text-sm text-text-secondary dark:text-dark-text-secondary leading-6">
               {handout.description}
@@ -191,39 +199,35 @@ export default function HandoutDetailScreen() {
             )}
 
             {/* স্ট্যাটস */}
-            <View className="flex-row items-center justify-between bg-background-secondary dark:bg-dark-background-secondary rounded-2xl px-4 py-3">
-              <View className="items-center gap-1">
-                <Ionicons name="reader-outline" size={18} color="#00914d" />
-                <Text className="text-xs text-text-secondary dark:text-dark-text-secondary">
-                  {n(handout.chaptersCount)} অধ্যায়
-                </Text>
-              </View>
-              <View className="items-center gap-1">
-                <Ionicons name="time-outline" size={18} color="#00914d" />
-                <Text className="text-xs text-text-secondary dark:text-dark-text-secondary">
-                  {n(handout.estimatedReadTime)} মিনিট
-                </Text>
-              </View>
-              <View className="items-center gap-1">
-                <Ionicons name="eye-outline" size={18} color="#00914d" />
-                <Text className="text-xs text-text-secondary dark:text-dark-text-secondary">
-                  {n(handout.readCount)} পঠিত
-                </Text>
-              </View>
-              <View className="items-center gap-1">
-                <Ionicons name="heart-outline" size={18} color="#00914d" />
-                <Text className="text-xs text-text-secondary dark:text-dark-text-secondary">
-                  {n(handout.likesCount)}
-                </Text>
-              </View>
+            <View className="flex-row items-center bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border rounded-3xl px-2 py-4">
+              <StatItem
+                icon="reader-outline"
+                label={t("handoutData.chapters", {
+                  value: handout.chaptersCount,
+                })}
+              />
+              <StatItem
+                icon="time-outline"
+                label={t("handoutData.minutes", {
+                  value: handout.estimatedReadTime,
+                })}
+              />
+              <StatItem
+                icon="eye-outline"
+                label={t("handoutData.reads", { value: handout.readCount })}
+              />
+              <StatItem
+                icon="heart-outline"
+                label={String(handout.likesCount)}
+              />
             </View>
 
             {/* Table of Contents */}
-            <Text className="text-lg font-bold text-text dark:text-dark-text mt-2">
-              অধ্যায়সমূহ
+            <Text className="text-lg font-bold text-text dark:text-dark-text">
+              {t("handoutData.chaptersHeading")}
             </Text>
 
-            <View className="gap-2">
+            <View className="gap-2.5">
               {handout.chapters.map((chapter, index) => (
                 <TouchableOpacity
                   key={chapter._id}
@@ -231,11 +235,11 @@ export default function HandoutDetailScreen() {
                   onPress={() =>
                     router.push(`/handouts/${slug}/chapter/${chapter._id}`)
                   }
-                  className="flex-row items-center gap-3 bg-background-secondary dark:bg-dark-background-secondary rounded-xl px-4 py-3 border border-border dark:border-dark-border"
+                  className="flex-row items-center gap-3 bg-background-secondary dark:bg-dark-background-secondary rounded-2xl px-4 py-3.5 border border-border dark:border-dark-border"
                 >
-                  <View className="w-8 h-8 rounded-full bg-accent-transparent items-center justify-center">
-                    <Text className="text-accent text-xs font-bold">
-                      {n(index + 1)}
+                  <View className="w-9 h-9 rounded-full bg-accent-transparent items-center justify-center">
+                    <Text className="text-accent text-sm font-bold">
+                      {index + 1}
                     </Text>
                   </View>
                   <View className="flex-1">
@@ -246,7 +250,7 @@ export default function HandoutDetailScreen() {
                       {chapter.title}
                     </Text>
                     <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary mt-0.5">
-                      {n(chapter.wordCount)} শব্দ
+                      {t("handoutData.words", { value: chapter.wordCount })}
                     </Text>
                   </View>
                   <Ionicons

@@ -1,4 +1,5 @@
 import SaveIcon from "@/assets/icons/bookmark.svg";
+import handouticon from "@/assets/icons/journal.svg";
 import SettingsIcon from "@/assets/icons/settings.svg";
 import LogoutIcon from "@/assets/icons/sign-out-alt.svg";
 import GreenMark from "@/components/ui/badges/GreenMark";
@@ -65,6 +66,11 @@ export function MenuDrawerContent() {
       label: t("settings"),
       route: "/(tabs)/settings",
     },
+    {
+      icon: handouticon,
+      label: t("createHandout"),
+      route: "/(pages)/handouts/create",
+    },
   ];
 
   return (
@@ -109,8 +115,8 @@ export function MenuDrawerContent() {
       </View>
 
       {/* Menu items */}
-      <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
-        <View className="py-3 bg-background-secondary dark:bg-dark-background-secondary rounded-xl">
+      <ScrollView className="flex-1 px-3" showsVerticalScrollIndicator={false}>
+        <View className="py-3">
           {menuItems.map((item) => (
             <TouchableOpacity
               key={item.label}
@@ -122,12 +128,12 @@ export function MenuDrawerContent() {
                 }
               }}
               activeOpacity={0.65}
-              className="flex-row items-center gap-2 px-5 py-4 "
+              className="flex-row items-center gap-3 px-5 py-4 "
             >
               <View className="  items-center justify-center">
-                <item.icon width={19} height={19} color={iconColor} />
+                <item.icon width={22} height={22} color={iconColor} />
               </View>
-              <Text className="text-text-secondary font-medium dark:text-dark-text-secondary text-[15px]">
+              <Text className="text-text-secondary font-semibold dark:text-dark-text-secondary text-[15px]">
                 {item.label}
               </Text>
             </TouchableOpacity>

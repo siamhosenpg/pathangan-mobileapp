@@ -9,6 +9,7 @@ import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -23,13 +24,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const CATEGORIES: { value: HandoutCategory; label: string }[] = [
-  { value: "golpo", label: "গল্প" },
-  { value: "itihash", label: "ইতিহাস" },
-  { value: "dharmiyo", label: "ধর্মীয়" },
-  { value: "kobita", label: "কবিতা" },
-  { value: "ovizoggota", label: "অভিজ্ঞতা" },
-  { value: "onnanno", label: "অন্যান্য" },
+const CATEGORY_KEYS: HandoutCategory[] = [
+  "golpo",
+  "itihash",
+  "dharmiyo",
+  "kobita",
+  "ovizoggota",
+  "onnanno",
 ];
 
 const SAFE_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
@@ -43,10 +44,11 @@ const getSafeExtension = (uri: string) => {
   return ext && SAFE_IMAGE_EXTENSIONS.includes(ext) ? ext : "jpg";
 };
 
-const getMimeType = (ext: string) =>
-  ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+const inputClass =
+  "px-4 py-3.5 rounded-2xl bg-background-secondary dark:bg-dark-background-secondary text-text dark:text-dark-text border border-border dark:border-dark-border";
 
 export default function EditHandoutScreen() {
+  const { t } = useTranslation();
   const { handoutId } = useLocalSearchParams<{ handoutId: string }>();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -63,7 +65,7 @@ export default function EditHandoutScreen() {
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [newCoverPicked, setNewCoverPicked] = useState(false);
 
-  // Server theke ashа original value, change hoyeche kina bujhar jonno
+  // Server theke asha original value, change hoyeche kina bujhar jonno
   const [original, setOriginal] = useState<{
     title: string;
     description: string;
@@ -73,6 +75,8 @@ export default function EditHandoutScreen() {
   const hasLoadedRef = useRef(false);
   // Save successful hole popup skip korar jonno
   const allowLeaveRef = useRef(false);
+
+  const placeholderColor = isDark ? "#6b7280" : "#9ca3af";
 
   /* ─────────── Existing data diye form fill (shudhu ekbar) ─────────── */
   useEffect(() => {
@@ -107,12 +111,12 @@ export default function EditHandoutScreen() {
       e.preventDefault();
 
       Alert.alert(
-        "পরিবর্তন বাতিল করবেন?",
-        "আপনার করা পরিবর্তন সংরক্ষিত হয়নি। এখন বেরিয়ে গেলে সব মুছে যাবে।",
+        t("handoutData.discardTitle"),
+        t("handoutData.discardEditMessage"),
         [
-          { text: "থাকুন", style: "cancel" },
+          { text: t("handoutData.stay"), style: "cancel" },
           {
-            text: "বাদ দিন",
+            text: t("handoutData.discard"),
             style: "destructive",
             onPress: () => navigation.dispatch(e.data.action),
           },
@@ -121,7 +125,7 @@ export default function EditHandoutScreen() {
     });
 
     return unsubscribe;
-  }, [navigation, hasUnsavedChanges]);
+  }, [navigation, hasUnsavedChanges, t]);
 
   /* ─────────── Cover image ─────────── */
   const handlePickImage = async () => {
@@ -141,7 +145,10 @@ export default function EditHandoutScreen() {
         setNewCoverPicked(true);
       }
     } catch {
-      Alert.alert("সমস্যা হয়েছে", "ছবি নির্বাচন করা যায়নি, আবার চেষ্টা করুন");
+      Alert.alert(
+        t("handoutData.errorTitle"),
+        t("handoutData.pickImageFailed"),
+      );
     }
   };
 
@@ -150,7 +157,10 @@ export default function EditHandoutScreen() {
     if (isSaving) return;
 
     if (!title.trim()) {
-      Alert.alert("শিরোনাম দিন", "হ্যান্ডআউটের একটি শিরোনাম আবশ্যক");
+      Alert.alert(
+        t("handoutData.titleRequiredTitle"),
+        t("handoutData.titleRequiredMessage"),
+      );
       return;
     }
 
@@ -171,12 +181,12 @@ export default function EditHandoutScreen() {
 
       // popup na dekhiye back jete dao
       allowLeaveRef.current = true;
-      Alert.alert("সফল!", "হ্যান্ডআউট আপডেট হয়েছে", [
-        { text: "ঠিক আছে", onPress: () => router.back() },
+      Alert.alert(t("handoutData.success"), t("handoutData.updateSuccess"), [
+        { text: t("handoutData.ok"), onPress: () => router.back() },
       ]);
     } catch (error) {
       console.log("HANDOUT UPDATE ERROR:", JSON.stringify(error, null, 2));
-      Alert.alert("সমস্যা হয়েছে", "আপডেট করা যায়নি, আবার চেষ্টা করুন");
+      Alert.alert(t("handoutData.errorTitle"), t("handoutData.updateFailed"));
     }
   };
 
@@ -198,6 +208,7 @@ export default function EditHandoutScreen() {
       <View className="flex-row items-center px-4 py-3">
         <TouchableOpacity
           onPress={() => router.back()}
+          accessibilityRole="button"
           className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
         >
           <Ionicons
@@ -207,7 +218,7 @@ export default function EditHandoutScreen() {
           />
         </TouchableOpacity>
         <Text className="flex-1 text-center text-base font-bold text-text dark:text-dark-text mr-9">
-          হ্যান্ডআউট এডিট করুন
+          {t("handoutData.editHandout")}
         </Text>
       </View>
 
@@ -218,13 +229,13 @@ export default function EditHandoutScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 40 }}
+          contentContainerStyle={{ padding: 20, gap: 20, paddingBottom: 40 }}
         >
           {/* Cover Image */}
           <TouchableOpacity
             onPress={handlePickImage}
             activeOpacity={0.85}
-            className="w-40 aspect-[2/3] rounded-2xl overflow-hidden bg-background-secondary dark:bg-dark-background-secondary border border-dashed border-border dark:border-dark-border items-center justify-center"
+            className="self-center w-44 aspect-[2/3] rounded-3xl overflow-hidden bg-background-secondary dark:bg-dark-background-secondary border border-dashed border-border dark:border-dark-border items-center justify-center"
           >
             {coverImage ? (
               <Image
@@ -233,96 +244,99 @@ export default function EditHandoutScreen() {
                 resizeMode="cover"
               />
             ) : (
-              <View className="items-center gap-2">
-                <Ionicons
-                  name="image-outline"
-                  size={28}
-                  color={isDark ? "#9ca3af" : "#6b7280"}
-                />
-                <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
-                  কভার ছবি যোগ করুন
+              <View className="items-center gap-2.5 px-3">
+                <View className="w-14 h-14 rounded-full bg-accent/10 items-center justify-center">
+                  <Ionicons name="image-outline" size={26} color="#00914d" />
+                </View>
+                <Text className="text-sm text-center font-medium text-text-tertiary dark:text-dark-text-tertiary">
+                  {t("handoutData.coverAdd")}
                 </Text>
               </View>
             )}
-            <View className="absolute bottom-2 right-2 bg-black/60 rounded-full p-2">
+            <View className="absolute bottom-2.5 right-2.5 bg-black/60 rounded-full p-2">
               <Ionicons name="camera-outline" size={16} color="#fff" />
             </View>
           </TouchableOpacity>
 
           {/* Title */}
-          <View className="gap-1.5">
-            <Text className="text-xs font-semibold text-text-secondary dark:text-dark-text-secondary">
-              শিরোনাম
+          <View className="gap-2">
+            <Text className="text-sm font-semibold text-text dark:text-dark-text px-1">
+              {t("handoutData.fieldTitle")}
             </Text>
             <TextInput
               value={title}
               onChangeText={setTitle}
-              placeholder="হ্যান্ডআউটের নাম লিখুন"
-              placeholderTextColor={isDark ? "#6b7280" : "#9ca3af"}
-              className="bg-background-secondary dark:bg-dark-background-secondary rounded-xl px-4 py-3 text-sm text-text dark:text-dark-text"
+              placeholder={t("handoutData.titlePlaceholder")}
+              placeholderTextColor={placeholderColor}
+              className={inputClass}
             />
           </View>
 
           {/* Description */}
-          <View className="gap-1.5">
-            <Text className="text-xs font-semibold text-text-secondary dark:text-dark-text-secondary">
-              বিবরণ
+          <View className="gap-2">
+            <Text className="text-sm font-semibold text-text dark:text-dark-text px-1">
+              {t("handoutData.fieldDescription")}
             </Text>
             <TextInput
               value={description}
               onChangeText={setDescription}
-              placeholder="সংক্ষিপ্ত বিবরণ লিখুন"
-              placeholderTextColor={isDark ? "#6b7280" : "#9ca3af"}
+              placeholder={t("handoutData.descriptionPlaceholder")}
+              placeholderTextColor={placeholderColor}
               multiline
               numberOfLines={4}
               textAlignVertical="top"
-              className="bg-background-secondary dark:bg-dark-background-secondary rounded-xl px-4 py-3 text-sm text-text dark:text-dark-text min-h-[100px]"
+              className={`${inputClass} min-h-[110px]`}
             />
           </View>
 
           {/* Category */}
-          <View className="gap-1.5">
-            <Text className="text-xs font-semibold text-text-secondary dark:text-dark-text-secondary">
-              ক্যাটাগরি
+          <View className="gap-2">
+            <Text className="text-sm font-semibold text-text dark:text-dark-text px-1">
+              {t("handoutData.fieldCategory")}
             </Text>
             <View className="flex-row flex-wrap gap-2">
-              {CATEGORIES.map((c) => (
-                <TouchableOpacity
-                  key={c.value}
-                  onPress={() => setCategory(c.value)}
-                  className={`px-4 py-2 rounded-full border ${
-                    category === c.value
-                      ? "bg-accent border-accent"
-                      : "border-border dark:border-dark-border"
-                  }`}
-                >
-                  <Text
-                    className={`text-xs font-semibold ${
-                      category === c.value
-                        ? "text-white"
-                        : "text-text-secondary dark:text-dark-text-secondary"
+              {CATEGORY_KEYS.map((key) => {
+                const isActive = category === key;
+                return (
+                  <TouchableOpacity
+                    key={key}
+                    onPress={() => setCategory(key)}
+                    activeOpacity={0.8}
+                    className={`px-4 py-2 rounded-full border ${
+                      isActive
+                        ? "bg-accent border-accent"
+                        : "bg-background-secondary dark:bg-dark-background-secondary border-border dark:border-dark-border"
                     }`}
                   >
-                    {c.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Text
+                      className={`text-sm font-semibold ${
+                        isActive
+                          ? "text-white"
+                          : "text-text-secondary dark:text-dark-text-secondary"
+                      }`}
+                    >
+                      {t(`handoutData.categories.${key}`)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
         </ScrollView>
 
-        {/* Save button (keyboard er upore thake) */}
+        {/* Save button */}
         <View className="px-5 pb-3 pt-2 border-t border-border dark:border-dark-border">
           <TouchableOpacity
             onPress={handleSave}
             disabled={isSaving}
-            className="bg-accent rounded-xl py-4 items-center justify-center flex-row gap-2"
+            activeOpacity={0.85}
+            className="bg-accent rounded-2xl py-4 items-center justify-center flex-row gap-2"
           >
             {isSaving ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <Text className="text-white font-bold text-base">
-                সংরক্ষণ করুন
+                {t("handoutData.save")}
               </Text>
             )}
           </TouchableOpacity>

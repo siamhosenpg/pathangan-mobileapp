@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity, View } from "react-native";
 
@@ -7,68 +6,58 @@ export type PostType = "post" | "question" | "course";
 interface Props {
   active: PostType;
   onChange: (t: PostType) => void;
-  isDark: boolean;
   /** Kon kon tab dekhabe. Default: sob gulo */
   types?: PostType[];
+  /** পুরনো কল-সাইটের সাথে compatible রাখার জন্য, এখন আর লাগে না */
+  isDark?: boolean;
 }
 
-const ACCENT = "#00914d";
-
-const tabs: {
-  type: PostType;
-  labelKey: string;
-  icon: keyof typeof Ionicons.glyphMap;
-}[] = [
-  { type: "post", labelKey: "tabPost", icon: "create-outline" },
-  { type: "question", labelKey: "tabQuestion", icon: "help-circle-outline" },
-  { type: "course", labelKey: "tabCourse", icon: "book-outline" },
+const tabs: { type: PostType; labelKey: string }[] = [
+  { type: "post", labelKey: "tabPost" },
+  { type: "question", labelKey: "tabQuestion" },
+  { type: "course", labelKey: "tabCourse" },
 ];
 
 const PostTypeSelector = ({
   active,
   onChange,
-  isDark,
   types = ["post", "question", "course"],
 }: Props) => {
   const { t } = useTranslation();
   const visibleTabs = tabs.filter((tab) => types.includes(tab.type));
 
   return (
-    <View className="flex-row p-1 rounded-2xl bg-background-secondary dark:bg-dark-background-secondary">
+    <View
+      accessibilityRole="tablist"
+      className="flex-row w-full border-b border-border dark:border-dark-border"
+    >
       {visibleTabs.map((tab) => {
         const isActive = active === tab.type;
+
         return (
           <TouchableOpacity
             key={tab.type}
             onPress={() => onChange(tab.type)}
-            activeOpacity={0.8}
-            accessibilityRole="button"
+            activeOpacity={0.7}
+            accessibilityRole="tab"
             accessibilityState={{ selected: isActive }}
-            style={{
-              flex: 1,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              paddingVertical: 10,
-              borderRadius: 12,
-              backgroundColor: isActive ? ACCENT : "transparent",
-            }}
+            className="flex-1 items-center justify-center pt-3.5 pb-4"
           >
-            <Ionicons
-              name={tab.icon}
-              size={18}
-              color={isActive ? "#fff" : isDark ? "#9CA3AF" : "#6B7280"}
-            />
             <Text
-              className={` font-semibold ${
+              numberOfLines={1}
+              className={`text-base ${
                 isActive
-                  ? "text-white"
-                  : "text-text-secondary dark:text-dark-text-secondary"
+                  ? "font-bold text-text dark:text-dark-text"
+                  : "font-semibold text-text-tertiary dark:text-dark-text-tertiary"
               }`}
             >
               {t(`postData.${tab.labelKey}`)}
             </Text>
+
+            {/* active indicator: পুরো tab-এর চওড়া জুড়ে */}
+            {isActive && (
+              <View className="absolute bottom-0 left-0 right-0 h-[3px] rounded-t-full bg-accent" />
+            )}
           </TouchableOpacity>
         );
       })}

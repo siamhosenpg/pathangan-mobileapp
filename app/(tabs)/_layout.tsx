@@ -156,29 +156,9 @@ export default function TabLayout() {
               }}
             />
             <Tabs.Screen name="profile" options={{ href: null }} />
-            <Tabs.Screen name="[username]" options={{ href: null }} />
 
             <Tabs.Screen name="settings" options={{ href: null }} />
             <Tabs.Screen name="saved" options={{ href: null }} />
-
-            <Tabs.Screen name="handouts/create" options={{ href: null }} />
-            <Tabs.Screen name="handouts/mine" options={{ href: null }} />
-            <Tabs.Screen
-              name="handouts/[handoutId]/index"
-              options={{ href: null }}
-            />
-            <Tabs.Screen
-              name="handouts/[handoutId]/chapter/[chapterId]"
-              options={{ href: null }}
-            />
-            <Tabs.Screen
-              name="handouts/manage/[handoutId]/index"
-              options={{ href: null }}
-            />
-            <Tabs.Screen
-              name="handouts/manage/[handoutId]/add-chapter"
-              options={{ href: null }}
-            />
           </Tabs>
         </DrawerLayout>
       </AuthGuard>

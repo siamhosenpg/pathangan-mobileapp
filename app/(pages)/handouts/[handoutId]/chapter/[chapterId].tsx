@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   ScrollView,
@@ -16,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const FONT_SIZES = [13, 14, 15, 17, 19];
 
 export default function ChapterReaderScreen() {
+  const { t } = useTranslation();
   // route এ handoutId আসলে slug
   const { handoutId: slug, chapterId } = useLocalSearchParams<{
     handoutId: string;
@@ -72,11 +74,14 @@ export default function ChapterReaderScreen() {
           color={isDark ? "#f87171" : "#ef4444"}
         />
         <Text className="text-base text-center text-text-secondary dark:text-dark-text-secondary">
-          অধ্যায়টি পাওয়া যায়নি
+          {t("handoutData.chapterNotFound")}
         </Text>
       </SafeAreaView>
     );
   }
+
+  const fontSize = FONT_SIZES[fontSizeIndex];
+  const iconColor = isDark ? "#f1f1f1" : "#1b1b1b";
 
   return (
     <SafeAreaView
@@ -84,36 +89,39 @@ export default function ChapterReaderScreen() {
       className="flex-1 bg-background dark:bg-dark-background"
     >
       {/* টপ বার */}
-      <View className="flex-row items-center justify-between gap-2 px-4 py-3">
+      <View className="flex-row items-center gap-3 px-4 py-3">
         <TouchableOpacity
           onPress={() => router.back()}
+          accessibilityRole="button"
           className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
         >
-          <Ionicons
-            name="arrow-back"
-            size={20}
-            color={isDark ? "#f1f1f1" : "#1b1b1b"}
-          />
+          <Ionicons name="arrow-back" size={20} color={iconColor} />
         </TouchableOpacity>
 
-        <View className="flex-1 flex-col items-start justify-start">
+        <View className="flex-1">
           <Text
             numberOfLines={1}
-            className="flex-1 text-center text-sm font-semibold text-text dark:text-dark-text line-clamp-1"
+            className="text-sm font-semibold text-text dark:text-dark-text"
           >
             {handoutData?.data?.title}
           </Text>
-          <Text className="text-xs font-medium text-text-tertiary dark:text-dark-text-tertiary">
-            অধ্যায় {currentIndex + 1} / {chapters.length}
+          <Text className="text-xs font-medium text-text-tertiary dark:text-dark-text-tertiary mt-0.5">
+            {t("handoutData.chapterOf", {
+              current: currentIndex + 1,
+              total: chapters.length,
+            })}
           </Text>
         </View>
 
         {/* ফন্ট সাইজ কন্ট্রোল */}
-        <View className="flex-row items-center gap-1">
+        <View className="flex-row items-center gap-1.5">
           <TouchableOpacity
             disabled={fontSizeIndex === 0}
             onPress={() => setFontSizeIndex((i) => Math.max(0, i - 1))}
-            className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
+            accessibilityRole="button"
+            className={`w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary ${
+              fontSizeIndex === 0 ? "opacity-40" : ""
+            }`}
           >
             <Text className="text-text dark:text-dark-text text-xs font-bold">
               A-
@@ -124,7 +132,10 @@ export default function ChapterReaderScreen() {
             onPress={() =>
               setFontSizeIndex((i) => Math.min(FONT_SIZES.length - 1, i + 1))
             }
-            className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
+            accessibilityRole="button"
+            className={`w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary ${
+              fontSizeIndex === FONT_SIZES.length - 1 ? "opacity-40" : ""
+            }`}
           >
             <Text className="text-text dark:text-dark-text text-sm font-bold">
               A+
@@ -134,15 +145,13 @@ export default function ChapterReaderScreen() {
       </View>
 
       {/* progress */}
-      <View className=" ">
-        <View className="h-0.5  bg-background-tertiary dark:bg-dark-background-tertiary">
-          <View
-            className="h-0.5  bg-accent"
-            style={{
-              width: `${((currentIndex + 1) / chapters.length) * 100}%`,
-            }}
-          />
-        </View>
+      <View className="h-1 bg-background-tertiary dark:bg-dark-background-tertiary">
+        <View
+          className="h-1 bg-accent rounded-r-full"
+          style={{
+            width: `${((currentIndex + 1) / chapters.length) * 100}%`,
+          }}
+        />
       </View>
 
       <ScrollView
@@ -150,20 +159,17 @@ export default function ChapterReaderScreen() {
         contentContainerStyle={{
           paddingHorizontal: 20,
           paddingBottom: 40,
-          paddingTop: 6,
+          paddingTop: 16,
         }}
       >
-        <Text className="text-xl font-bold text-text dark:text-dark-text mb-2 mt-1 leading-8">
+        <Text className="text-lg font-bold text-text dark:text-dark-text mb-4 leading-9">
           {currentChapter.title}
         </Text>
 
         {paragraphs.map((para, idx) => (
           <Text
             key={idx}
-            style={{
-              fontSize: FONT_SIZES[fontSizeIndex],
-              lineHeight: FONT_SIZES[fontSizeIndex] * 1.7,
-            }}
+            style={{ fontSize, lineHeight: fontSize * 1.75 }}
             className="text-text dark:text-dark-text mb-4"
           >
             {para}
@@ -178,17 +184,13 @@ export default function ChapterReaderScreen() {
               prevChapter &&
               router.replace(`/handouts/${slug}/chapter/${prevChapter._id}`)
             }
-            className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-xl border border-border dark:border-dark-border ${
+            className={`flex-1 flex-row items-center justify-center gap-2 py-3.5 rounded-2xl border border-border dark:border-dark-border ${
               !prevChapter ? "opacity-40" : ""
             }`}
           >
-            <Ionicons
-              name="chevron-back"
-              size={16}
-              color={isDark ? "#f1f1f1" : "#1b1b1b"}
-            />
+            <Ionicons name="chevron-back" size={16} color={iconColor} />
             <Text className="text-sm font-semibold text-text dark:text-dark-text">
-              পূর্ববর্তী
+              {t("handoutData.previous")}
             </Text>
           </TouchableOpacity>
 
@@ -198,11 +200,13 @@ export default function ChapterReaderScreen() {
               nextChapter &&
               router.replace(`/handouts/${slug}/chapter/${nextChapter._id}`)
             }
-            className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-xl bg-accent ${
+            className={`flex-1 flex-row items-center justify-center gap-2 py-3.5 rounded-2xl bg-accent ${
               !nextChapter ? "opacity-40" : ""
             }`}
           >
-            <Text className="text-sm font-semibold text-white">পরবর্তী</Text>
+            <Text className="text-sm font-semibold text-white">
+              {t("handoutData.next")}
+            </Text>
             <Ionicons name="chevron-forward" size={16} color="#fff" />
           </TouchableOpacity>
         </View>

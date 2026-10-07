@@ -3,7 +3,6 @@ import {
   useGetChaptersByHandoutQuery,
 } from "@/redux/api/handout/chapterApi";
 import { usePublishHandoutMutation } from "@/redux/api/handout/handoutApi";
-import { toBanglaNumber } from "@/utils/toBanglaNumber";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useColorScheme } from "nativewind";
@@ -19,18 +18,15 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ManageHandoutScreen() {
+  const { t } = useTranslation();
   const { handoutId } = useLocalSearchParams<{ handoutId: string }>();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { i18n } = useTranslation();
-  const isBn = i18n.language === "bn";
-  const n = (num: number) => (isBn ? toBanglaNumber(num) : String(num));
 
-  const {
-    data: chaptersData,
-    isLoading,
-    refetch,
-  } = useGetChaptersByHandoutQuery(handoutId ?? "", { skip: !handoutId });
+  const { data: chaptersData, isLoading } = useGetChaptersByHandoutQuery(
+    handoutId ?? "",
+    { skip: !handoutId },
+  );
 
   const [deleteChapter] = useDeleteChapterMutation();
   const [publishHandout, { isLoading: isPublishing }] =
@@ -39,39 +35,54 @@ export default function ManageHandoutScreen() {
   const chapters = chaptersData?.data ?? [];
 
   const handleDeleteChapter = (chapterId: string) => {
-    Alert.alert("অধ্যায় ডিলিট করবেন?", "এটি পরে পুনরুদ্ধার করা যাবে", [
-      { text: "বাতিল", style: "cancel" },
-      {
-        text: "ডিলিট করুন",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteChapter({
-              id: chapterId,
-              handoutId: handoutId!,
-            }).unwrap();
-          } catch {
-            Alert.alert("সমস্যা হয়েছে", "অধ্যায় ডিলিট করা যায়নি");
-          }
+    Alert.alert(
+      t("handoutData.deleteChapterTitle"),
+      t("handoutData.deleteMessage"),
+      [
+        { text: t("handoutData.cancel"), style: "cancel" },
+        {
+          text: t("handoutData.deleteAction"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteChapter({
+                id: chapterId,
+                handoutId: handoutId!,
+              }).unwrap();
+            } catch {
+              Alert.alert(
+                t("handoutData.errorTitle"),
+                t("handoutData.deleteChapterFailed"),
+              );
+            }
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   const handlePublish = async () => {
     if (chapters.length === 0) {
-      Alert.alert("অধ্যায় নেই", "পাবলিশ করার আগে অন্তত একটি অধ্যায় যোগ করুন");
+      Alert.alert(
+        t("handoutData.noChaptersTitle"),
+        t("handoutData.noChaptersMessage"),
+      );
       return;
     }
     try {
       await publishHandout(handoutId!).unwrap();
-      Alert.alert("সফল!", "হ্যান্ডআউট পাবলিশ হয়েছে", [
-        { text: "ঠিক আছে", onPress: () => router.replace("/handouts") },
+      Alert.alert(t("handoutData.success"), t("handoutData.publishSuccess"), [
+        {
+          text: t("handoutData.ok"),
+          onPress: () => router.replace("/handouts"),
+        },
       ]);
     } catch {
-      Alert.alert("সমস্যা হয়েছে", "পাবলিশ করা যায়নি");
+      Alert.alert(t("handoutData.errorTitle"), t("handoutData.publishFailed"));
     }
   };
+
+  const iconColor = isDark ? "#f1f1f1" : "#1b1b1b";
 
   return (
     <SafeAreaView
@@ -81,26 +92,20 @@ export default function ManageHandoutScreen() {
       <View className="flex-row items-center px-4 py-3">
         <TouchableOpacity
           onPress={() => router.back()}
+          accessibilityRole="button"
           className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
         >
-          <Ionicons
-            name="arrow-back"
-            size={20}
-            color={isDark ? "#f1f1f1" : "#1b1b1b"}
-          />
+          <Ionicons name="arrow-back" size={20} color={iconColor} />
         </TouchableOpacity>
         <Text className="flex-1 text-center text-base font-bold text-text dark:text-dark-text">
-          অধ্যায় পরিচালনা
+          {t("handoutData.manageChapters")}
         </Text>
         <TouchableOpacity
           onPress={() => router.push(`/handouts/manage/${handoutId}/edit`)}
+          accessibilityRole="button"
           className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
         >
-          <Ionicons
-            name="create-outline"
-            size={18}
-            color={isDark ? "#f1f1f1" : "#1b1b1b"}
-          />
+          <Ionicons name="create-outline" size={18} color={iconColor} />
         </TouchableOpacity>
       </View>
 
@@ -113,28 +118,38 @@ export default function ManageHandoutScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ padding: 20, gap: 12, paddingBottom: 40 }}
         >
+          {/* সারসংক্ষেপ */}
+          <View className="flex-row items-center gap-2 px-1">
+            <Ionicons name="reader-outline" size={16} color="#00914d" />
+            <Text className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary">
+              {t("handoutData.chapters", { value: chapters.length })}
+            </Text>
+          </View>
+
           <TouchableOpacity
             onPress={() =>
               router.push(`/handouts/manage/${handoutId}/add-chapter`)
             }
             activeOpacity={0.85}
-            className="flex-row items-center justify-center gap-2 py-4 rounded-xl border-2 border-dashed border-accent"
+            className="flex-row items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-accent bg-accent/5"
           >
             <Ionicons name="add-circle-outline" size={20} color="#00914d" />
             <Text className="text-accent font-semibold text-sm">
-              নতুন অধ্যায় যোগ করুন
+              {t("handoutData.addNewChapter")}
             </Text>
           </TouchableOpacity>
 
           {chapters.length === 0 && (
-            <View className="items-center py-10 gap-2">
-              <Ionicons
-                name="document-outline"
-                size={40}
-                color={isDark ? "#4b5563" : "#9ca3af"}
-              />
+            <View className="items-center py-10 gap-3">
+              <View className="w-16 h-16 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary">
+                <Ionicons
+                  name="document-outline"
+                  size={28}
+                  color={isDark ? "#4b5563" : "#9ca3af"}
+                />
+              </View>
               <Text className="text-sm text-text-tertiary dark:text-dark-text-tertiary">
-                এখনো কোনো অধ্যায় যোগ করা হয়নি
+                {t("handoutData.noChapters")}
               </Text>
             </View>
           )}
@@ -142,11 +157,11 @@ export default function ManageHandoutScreen() {
           {chapters.map((chapter, index) => (
             <View
               key={chapter._id}
-              className="flex-row items-center gap-3 bg-background-secondary dark:bg-dark-background-secondary rounded-xl px-4 py-3 border border-border dark:border-dark-border"
+              className="flex-row items-center gap-3 bg-background-secondary dark:bg-dark-background-secondary rounded-2xl px-4 py-3 border border-border dark:border-dark-border"
             >
-              <View className="w-8 h-8 rounded-full bg-accent-transparent items-center justify-center">
-                <Text className="text-accent text-xs font-bold">
-                  {n(index + 1)}
+              <View className="w-9 h-9 rounded-full bg-accent-transparent items-center justify-center">
+                <Text className="text-accent text-sm font-bold">
+                  {index + 1}
                 </Text>
               </View>
               <TouchableOpacity
@@ -164,11 +179,14 @@ export default function ManageHandoutScreen() {
                   {chapter.title}
                 </Text>
                 <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary mt-0.5">
-                  {n(chapter.wordCount)} শব্দ
+                  {t("handoutData.words", { value: chapter.wordCount })}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => handleDeleteChapter(chapter._id)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t("handoutData.delete")}
                 className="p-2"
               >
                 <Ionicons name="trash-outline" size={18} color="#ef4444" />
@@ -182,7 +200,8 @@ export default function ManageHandoutScreen() {
         <TouchableOpacity
           onPress={handlePublish}
           disabled={isPublishing}
-          className="bg-accent rounded-xl py-4 items-center justify-center flex-row gap-2"
+          activeOpacity={0.85}
+          className="bg-accent rounded-2xl py-4 items-center justify-center flex-row gap-2"
         >
           {isPublishing ? (
             <ActivityIndicator size="small" color="#fff" />
@@ -194,7 +213,7 @@ export default function ManageHandoutScreen() {
                 color="#fff"
               />
               <Text className="text-white font-bold text-base">
-                পাবলিশ করুন
+                {t("handoutData.publishAction")}
               </Text>
             </>
           )}

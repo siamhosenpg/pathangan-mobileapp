@@ -21,46 +21,52 @@ if (
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
+type TFn = (key: string, options?: Record<string, unknown>) => string;
+
 interface Props {
   item: Notification;
   onRead: (id: string) => void;
   // true ফেরত দিলে delete সফল, false হলে fail (card আবার ফিরে আসবে)
   onDelete: (id: string) => Promise<boolean>;
+  // নেভিগেট করার আগে panel বন্ধ করার জন্য
+  onNavigate?: () => void;
 }
 
-const getText = (type: Notification["type"], t: (key: string) => string) => {
+const getText = (type: Notification["type"], t: TFn) => {
   switch (type) {
     case "like":
-      return t("reactedToYourPost");
+      return t("notificationData.reactedToYourPost");
     case "comment":
-      return t("commentedOnYourPost");
+      return t("notificationData.commentedOnYourPost");
     case "follow":
-      return t("followingYou");
+      return t("notificationData.followingYou");
     case "share":
-      return t("sharedYourPost");
+      return t("notificationData.sharedYourPost");
     default:
       return "";
   }
 };
 
-const timeAgo = (date: string) => {
+const timeAgo = (date: string, t: TFn) => {
   const diff = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
 
-  if (mins < 1) return "এখনই";
-  if (mins < 60) return `${mins} মিনিট আগে`;
+  if (mins < 1) return t("notificationData.justNow");
+  if (mins < 60) return t("notificationData.minutesAgo", { value: mins });
 
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs} ঘণ্টা আগে`;
+  if (hrs < 24) return t("notificationData.hoursAgo", { value: hrs });
 
-  return `${Math.floor(hrs / 24)} দিন আগে`;
+  return t("notificationData.daysAgo", { value: Math.floor(hrs / 24) });
 };
 
+// follow  -> যে follow করেছে তার profile
+// like / comment / share -> সংশ্লিষ্ট post
 const getNavigationPath = (notification: Notification): string | null => {
   const { type, actorId, target } = notification;
 
   if (type === "follow") {
-    return actorId?.username ? `/(public)/${actorId.username}` : null;
+    return actorId?.username ? `/${actorId.username}` : null;
   }
 
   if (
@@ -73,7 +79,7 @@ const getNavigationPath = (notification: Notification): string | null => {
   return null;
 };
 
-const NotificationCard = ({ item, onRead, onDelete }: Props) => {
+const NotificationCard = ({ item, onRead, onDelete, onNavigate }: Props) => {
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -107,7 +113,11 @@ const NotificationCard = ({ item, onRead, onDelete }: Props) => {
     if (!item.read) onRead(item._id);
 
     const path = getNavigationPath(item);
-    if (path) router.push(path as any);
+    if (!path) return;
+
+    // আগে panel বন্ধ, তারপর নেভিগেশন
+    onNavigate?.();
+    router.push(path as any);
   };
 
   const handleDelete = () => {
@@ -190,7 +200,7 @@ const NotificationCard = ({ item, onRead, onDelete }: Props) => {
 
         {/* content */}
         <View className="flex-1">
-          <View className="text-text dark:text-dark-text">
+          <View>
             <View className="flex-row items-center gap-1">
               <Text className="font-semibold text-sm text-text dark:text-dark-text">
                 {item.actorId?.name}
@@ -206,7 +216,7 @@ const NotificationCard = ({ item, onRead, onDelete }: Props) => {
           </View>
 
           <Text className="text-xs font-medium text-text-tertiary dark:text-dark-text-tertiary mt-1">
-            {timeAgo(item.createdAt)}
+            {timeAgo(item.createdAt, t)}
           </Text>
         </View>
 

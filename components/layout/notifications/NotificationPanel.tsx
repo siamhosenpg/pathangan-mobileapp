@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   Animated,
@@ -21,6 +22,11 @@ import {
   useMarkAsReadMutation,
 } from "@/redux/api/notification/notificationApi";
 import { getErrorMessage } from "@/utils/getErrorMessage";
+
+interface PanelProps {
+  // card-এ ক্লিক করে নেভিগেট করার সময় panel বন্ধ করতে
+  onClose?: () => void;
+}
 
 // ===================== SKELETON =====================
 const Pulse = ({ children }: { children: React.ReactNode }) => {
@@ -111,22 +117,12 @@ const HeaderIconButton = ({
   );
 };
 
-// ===================== ACTION HELPER =====================
-// সফল হলে true, fail করলে alert দেখিয়ে false
-const runAction = async (action: () => Promise<unknown>): Promise<boolean> => {
-  try {
-    await action();
-    return true;
-  } catch (err) {
-    Alert.alert("সমস্যা হয়েছে", getErrorMessage(err));
-    return false;
-  }
-};
-
 const animateLayout = () =>
   LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
-const NotificationPanel = () => {
+const NotificationPanel = ({ onClose }: PanelProps) => {
+  const { t } = useTranslation();
+
   const {
     data,
     error,
@@ -155,6 +151,19 @@ const NotificationPanel = () => {
 
   const showFullError = !isLoading && isError && notifications.length === 0;
 
+  // সফল হলে true, fail করলে alert দেখিয়ে false
+  const runAction = async (
+    action: () => Promise<unknown>,
+  ): Promise<boolean> => {
+    try {
+      await action();
+      return true;
+    } catch (err) {
+      Alert.alert(t("notificationData.errorTitle"), getErrorMessage(err));
+      return false;
+    }
+  };
+
   const handleEndReached = () => {
     if (isFetchNextPageError) return;
     if (hasNextPage && !isFetchingNextPage) {
@@ -171,17 +180,21 @@ const NotificationPanel = () => {
   const handleDeleteAll = () => {
     if (!hasAny) return;
 
-    Alert.alert("সব বিজ্ঞপ্তি মুছবে?", "এই কাজটি আর ফেরানো যাবে না।", [
-      { text: "বাতিল", style: "cancel" },
-      {
-        text: "মুছে ফেলো",
-        style: "destructive",
-        onPress: () => {
-          animateLayout();
-          runAction(() => deleteAllNotifications().unwrap());
+    Alert.alert(
+      t("notificationData.deleteAllTitle"),
+      t("notificationData.deleteAllMessage"),
+      [
+        { text: t("notificationData.cancel"), style: "cancel" },
+        {
+          text: t("notificationData.deleteAll"),
+          style: "destructive",
+          onPress: () => {
+            animateLayout();
+            runAction(() => deleteAllNotifications().unwrap());
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   const handleDelete = async (id: string) => {
@@ -198,7 +211,7 @@ const NotificationPanel = () => {
       return (
         <View className="py-6 px-8 items-center gap-3">
           <Text className="text-sm text-center text-text-secondary dark:text-dark-text-secondary">
-            আরও বিজ্ঞপ্তি লোড করা যায়নি
+            {t("notificationData.loadMoreFailed")}
           </Text>
           <TouchableOpacity
             onPress={() => fetchNextPage()}
@@ -206,7 +219,7 @@ const NotificationPanel = () => {
             className="px-5 py-2.5 rounded-full border border-border dark:border-dark-border"
           >
             <Text className="text-sm font-semibold text-text dark:text-dark-text">
-              আবার চেষ্টা করো
+              {t("notificationData.retry")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -221,7 +234,7 @@ const NotificationPanel = () => {
       {/* HEADER */}
       <View className="flex-row items-center justify-between px-4 pb-4 border-border/60 border-b dark:border-dark-border/60">
         <Text className="text-lg font-bold text-text dark:text-dark-text">
-          Notifications
+          {t("notificationData.title")}
         </Text>
 
         <View className="flex-row gap-2 items-center">
@@ -258,7 +271,7 @@ const NotificationPanel = () => {
             className="px-5 py-2.5 rounded-full border border-border dark:border-dark-border"
           >
             <Text className="text-sm font-semibold text-text dark:text-dark-text">
-              আবার চেষ্টা করো
+              {t("notificationData.retry")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -283,6 +296,7 @@ const NotificationPanel = () => {
                 markAsRead(id);
               }}
               onDelete={handleDelete}
+              onNavigate={onClose}
             />
           )}
           ListFooterComponent={renderFooter}
@@ -290,10 +304,10 @@ const NotificationPanel = () => {
             <View className="items-center justify-center py-16 gap-3">
               <Text className="text-4xl">🔔</Text>
               <Text className="text-text dark:text-dark-text font-semibold text-base">
-                কোনো বিজ্ঞপ্তি নেই
+                {t("notificationData.empty")}
               </Text>
               <Text className="text-text-secondary dark:text-dark-text-secondary text-sm text-center px-8">
-                নতুন কোনো কার্যক্রম হলে এখানে দেখাবে
+                {t("notificationData.emptyDesc")}
               </Text>
             </View>
           }

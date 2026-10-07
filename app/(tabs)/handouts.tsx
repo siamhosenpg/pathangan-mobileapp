@@ -7,8 +7,7 @@ import {
   useGetMyHandoutsQuery,
 } from "@/redux/api/handout/handoutApi";
 import type { Handout, HandoutCategory } from "@/types/handoutTypes";
-import { getErrorMessage } from "@/utils/getErrorMessage"; // path ঠিক করে নিও
-import { toBanglaNumber } from "@/utils/toBanglaNumber";
+import { getErrorMessage } from "@/utils/getErrorMessage";
 import { Ionicons } from "@expo/vector-icons";
 import NetInfo from "@react-native-community/netinfo";
 import { router, useFocusEffect } from "expo-router";
@@ -27,14 +26,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const categories: { key: HandoutCategory | null; label: string }[] = [
-  { key: null, label: "সব" },
-  { key: "golpo", label: "গল্প" },
-  { key: "itihash", label: "ইতিহাস" },
-  { key: "dharmiyo", label: "ধর্মীয়" },
-  { key: "kobita", label: "কবিতা" },
-  { key: "ovizoggota", label: "অভিজ্ঞতা" },
-  { key: "onnanno", label: "অন্যান্য" },
+const CATEGORY_KEYS: (HandoutCategory | null)[] = [
+  null,
+  "golpo",
+  "itihash",
+  "dharmiyo",
+  "kobita",
+  "ovizoggota",
+  "onnanno",
 ];
 
 const CATEGORY_BAR_HEIGHT = 56;
@@ -48,16 +47,13 @@ const isOnline = async () => {
 };
 
 function DraftStrip({ isDark }: { isDark: boolean }) {
-  const { i18n } = useTranslation();
-  const isBn = i18n.language === "bn";
-  const n = (num: number) => (isBn ? toBanglaNumber(num) : String(num));
+  const { t } = useTranslation();
 
   const { data, refetch } = useGetMyHandoutsQuery({ status: "draft" });
   const drafts = data?.data ?? [];
 
-  // ✅ ফিড স্ক্রিন focus হলে draft strip নিঃশব্দে (background এ) রিফ্রেশ হবে,
-  // কোনো loading UI দেখাবে না বলে flicker হবে না
-  // net na thakle refetch chalabo na (oshotheo retry hoto)
+  // ফিড স্ক্রিন focus হলে draft strip নিঃশব্দে (background এ) রিফ্রেশ হবে
+  // net na thakle refetch chalabo na
   useFocusEffect(
     useCallback(() => {
       (async () => {
@@ -69,32 +65,37 @@ function DraftStrip({ isDark }: { isDark: boolean }) {
   if (drafts.length === 0) return null;
 
   return (
-    <View className="mb-4">
+    <View className="mb-5">
       <View className="flex-row items-center justify-between px-4 mb-3">
         <View className="flex-row items-center gap-2">
-          <View className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
+          <View className="w-2 h-2 rounded-full bg-yellow-500" />
           <Text className="text-sm font-bold text-text dark:text-dark-text">
-            আপনার অপ্রকাশিত লেখা
+            {t("handoutData.draftsTitle")}
           </Text>
         </View>
-        <TouchableOpacity onPress={() => router.push("/handouts/mine")}>
-          <Text className="text-xs font-semibold text-accent">সব দেখুন</Text>
+        <TouchableOpacity
+          onPress={() => router.push("/handouts/mine")}
+          hitSlop={8}
+        >
+          <Text className="text-xs font-semibold text-accent">
+            {t("handoutData.seeAll")}
+          </Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}
+        contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
       >
         {drafts.map((item) => (
           <TouchableOpacity
             key={item._id}
             activeOpacity={0.85}
             onPress={() => router.push(`/handouts/manage/${item._id}`)}
-            className="w-40 rounded-2xl overflow-hidden bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border"
+            className="w-44 rounded-2xl overflow-hidden bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border"
           >
-            <View className="w-full h-24 bg-background-tertiary dark:bg-dark-background-tertiary">
+            <View className="w-full h-28 bg-background-tertiary dark:bg-dark-background-tertiary">
               {item.coverImage ? (
                 <Image
                   source={{ uri: item.coverImage }}
@@ -105,24 +106,26 @@ function DraftStrip({ isDark }: { isDark: boolean }) {
                 <View className="w-full h-full items-center justify-center">
                   <Ionicons
                     name="document-text-outline"
-                    size={22}
+                    size={24}
                     color={isDark ? "#4b5563" : "#9ca3af"}
                   />
                 </View>
               )}
-              <View className="absolute top-2 left-2 bg-yellow-500 px-2 py-0.5 rounded-full">
-                <Text className="text-[9px] font-bold text-white">ড্রাফট</Text>
+              <View className="absolute top-2 left-2 bg-yellow-500 px-2.5 py-0.5 rounded-full">
+                <Text className="text-[10px] font-bold text-white">
+                  {t("handoutData.status.draft")}
+                </Text>
               </View>
             </View>
-            <View className="p-2.5 gap-1">
+            <View className="p-3 gap-1">
               <Text
                 numberOfLines={1}
-                className="text-xs font-bold text-text dark:text-dark-text"
+                className="text-sm font-bold text-text dark:text-dark-text"
               >
                 {item.title}
               </Text>
-              <Text className="text-[10px] text-text-tertiary dark:text-dark-text-tertiary">
-                {n(item.chaptersCount)} অধ্যায়
+              <Text className="text-[11px] text-text-tertiary dark:text-dark-text-tertiary">
+                {t("handoutData.chapters", { value: item.chaptersCount })}
               </Text>
             </View>
           </TouchableOpacity>
@@ -133,6 +136,7 @@ function DraftStrip({ isDark }: { isDark: boolean }) {
 }
 
 export default function HandoutsFeedScreen() {
+  const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const [activeCategory, setActiveCategory] = useState<HandoutCategory | null>(
@@ -154,9 +158,8 @@ export default function HandoutsFeedScreen() {
 
   const handouts: Handout[] = data?.pages?.flatMap((page) => page.data) ?? [];
 
-  // ✅ ট্যাব ফোকাস হলে ডেটা নিঃশব্দে (background এ) রিফ্রেশ হয় — data আগে থেকে
-  // থাকলে skeleton আর দেখানো হবে না, তাই "reload" এর মতো লাগবে না
-  // net na thakle refetch chalabo na, noyto fail hoye list er jaigay error ashto
+  // ট্যাব ফোকাস হলে ডেটা নিঃশব্দে (background এ) রিফ্রেশ হয়
+  // net na thakle refetch chalabo na
   useFocusEffect(
     useCallback(() => {
       (async () => {
@@ -166,7 +169,6 @@ export default function HandoutsFeedScreen() {
   );
 
   const onManualRefresh = useCallback(async () => {
-    // net na thakle refetch chalabo na (upore NetworkBanner already dekhacche)
     if (!(await isOnline())) return;
 
     setManualRefreshing(true);
@@ -175,12 +177,15 @@ export default function HandoutsFeedScreen() {
 
       // refresh fail holeo purono handout gulo thakbe, shudhu user ke jani
       if (result.isError && handouts.length > 0) {
-        Alert.alert("রিফ্রেশ হয়নি", getErrorMessage(result.error));
+        Alert.alert(
+          t("handoutData.refreshFailedTitle"),
+          getErrorMessage(result.error),
+        );
       }
     } finally {
       setManualRefreshing(false);
     }
-  }, [refetch, handouts.length]);
+  }, [refetch, handouts.length, t]);
 
   const renderItem = useCallback(
     ({ item }: { item: Handout }) => <HandoutCard handout={item} />,
@@ -189,13 +194,13 @@ export default function HandoutsFeedScreen() {
 
   const keyExtractor = useCallback((item: Handout) => item._id, []);
 
-  const renderSeparator = useCallback(() => <View className="h-4" />, []);
+  const renderSeparator = useCallback(() => <View className="h-3" />, []);
 
   const renderFooter = useCallback(() => {
     // 1) next page ashchhe -> skeleton
     if (isFetchingNextPage) {
       return (
-        <View className="px-4 pt-4">
+        <View className="pt-3">
           <HandoutCardSkeleton />
         </View>
       );
@@ -206,7 +211,7 @@ export default function HandoutsFeedScreen() {
       return (
         <View className="py-6 px-8 items-center gap-3">
           <Text className="text-sm text-center text-text-secondary dark:text-dark-text-secondary">
-            আরও হ্যান্ডআউট লোড করা যায়নি
+            {t("handoutData.loadMoreFailed")}
           </Text>
           <TouchableOpacity
             onPress={() => fetchNextPage()}
@@ -214,7 +219,7 @@ export default function HandoutsFeedScreen() {
             className="px-5 py-2.5 rounded-full border border-border dark:border-dark-border"
           >
             <Text className="text-sm font-semibold text-text dark:text-dark-text">
-              আবার চেষ্টা করো
+              {t("handoutData.retry")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -222,18 +227,17 @@ export default function HandoutsFeedScreen() {
     }
 
     return null;
-  }, [isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
+  }, [isFetchingNextPage, isFetchNextPageError, fetchNextPage, t]);
 
   const handleEndReached = useCallback(() => {
-    // next page er error thakle nije nije abar chalabo na,
-    // user "আবার চেষ্টা করো" chaple tokhon chalbe
+    // next page er error thakle nije nije abar chalabo na
     if (isFetchNextPageError) return;
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
 
-  // ✅ Scroll করলে ক্যাটাগরি বার লুকাবে/দেখাবে (Animated, নরম motion সহ)
+  // Scroll করলে ক্যাটাগরি বার লুকাবে/দেখাবে
   const categoryTranslateY = useRef(new Animated.Value(0)).current;
   const lastScrollY = useRef(0);
   const isCategoryVisible = useRef(true);
@@ -299,12 +303,12 @@ export default function HandoutsFeedScreen() {
           height: CATEGORY_BAR_HEIGHT,
         }}
       >
-        {categories.map((cat) => {
-          const isActive = activeCategory === cat.key;
+        {CATEGORY_KEYS.map((key) => {
+          const isActive = activeCategory === key;
           return (
             <TouchableOpacity
-              key={cat.label}
-              onPress={() => setActiveCategory(cat.key)}
+              key={key ?? "all"}
+              onPress={() => setActiveCategory(key)}
               activeOpacity={0.8}
               className={`px-4 py-2 rounded-full border ${
                 isActive
@@ -313,13 +317,15 @@ export default function HandoutsFeedScreen() {
               }`}
             >
               <Text
-                className={`text-sm font-medium ${
+                className={`text-sm font-semibold ${
                   isActive
                     ? "text-white"
                     : "text-text-secondary dark:text-dark-text-secondary"
                 }`}
               >
-                {cat.label}
+                {key
+                  ? t(`handoutData.categories.${key}`)
+                  : t("handoutData.all")}
               </Text>
             </TouchableOpacity>
           );
@@ -336,16 +342,24 @@ export default function HandoutsFeedScreen() {
       className="flex-1 bg-background dark:bg-dark-background"
     >
       {/* কাস্টম হেডার */}
-      <View className="flex-row items-center justify-between px-5 pt-2 pb-2 border-b border-border dark:border-dark-border">
-        <View>
+      <View className="flex-row items-center justify-between px-5 pt-2 pb-3 border-b border-border dark:border-dark-border">
+        <View className="flex-1 pr-3">
           <Text className="text-2xl font-bold text-text dark:text-dark-text">
-            Handouts
+            {t("handoutData.title")}
+          </Text>
+          <Text
+            numberOfLines={1}
+            className="text-xs text-text-tertiary dark:text-dark-text-tertiary mt-0.5"
+          >
+            {t("handoutData.subtitle")}
           </Text>
         </View>
 
         <TouchableOpacity
           onPress={() => router.push("/handouts/mine")}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={t("handoutData.myHandouts")}
           className="w-11 h-11 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border"
         >
           <Ionicons
@@ -356,14 +370,14 @@ export default function HandoutsFeedScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* ক্যাটাগরি বার + কনটেন্ট — একই relative কন্টেইনারে, বার সবসময় ওভারলে হিসেবে থাকবে */}
+      {/* ক্যাটাগরি বার + কনটেন্ট */}
       <View className="flex-1 relative">
         {CategoryBar}
 
         {/* Loading */}
         {showSkeleton && (
           <View
-            className="px-4 gap-3"
+            className="gap-3"
             style={{ paddingTop: CATEGORY_BAR_HEIGHT + 12 }}
           >
             <HandoutCardSkeleton />
@@ -400,19 +414,24 @@ export default function HandoutsFeedScreen() {
           >
             {renderListHeader()}
             <View className="flex-1 items-center justify-center gap-3 px-6 pb-20">
-              <Ionicons
-                name="document-text-outline"
-                size={48}
-                color={isDark ? "#6b7280" : "#9ca3af"}
-              />
-              <Text className="text-base text-center text-text-secondary dark:text-dark-text-secondary">
-                এখনো কোনো হ্যান্ডআউট নেই
+              <View className="w-20 h-20 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary">
+                <Ionicons
+                  name="document-text-outline"
+                  size={36}
+                  color={isDark ? "#6b7280" : "#9ca3af"}
+                />
+              </View>
+              <Text className="text-base font-semibold text-center text-text dark:text-dark-text">
+                {t("handoutData.empty")}
+              </Text>
+              <Text className="text-sm text-center text-text-tertiary dark:text-dark-text-tertiary">
+                {t("handoutData.emptyHint")}
               </Text>
             </View>
           </ScrollView>
         )}
 
-        {/* List — next page / background refetch error হলেও পুরনো handout গুলো থাকবে */}
+        {/* List */}
         {!showSkeleton && handouts.length > 0 && (
           <Animated.FlatList
             data={handouts}
@@ -437,7 +456,7 @@ export default function HandoutsFeedScreen() {
             }
             contentContainerStyle={{
               paddingTop: CATEGORY_BAR_HEIGHT,
-              paddingBottom: 90,
+              paddingBottom: 100,
             }}
           />
         )}
@@ -447,6 +466,8 @@ export default function HandoutsFeedScreen() {
       <TouchableOpacity
         onPress={() => router.push("/handouts/create")}
         activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel={t("handoutData.newHandout")}
         className="absolute bottom-6 right-5 w-14 h-14 rounded-full bg-accent items-center justify-center"
         style={{
           shadowColor: "#00914d",

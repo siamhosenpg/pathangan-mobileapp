@@ -32,20 +32,20 @@ const NormalPostForm = ({
   const border = "border border-border dark:border-dark-border";
 
   return (
-    <View className="gap-4">
+    <View className="gap-2">
       {/* Title */}
-      <View className={`${border} ${bg} rounded-2xl px-4`}>
+      <View className={` border-b border-border dark:border-dark-border   `}>
         <TextInput
           value={title}
           onChangeText={setTitle}
           placeholder={t("postData.titlePlaceholder")}
           placeholderTextColor={ph}
-          className="text-text dark:text-dark-text  font-medium py-3.5"
+          className="text-text dark:text-dark-text  font-medium py-3"
         />
       </View>
 
       {/* Body */}
-      <View className={`${border} ${bg} rounded-2xl px-4 py-3`}>
+      <View className={`   py-1`}>
         <TextInput
           value={text}
           onChangeText={setText}
@@ -55,7 +55,7 @@ const NormalPostForm = ({
           numberOfLines={5}
           textAlignVertical="top"
           className="text-text dark:text-dark-text "
-          style={{ minHeight: 110 }}
+          style={{ minHeight: 140 }}
         />
       </View>
 
@@ -68,19 +68,14 @@ const NormalPostForm = ({
         activeOpacity={0.8}
         accessibilityRole="button"
         accessibilityLabel={t("postData.addMedia")}
-        className={`flex-row items-center gap-3 px-4 py-3.5 rounded-2xl ${border} ${bg}`}
+        className={`flex-row items-center gap-3 w-5/6 py-1  `}
       >
         <View className="w-8 h-8 rounded-xl bg-accent/10 items-center justify-center">
           <Ionicons name="image-outline" size={18} color={ACCENT} />
         </View>
-        <Text className="text-text-secondary dark:text-dark-text-secondary text-sm flex-1">
+        <Text className="text-text-tertiary text-sm dark:text-dark-text-tertiary font-semibold flex-1">
           {t("postData.addMedia")}
         </Text>
-        <Ionicons
-          name="chevron-forward"
-          size={16}
-          color={isDark ? "#555" : "#bbb"}
-        />
       </TouchableOpacity>
     </View>
   );

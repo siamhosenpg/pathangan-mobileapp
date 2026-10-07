@@ -173,7 +173,7 @@ const AnswerThreeDotMenu = ({
 
               <View className="flex-1">
                 <Text
-                  className={`text-sm font-semibold leading-5 ${
+                  className={`text font-semibold leading-5 ${
                     item.danger
                       ? "text-red-500"
                       : "text-text dark:text-dark-text"
@@ -182,15 +182,6 @@ const AnswerThreeDotMenu = ({
                   {item.danger && isDeleting
                     ? t("answerData.deleting")
                     : item.title}
-                </Text>
-                <Text
-                  className={`text-xs mt-0.5 ${
-                    item.danger
-                      ? "text-red-300"
-                      : "text-text-secondary dark:text-dark-text-secondary"
-                  }`}
-                >
-                  {item.subtitle}
                 </Text>
               </View>
 

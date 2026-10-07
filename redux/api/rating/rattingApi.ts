@@ -13,7 +13,7 @@ export interface GiveRatingResponse {
   userRating: number;
   averageRating: number;
   ratingCount: number;
-  answerUserId?: string; // ✅ নতুন: যার answer এ rating পড়েছে তার _id
+  answerUserId?: string; // যার answer এ rating পড়েছে তার _id
 }
 
 export interface GiveRatingRequest {
@@ -29,7 +29,7 @@ export interface MyRatingResponse {
 export interface DeleteRatingResponse {
   success: boolean;
   message: string;
-  answerUserId?: string; // ✅ নতুন
+  answerUserId?: string;
 }
 
 export interface AnswerRatingItem {
@@ -51,6 +51,36 @@ export interface UserAverageRatingResponse {
   totalRatingCount: number;
 }
 
+// ===================== HELPERS =====================
+// নতুন rating বসালে average ও count কী হবে তা হিসাব করা
+const applyGive = (
+  stats: { averageRating: number; ratingCount: number },
+  previous: number,
+  next: number,
+) => {
+  const total = stats.averageRating * stats.ratingCount;
+  if (previous > 0) {
+    // আগের rating বদলে নতুনটা বসছে, count একই থাকবে
+    stats.averageRating =
+      stats.ratingCount > 0 ? (total - previous + next) / stats.ratingCount : 0;
+  } else {
+    stats.ratingCount += 1;
+    stats.averageRating = (total + next) / stats.ratingCount;
+  }
+};
+
+// rating সরালে average ও count কী হবে তা হিসাব করা
+const applyRemove = (
+  stats: { averageRating: number; ratingCount: number },
+  previous: number,
+) => {
+  if (previous <= 0 || stats.ratingCount <= 0) return;
+  const total = stats.averageRating * stats.ratingCount;
+  stats.ratingCount -= 1;
+  stats.averageRating =
+    stats.ratingCount > 0 ? (total - previous) / stats.ratingCount : 0;
+};
+
 // ===================== RATING API =====================
 export const ratingApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -61,17 +91,71 @@ export const ratingApi = baseApi.injectEndpoints({
         method: "POST",
         body: { rating },
       }),
-      invalidatesTags: (result, _error, { answerId }) => [
-        { type: "Rating", id: answerId },
-        { type: "Rating", id: `MY_${answerId}` },
-        // ✅ profile data (getUserByUsername) refresh করার জন্য
-        ...(result?.answerUserId
+
+      // ✅ Optimistic update: server এর উত্তরের আগেই UI বদলে যাবে
+      async onQueryStarted({ answerId, rating }, { dispatch, queryFulfilled }) {
+        let previous = 0;
+
+        const myRatingPatch = dispatch(
+          (baseApi as any).util.updateQueryData(
+            "getMyRating",
+            answerId,
+            (draft: MyRatingResponse) => {
+              previous = draft.userRating ?? 0;
+              draft.userRating = rating;
+            },
+          ),
+        );
+
+        const statsPatch = dispatch(
+          (baseApi as any).util.updateQueryData(
+            "getRatingsByAnswer",
+            answerId,
+            (draft: RatingStats) => {
+              applyGive(draft, previous, rating);
+            },
+          ),
+        );
+
+        try {
+          const { data } = await queryFulfilled;
+
+          // server এর আসল মান দিয়ে cache সঠিক করে নেওয়া (refetch ছাড়াই)
+          dispatch(
+            (baseApi as any).util.updateQueryData(
+              "getMyRating",
+              answerId,
+              (draft: MyRatingResponse) => {
+                draft.userRating = data.userRating;
+              },
+            ),
+          );
+          dispatch(
+            (baseApi as any).util.updateQueryData(
+              "getRatingsByAnswer",
+              answerId,
+              (draft: RatingStats) => {
+                draft.averageRating = data.averageRating;
+                draft.ratingCount = data.ratingCount;
+              },
+            ),
+          );
+        } catch {
+          // fail করলে আগের অবস্থায় ফেরত
+          myRatingPatch.undo();
+          statsPatch.undo();
+        }
+      },
+
+      // answer/my tag আর invalidate করার দরকার নেই (উপরে নিজেই update হচ্ছে)
+      // শুধু profile এর rating refresh করার জন্য User tag
+      invalidatesTags: (result) =>
+        result?.answerUserId
           ? [
               { type: "User" as const, id: result.answerUserId },
               { type: "Rating" as const, id: `USER_${result.answerUserId}` },
             ]
-          : []),
-      ],
+          : [],
     }),
 
     // GET /ratings/answer/:answerId — answer এর average rating ও count
@@ -96,10 +180,44 @@ export const ratingApi = baseApi.injectEndpoints({
         url: `/ratings/answer/${answerId}`,
         method: "DELETE",
       }),
+
+      // ✅ Optimistic update
+      async onQueryStarted(answerId, { dispatch, queryFulfilled }) {
+        let previous = 0;
+
+        const myRatingPatch = dispatch(
+          (baseApi as any).util.updateQueryData(
+            "getMyRating",
+            answerId,
+            (draft: MyRatingResponse) => {
+              previous = draft.userRating ?? 0;
+              draft.userRating = null;
+            },
+          ),
+        );
+
+        const statsPatch = dispatch(
+          (baseApi as any).util.updateQueryData(
+            "getRatingsByAnswer",
+            answerId,
+            (draft: RatingStats) => {
+              applyRemove(draft, previous);
+            },
+          ),
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          myRatingPatch.undo();
+          statsPatch.undo();
+        }
+      },
+
+      // delete এর response এ নতুন average আসে না, তাই stats টা একবার refetch হবে
+      // (data মুছে যায় না, তাই UI তে কোনো flicker হবে না)
       invalidatesTags: (result, _error, answerId) => [
         { type: "Rating", id: answerId },
-        { type: "Rating", id: `MY_${answerId}` },
-        // ✅ profile data (getUserByUsername) refresh করার জন্য
         ...(result?.answerUserId
           ? [
               { type: "User" as const, id: result.answerUserId },
@@ -117,7 +235,7 @@ export const ratingApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // GET /ratings/user/:userId — user এর average rating (পুরোনো জায়গার fallback)
+    // GET /ratings/user/:userId — user এর average rating
     getUserAverageRating: builder.query<UserAverageRatingResponse, string>({
       query: (userId) => `/ratings/user/${userId}`,
       providesTags: (_result, _error, userId) => [
