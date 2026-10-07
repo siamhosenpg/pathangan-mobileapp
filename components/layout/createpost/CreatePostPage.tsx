@@ -29,7 +29,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
 import { MediaItem } from "./MediaPreviewGrid";
-import NormalPostForm from "./NormalPostForm";
+import NormalPostForm, { PostFieldKey } from "./NormalPostForm";
 import PostTypeSelector from "./PostTypeSelector";
 import PrivacySelector from "./PrivacySelector";
 import QuestionPostForm from "./QuestionPostForm";
@@ -45,6 +45,11 @@ type ErrorKey =
 
 const ACCENT = "#00914d";
 const MAX_MEDIA = 10;
+
+/* কিবোর্ড খোলা অবস্থায় স্ক্রলের জন্য বাড়তি জায়গা */
+const KEYBOARD_EXTRA_SPACE = 320;
+/* ফোকাস করা ফিল্ড স্ক্রিনের উপর থেকে কতটা নিচে দেখাবে */
+const SCROLL_TOP_OFFSET = 90;
 
 const SAFE_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
 
@@ -89,6 +94,58 @@ export default function CreatePostPage() {
   // Double tap atkanor jonno (state na, tai kokhono atke thake na)
   const submitLockRef = useRef(false);
 
+  /* ─────────── Keyboard scroll ─────────── */
+  const scrollRef = useRef<ScrollView>(null);
+  // ফর্মের ভেতরের ফিল্ডের y, ফর্ম কন্টেইনারের সাপেক্ষে
+  const fieldYRef = useRef<Record<PostFieldKey, number>>({
+    title: 0,
+    text: 0,
+  });
+  // ScrollView-এর ভেতরে ফর্ম কন্টেইনারের নিজের y
+  const formOffsetYRef = useRef(0);
+  const focusedFieldRef = useRef<PostFieldKey | null>(null);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+
+  const scrollToField = useCallback((key: PostFieldKey, delay = 0) => {
+    setTimeout(() => {
+      const y = formOffsetYRef.current + fieldYRef.current[key];
+      scrollRef.current?.scrollTo({
+        y: Math.max(y - SCROLL_TOP_OFFSET, 0),
+        animated: true,
+      });
+    }, delay);
+  }, []);
+
+  const handleFieldLayout = useCallback((key: PostFieldKey, y: number) => {
+    fieldYRef.current[key] = y;
+  }, []);
+
+  const handleFieldFocus = useCallback(
+    (key: PostFieldKey) => {
+      focusedFieldRef.current = key;
+      // আগে বাড়তি প্যাডিং বসাই, তারপর স্ক্রল করি
+      setIsInputFocused(true);
+      scrollToField(key, 150);
+      // কিবোর্ড পুরো খোলার পর আরেকবার ঠিক করে নিই
+      scrollToField(key, 400);
+    },
+    [scrollToField],
+  );
+
+  const handleFieldBlur = useCallback((key: PostFieldKey) => {
+    if (focusedFieldRef.current === key) {
+      focusedFieldRef.current = null;
+      setIsInputFocused(false);
+    }
+  }, []);
+
+  const handleTextContentSizeChange = useCallback(() => {
+    // লিখতে লিখতে লাইন বাড়লে আবার ঠিক জায়গায় স্ক্রল করি
+    if (focusedFieldRef.current === "text") {
+      scrollToField("text", 50);
+    }
+  }, [scrollToField]);
+
   const hasUnsavedChanges =
     title.trim().length > 0 ||
     text.trim().length > 0 ||
@@ -112,6 +169,8 @@ export default function CreatePostPage() {
     setActiveType("post");
     setPrivacy("public");
     setErrorKey("");
+    setIsInputFocused(false);
+    focusedFieldRef.current = null;
     setFormKey((k) => k + 1); // form remount, input clear
   }, []);
 
@@ -350,12 +409,15 @@ export default function CreatePostPage() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
+          ref={scrollRef}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             padding: 16,
             gap: 16,
-            paddingBottom: insets.bottom + 40,
+            // কিবোর্ড খোলা থাকলে নিচে বাড়তি জায়গা, যাতে স্ক্রল করা যায়
+            paddingBottom:
+              insets.bottom + 40 + (isInputFocused ? KEYBOARD_EXTRA_SPACE : 0),
           }}
         >
           {/* ───────── User row + Privacy select ───────── */}
@@ -404,19 +466,29 @@ export default function CreatePostPage() {
 
           {/* ───────── Forms (key bodlale remount hoy) ───────── */}
           {activeType === "post" ? (
-            <NormalPostForm
-              key={`post-${formKey}`}
-              title={title}
-              setTitle={setTitle}
-              text={text}
-              setText={setText}
-              media={media}
-              onRemoveMedia={(i) =>
-                setMedia((prev) => prev.filter((_, j) => j !== i))
-              }
-              onPickMedia={pickMedia}
-              isDark={isDark}
-            />
+            <View
+              onLayout={(e) => {
+                formOffsetYRef.current = e.nativeEvent.layout.y;
+              }}
+            >
+              <NormalPostForm
+                key={`post-${formKey}`}
+                title={title}
+                setTitle={setTitle}
+                text={text}
+                setText={setText}
+                media={media}
+                onRemoveMedia={(i) =>
+                  setMedia((prev) => prev.filter((_, j) => j !== i))
+                }
+                onPickMedia={pickMedia}
+                isDark={isDark}
+                onFieldFocus={handleFieldFocus}
+                onFieldBlur={handleFieldBlur}
+                onFieldLayout={handleFieldLayout}
+                onTextContentSizeChange={handleTextContentSizeChange}
+              />
+            </View>
           ) : (
             <QuestionPostForm
               key={`question-${formKey}`}
