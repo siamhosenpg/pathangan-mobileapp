@@ -1,5 +1,12 @@
 import { baseApi } from "../baseApi";
-export type ReportTargetType = "post" | "user" | "answer" | "comment";
+
+export type ReportTargetType =
+  | "post"
+  | "user"
+  | "answer"
+  | "comment"
+  | "handout"
+  | "chapter";
 
 export type ReportReason =
   | "spam"

@@ -430,5 +430,10 @@
     "addChapterBtn": "Add chapter",
     "updateChapter": "Update",
     "chapterSaveFailed": "Couldn't save the chapter"
+  },
+  "contentMenu": {
+    "copyLink": "Copy link",
+    "report": "Report",
+    "linkCopied": "Link copied"
   }
 }

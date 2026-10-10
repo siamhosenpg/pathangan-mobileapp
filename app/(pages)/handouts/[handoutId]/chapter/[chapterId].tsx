@@ -1,3 +1,7 @@
+import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
+import ContentMenuSheet, {
+  SHARE_BASE_URL,
+} from "@/components/ui/bottom-sheet/report/ContentMenuSheet"; // তোমার আসল path দাও
 import { useGetChaptersByHandoutQuery } from "@/redux/api/handout/chapterApi";
 import { useGetHandoutBySlugQuery } from "@/redux/api/handout/handoutApi";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,6 +30,7 @@ export default function ChapterReaderScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const [fontSizeIndex, setFontSizeIndex] = useState(1);
+  const { open } = useBottomSheet();
 
   // হ্যান্ডআউটের আসল _id বের করার জন্য প্রথমে slug দিয়ে fetch
   const { data: handoutData, isLoading: handoutLoading } =
@@ -83,6 +88,17 @@ export default function ChapterReaderScreen() {
   const fontSize = FONT_SIZES[fontSizeIndex];
   const iconColor = isDark ? "#f1f1f1" : "#1b1b1b";
 
+  // ৩ ডট চাপলে menu sheet খুলবে (copy link + report) — target হবে এই chapter
+  const openMenu = () => {
+    open(
+      <ContentMenuSheet
+        targetType="chapter"
+        targetId={currentChapter._id}
+        shareUrl={`${SHARE_BASE_URL}/handouts/${slug}/chapter/${currentChapter._id}`}
+      />,
+    );
+  };
+
   return (
     <SafeAreaView
       edges={["top"]}
@@ -113,7 +129,7 @@ export default function ChapterReaderScreen() {
           </Text>
         </View>
 
-        {/* ফন্ট সাইজ কন্ট্রোল */}
+        {/* ফন্ট সাইজ কন্ট্রোল + ৩ ডট */}
         <View className="flex-row items-center gap-1.5">
           <TouchableOpacity
             disabled={fontSizeIndex === 0}
@@ -140,6 +156,14 @@ export default function ChapterReaderScreen() {
             <Text className="text-text dark:text-dark-text text-sm font-bold">
               A+
             </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={openMenu}
+            accessibilityRole="button"
+            hitSlop={8}
+            className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
+          >
+            <Ionicons name="ellipsis-vertical" size={18} color={iconColor} />
           </TouchableOpacity>
         </View>
       </View>

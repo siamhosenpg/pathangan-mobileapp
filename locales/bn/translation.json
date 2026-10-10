@@ -419,5 +419,10 @@
     "addChapterBtn": "অধ্যায় যোগ করুন",
     "updateChapter": "আপডেট করুন",
     "chapterSaveFailed": "অধ্যায় সেভ করা যায়নি"
+  },
+  "contentMenu": {
+    "copyLink": "লিংক কপি করুন",
+    "report": "রিপোর্ট করুন",
+    "linkCopied": "লিংক কপি হয়েছে"
   }
 }

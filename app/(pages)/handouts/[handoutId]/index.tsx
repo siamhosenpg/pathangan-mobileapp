@@ -1,6 +1,9 @@
 import GreenMark from "@/components/ui/badges/GreenMark";
+import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
+import ContentMenuSheet, {
+  SHARE_BASE_URL,
+} from "@/components/ui/bottom-sheet/report/ContentMenuSheet"; // তোমার আসল path দাও
 import TimeAgo from "@/components/ui/datetime/TimeAgo";
-import BackHeader from "@/components/ui/headers/BackHeader";
 import { useGetHandoutBySlugQuery } from "@/redux/api/handout/handoutApi";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -39,6 +42,7 @@ export default function HandoutDetailScreen() {
   const { handoutId: slug } = useLocalSearchParams<{ handoutId: string }>();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { open } = useBottomSheet();
 
   const { data, isLoading, isError, refetch } = useGetHandoutBySlugQuery(
     slug ?? "",
@@ -48,6 +52,7 @@ export default function HandoutDetailScreen() {
   );
 
   const handout = data?.data;
+  const iconColor = isDark ? "#f1f1f1" : "#1b1b1b";
 
   if (isLoading) {
     return (
@@ -80,17 +85,45 @@ export default function HandoutDetailScreen() {
     );
   }
 
+  // ৩ ডট চাপলে menu sheet খুলবে (copy link + report)
+  const openMenu = () => {
+    open(
+      <ContentMenuSheet
+        targetType="handout"
+        targetId={handout._id}
+        shareUrl={`${SHARE_BASE_URL}/handouts/${handout.slug}`}
+      />,
+    );
+  };
+
   return (
     <SafeAreaView
       edges={["top"]}
       className="flex-1 bg-background dark:bg-dark-background"
     >
-      {/* কাস্টম টপ বার */}
-      <BackHeader />
+      {/* কাস্টম টপ বার: বামে back, ডানে ৩ ডট */}
+      <View className="flex-row items-center justify-between px-4 py-3">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
+        >
+          <Ionicons name="arrow-back" size={20} color={iconColor} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={openMenu}
+          accessibilityRole="button"
+          hitSlop={8}
+          className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
+        >
+          <Ionicons name="ellipsis-vertical" size={18} color={iconColor} />
+        </TouchableOpacity>
+      </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40, paddingTop: 16 }}
+        contentContainerStyle={{ paddingBottom: 40, paddingTop: 4 }}
       >
         <View className="px-5">
           {/* কভার (বামে) + টাইটেল/ক্যাটাগরি/ইউজার (ডানে) */}
