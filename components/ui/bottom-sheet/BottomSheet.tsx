@@ -31,7 +31,11 @@ const BOTTOM_PADDING = 16; // safe area bottom er sathe jog hobe
 
 interface Props {
   visible: boolean;
-  onClose: () => void;
+  /**
+   * user backdrop e tap korle ba niche drag kore bondho korte chaile eta call hoy.
+   * false return korle bujhbo bondho hoyni (guard atkeche) — sheet ager jaigay ferot jabe.
+   */
+  onClose: () => boolean | void;
   children: React.ReactNode;
   /**
    * true (default): children ScrollView er vitore render hobe.
@@ -112,6 +116,14 @@ const BottomSheet = ({
     }
   }, [visible]);
 
+  // user bondho korte chaile (backdrop / drag) — guard atkale sheet ferot ashe
+  const requestClose = () => {
+    const result = onClose();
+    if (result === false) {
+      translateY.value = withSpring(0, SNAP_SPRING);
+    }
+  };
+
   const handleGesture = Gesture.Pan()
     .onUpdate((e) => {
       const next = e.translationY;
@@ -124,7 +136,7 @@ const BottomSheet = ({
         e.translationY > DISMISS_THRESHOLD || e.velocityY > DISMISS_VELOCITY;
 
       if (shouldDismiss) {
-        runOnJS(onClose)();
+        runOnJS(requestClose)();
       } else {
         translateY.value = withSpring(0, SNAP_SPRING);
       }
@@ -162,7 +174,7 @@ const BottomSheet = ({
   return (
     <View className="absolute inset-0 z-[999] justify-end">
       {/* Backdrop */}
-      <Pressable className="absolute inset-0" onPress={onClose}>
+      <Pressable className="absolute inset-0" onPress={requestClose}>
         <Animated.View
           style={backdropStyle}
           className="flex-1 bg-background-transparent dark:bg-dark-background-transparent"

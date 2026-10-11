@@ -26,6 +26,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Video } from "react-native-compressor";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch } from "react-redux";
 import { MediaItem } from "./MediaPreviewGrid";
@@ -53,11 +54,86 @@ const SCROLL_TOP_OFFSET = 90;
 
 const SAFE_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
 
+/* ─────────── Video compress settings ─────────── */
+const MB = 1024 * 1024;
+// ৮MB এর ছোট ভিডিও compress করার দরকার নেই
+const SKIP_COMPRESS_BELOW = 8 * MB;
+// সার্ভার limit (backend এর multer limit এর সাথে মিলিয়ে রাখো)
+const MAX_UPLOAD_BYTES = 60 * MB;
+// compress করা ভিডিওর সর্বোচ্চ টার্গেট সাইজ (লম্বা ভিডিওর জন্য bitrate কমবে)
+const TARGET_MAX_BYTES = 45 * MB;
+const TARGET_BITRATE = 2_000_000; // 2 Mbps (30fps আর 60fps দুটোতেই ভালো)
+const MIN_BITRATE = 500_000; // এর নিচে কোয়ালিটি খুব খারাপ হয়ে যায়
+// longer side সর্বোচ্চ 1280px, মানে 720p (পোর্ট্রেটে 720x1280)
+const VIDEO_MAX_SIZE = 1280;
+
+type VideoInfo = { duration?: number; fileSize?: number };
+
 /** uri theke extension ber kori. Unknown/HEIC hole safe default. */
 const getExtension = (uri: string, type: "image" | "video") => {
   const ext = uri.split("?")[0].split(".").pop()?.toLowerCase();
   if (type === "video") return ext === "mov" ? "mov" : "mp4";
   return ext && SAFE_IMAGE_EXTENSIONS.includes(ext) ? ext : "jpg";
+};
+
+/**
+ * ভিডিও compress করে। ছোট ভিডিও হলে original ই ফেরত দেয়।
+ * temp = true মানে এটা আমাদের বানানো ফাইল, আপলোড শেষে ডিলিট করতে হবে।
+ */
+const compressVideo = async (
+  uri: string,
+  info: VideoInfo | undefined,
+  onProgress: (p: number) => void,
+): Promise<{ uri: string; temp: boolean }> => {
+  if (info?.fileSize && info.fileSize < SKIP_COMPRESS_BELOW) {
+    return { uri, temp: false };
+  }
+
+  // duration অনুযায়ী bitrate ঠিক করি, যাতে ফাইল TARGET_MAX_BYTES এর বেশি না হয়
+  const seconds = info?.duration ? info.duration / 1000 : 0;
+  let bitrate = TARGET_BITRATE;
+  if (seconds > 0) {
+    const allowed = (TARGET_MAX_BYTES * 8) / seconds;
+    bitrate = Math.max(MIN_BITRATE, Math.min(TARGET_BITRATE, allowed));
+  }
+
+  let output: string;
+  try {
+    output = await Video.compress(
+      uri,
+      {
+        compressionMethod: "manual",
+        maxSize: VIDEO_MAX_SIZE,
+        bitrate: Math.round(bitrate),
+      },
+      (p) => onProgress(p),
+    );
+  } catch (e) {
+    console.log("COMPRESS ERROR:", e);
+    // compress fail হলে original পাঠাই, তবে সেটা সার্ভার limit এর মধ্যে থাকলে
+    if (info?.fileSize && info.fileSize <= MAX_UPLOAD_BYTES) {
+      return { uri, temp: false };
+    }
+    throw e;
+  }
+
+  const temp = output !== uri;
+
+  // compress এর পরেও বড় থাকলে আপলোড করে লাভ নেই
+  try {
+    const size = new File(output).size;
+    if (__DEV__) {
+      console.log("Compressed size (MB):", (size / MB).toFixed(1));
+    }
+    if (size > MAX_UPLOAD_BYTES) {
+      throw new Error("VIDEO_TOO_LARGE");
+    }
+  } catch (e: any) {
+    if (e?.message === "VIDEO_TOO_LARGE") throw e;
+    // size পড়তে না পারলে ignore করি
+  }
+
+  return { uri: output, temp };
 };
 
 export default function CreatePostPage() {
@@ -93,6 +169,8 @@ export default function CreatePostPage() {
   const allowLeaveRef = useRef(false);
   // Double tap atkanor jonno (state na, tai kokhono atke thake na)
   const submitLockRef = useRef(false);
+  // ভিডিওর duration/fileSize রাখি (uri দিয়ে), compress এর সময় লাগবে
+  const videoInfoRef = useRef<Record<string, VideoInfo>>({});
 
   /* ─────────── Keyboard scroll ─────────── */
   const scrollRef = useRef<ScrollView>(null);
@@ -217,11 +295,23 @@ export default function CreatePostPage() {
         selectionLimit: remaining,
         quality: 0.85,
         exif: false,
+        // picker নিজে ভিডিও আবার encode করবে না, compress আমরা নিজেরা করব
+        videoExportPreset: ImagePicker.VideoExportPreset.Passthrough,
         // iPhone er HEIC auto JPG hoye jay
         preferredAssetRepresentationMode:
           ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
       });
       if (result.canceled) return;
+
+      // ভিডিওর duration আর size মনে রাখি (duration মিলিসেকেন্ডে)
+      result.assets.forEach((a) => {
+        if (a.type === "video") {
+          videoInfoRef.current[a.uri] = {
+            duration: a.duration ?? undefined,
+            fileSize: a.fileSize ?? undefined,
+          };
+        }
+      });
 
       const picked: MediaItem[] = result.assets
         .filter((a) => !media.some((m) => m.uri === a.uri)) // duplicate bad
@@ -307,27 +397,86 @@ export default function CreatePostPage() {
     // 4) Background upload (payload theke, state theke na)
     dispatch(startUpload());
 
-    const hasMedia = payload.type === "post" && payload.media.length > 0;
-    let fakeProgress = 0;
-    const increment = hasMedia ? 1.5 : 8;
-    const interval = setInterval(() => {
-      fakeProgress += increment;
-      if (fakeProgress < 85) {
-        dispatch(setProgress(Math.round(fakeProgress)));
-      } else {
-        clearInterval(interval);
+    const isPost = payload.type === "post";
+    const videoItems = isPost
+      ? payload.media.filter((m) => m.type === "video")
+      : [];
+    const hasVideo = videoItems.length > 0;
+    const hasMedia = isPost && payload.media.length > 0;
+
+    // ভিডিও থাকলে প্রথম ৫০% compress এর জন্য, বাকিটা আপলোডের জন্য
+    const COMPRESS_SHARE = hasVideo ? 50 : 0;
+
+    let lastReported = 0;
+    const report = (value: number) => {
+      const next = Math.min(Math.round(value), 99);
+      if (next > lastReported) {
+        lastReported = next;
+        dispatch(setProgress(next));
       }
-    }, 200);
+    };
+
+    // আমাদের বানানো compressed ফাইলের তালিকা, শেষে ডিলিট করব
+    const tempUris: string[] = [];
+    let interval: ReturnType<typeof setInterval> | undefined;
 
     try {
-      if (payload.type === "post") {
+      if (isPost) {
+        // ── ধাপ ১: ভিডিও compress (সত্যিকারের progress) ──
+        let mediaToUpload = payload.media;
+
+        if (hasVideo) {
+          const processed: MediaItem[] = [];
+          let videoIndex = 0;
+
+          for (const item of payload.media) {
+            if (item.type !== "video") {
+              processed.push(item);
+              continue;
+            }
+            const idx = videoIndex++;
+            const out = await compressVideo(
+              item.uri,
+              videoInfoRef.current[item.uri],
+              (p) => report(((idx + p) / videoItems.length) * COMPRESS_SHARE),
+            );
+            if (out.temp) tempUris.push(out.uri);
+            processed.push({ ...item, uri: out.uri });
+          }
+          mediaToUpload = processed;
+          report(COMPRESS_SHARE);
+        }
+
+        // ── ধাপ ২: আপলোড (progress আনুমানিক) ──
+        let fakeProgress = Math.max(lastReported, COMPRESS_SHARE);
+        const increment = hasMedia ? 0.8 : 8;
+        const cap = hasMedia ? 95 : 85;
+        interval = setInterval(() => {
+          fakeProgress += increment;
+          if (fakeProgress < cap) {
+            report(fakeProgress);
+          } else if (interval) {
+            clearInterval(interval);
+          }
+        }, 200);
+
         const formData = new FormData();
         if (payload.title) formData.append("title", payload.title);
         formData.append("text", payload.text);
         formData.append("privacy", payload.privacy);
-        buildFormData(payload.media, formData);
+        buildFormData(mediaToUpload, formData);
         await createPost(formData).unwrap();
       } else {
+        let fakeProgress = 0;
+        interval = setInterval(() => {
+          fakeProgress += 8;
+          if (fakeProgress < 85) {
+            report(fakeProgress);
+          } else if (interval) {
+            clearInterval(interval);
+          }
+        }, 200);
+
         await createQuestion({
           questionText: payload.questionText,
           tags: payload.tags,
@@ -335,14 +484,23 @@ export default function CreatePostPage() {
         }).unwrap();
       }
 
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
       dispatch(setProgress(100));
       dispatch(finishUpload());
     } catch (err: any) {
-      clearInterval(interval);
-      console.log("UPLOAD ERROR:", JSON.stringify(err, null, 2));
+      if (interval) clearInterval(interval);
+      console.log("UPLOAD ERROR:", JSON.stringify(err, null, 2), err?.message);
       dispatch(failUpload());
     } finally {
+      // compress করা ফাইল ক্যাশ থেকে মুছে ফেলি (সফল বা ব্যর্থ, দুই ক্ষেত্রেই)
+      for (const u of tempUris) {
+        try {
+          const f = new File(u);
+          if (f.exists) f.delete();
+        } catch {
+          // ডিলিট ব্যর্থ হলে ignore
+        }
+      }
       submitLockRef.current = false;
     }
   };

@@ -440,6 +440,21 @@
     "hideReplies": "উত্তর লুকান",
     "loadMoreReplies": "আরও উত্তর দেখুন",
     "repliesLoadFailed": "উত্তর লোড করা যায়নি",
-    "retry": "আবার চেষ্টা করুন"
+    "retry": "আবার চেষ্টা করুন",
+    "edit": "সম্পাদনা করুন",
+    "edited": "সম্পাদিত",
+    "editingComment": "মন্তব্য সম্পাদনা করছেন",
+    "updateFailed": "মন্তব্য আপডেট করা যায়নি",
+    "replyingTo": "উত্তর দিচ্ছেন",
+    "writeComment": "মন্তব্য লিখুন...",
+    "writeReply": "উত্তর লিখুন...",
+    "discardTitle": "লেখাটি বাদ দেবেন?",
+    "discardMessage": "আপনি মন্তব্যটি জমা দেননি। এখন বন্ধ করলে লেখাটি মুছে যাবে।",
+    "discardEditTitle": "পরিবর্তন বাদ দেবেন?",
+    "discardEditMessage": "আপনার সম্পাদনা সংরক্ষণ করা হয়নি। এখন বন্ধ করলে পরিবর্তনগুলো মুছে যাবে।",
+    "discard": "বাদ দিন",
+    "keepWriting": "লিখতে থাকুন",
+    "replaceDraftTitle": "বর্তমান লেখা বাদ দেবেন?",
+    "replaceDraftMessage": "আপনার লেখা বা সম্পাদনা মুছে যাবে।"
   }
 }

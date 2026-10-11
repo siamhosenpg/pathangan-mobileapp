@@ -2,6 +2,7 @@ import type { Comment } from "@/types/commentsTypes";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Animated,
@@ -18,6 +19,8 @@ interface Props {
   isLoading: boolean;
   replyingTo?: Comment | null;
   onCancelReply?: () => void;
+  editingComment?: Comment | null;
+  onCancelEdit?: () => void;
   maxLength?: number;
 }
 
@@ -30,8 +33,11 @@ const CommentFeedInput = ({
   isLoading,
   replyingTo,
   onCancelReply,
-  maxLength = 500,
+  editingComment,
+  onCancelEdit,
+  maxLength = 1000,
 }: Props) => {
+  const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const inputRef = useRef<TextInput>(null);
@@ -53,18 +59,54 @@ const CommentFeedInput = ({
     }).start();
   }, [canSend, scale]);
 
-  // Auto focus when user taps reply
+  // reply বা edit শুরু হলে input এ auto focus
   useEffect(() => {
-    if (replyingTo) {
-      const t = setTimeout(() => inputRef.current?.focus(), 100);
-      return () => clearTimeout(t);
+    if (replyingTo || editingComment) {
+      const timer = setTimeout(() => inputRef.current?.focus(), 100);
+      return () => clearTimeout(timer);
     }
-  }, [replyingTo]);
+  }, [replyingTo, editingComment]);
 
   return (
     <View className="border-t border-border dark:border-dark-border bg-background dark:bg-dark-background px-3 pt-2.5 pb-4">
-      {/* Reply indicator */}
-      {replyingTo && (
+      {/* Edit indicator */}
+      {editingComment && (
+        <View className="flex-row items-center bg-accent/10 rounded-xl mb-2.5 overflow-hidden">
+          <View className="w-1 self-stretch bg-accent" />
+
+          <View className="flex-1 flex-row items-center px-3 py-2">
+            <Ionicons
+              name="create-outline"
+              size={16}
+              color={ACCENT}
+              style={{ marginRight: 8 }}
+            />
+            <View className="flex-1">
+              <Text className="text-[10px] text-text-secondary dark:text-dark-text-secondary">
+                {t("commentData.editingComment")}
+              </Text>
+              <Text
+                className="text-xs text-accent font-semibold"
+                numberOfLines={1}
+              >
+                {editingComment.text}
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            onPress={onCancelEdit}
+            hitSlop={10}
+            activeOpacity={0.7}
+            className="w-6 h-6 rounded-full bg-accent/15 items-center justify-center mr-2"
+          >
+            <Ionicons name="close" size={14} color={ACCENT} />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Reply indicator (edit চলার সময় দেখাবে না) */}
+      {replyingTo && !editingComment && (
         <View className="flex-row items-center bg-accent/10 rounded-xl mb-2.5 overflow-hidden">
           <View className="w-1 self-stretch bg-accent" />
 
@@ -77,7 +119,7 @@ const CommentFeedInput = ({
             />
             <View className="flex-1">
               <Text className="text-[10px] text-text-secondary dark:text-dark-text-secondary">
-                উত্তর দিচ্ছেন
+                {t("commentData.replyingTo")}
               </Text>
               <Text
                 className="text-xs text-accent font-semibold"
@@ -111,7 +153,11 @@ const CommentFeedInput = ({
           onChangeText={onChangeText}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholder={replyingTo ? "উত্তর লিখুন..." : "মন্তব্য লিখুন..."}
+          placeholder={
+            replyingTo && !editingComment
+              ? t("commentData.writeReply")
+              : t("commentData.writeComment")
+          }
           placeholderTextColor={isDark ? "#6B7280" : "#9CA3AF"}
           selectionColor={ACCENT}
           cursorColor={ACCENT}
@@ -119,7 +165,7 @@ const CommentFeedInput = ({
           multiline
           textAlignVertical="center"
           scrollEnabled
-          className="flex-1  text-text dark:text-dark-text py-2"
+          className="flex-1 text-text dark:text-dark-text py-2"
           style={{
             maxHeight: 110,
             minHeight: 36,
@@ -140,7 +186,11 @@ const CommentFeedInput = ({
             {isLoading ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Ionicons name="arrow-up" size={19} color="#fff" />
+              <Ionicons
+                name={editingComment ? "checkmark" : "arrow-up"}
+                size={editingComment ? 22 : 19}
+                color="#fff"
+              />
             )}
           </TouchableOpacity>
         </Animated.View>

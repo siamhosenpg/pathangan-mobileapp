@@ -203,7 +203,7 @@ const NotificationCard = ({ item, onRead, onDelete, onNavigate }: Props) => {
           <View>
             <View className="flex-row items-center gap-1">
               <Text className="font-semibold text-sm text-text dark:text-dark-text">
-                {item.actorId?.name}
+                {item.actorId?.name ?? item.actorId?.username ?? "Deleted User"}
               </Text>
               <GreenMark
                 mark={item.actorId?.greenmarkVerified || false}

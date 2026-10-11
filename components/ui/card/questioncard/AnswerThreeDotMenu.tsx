@@ -42,7 +42,7 @@ const AnswerThreeDotMenu = ({
   questionText,
   answerText,
 }: Props) => {
-  const { close, open } = useBottomSheet();
+  const { close, open, replace } = useBottomSheet();
   const router = useRouter();
   const { t } = useTranslation();
   const currentUser = useAppSelector((state) => state.auth.user);
@@ -65,7 +65,7 @@ const AnswerThreeDotMenu = ({
 
   // menu এর জায়গায় ReportSheet বসবে
   const handleReport = () => {
-    open(<ReportSheet targetType="answer" targetId={answerId} />, {
+    replace(<ReportSheet targetType="answer" targetId={answerId} />, {
       scrollable: false,
     });
   };

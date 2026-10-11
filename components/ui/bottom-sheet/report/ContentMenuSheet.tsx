@@ -1,5 +1,5 @@
 import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
-import ReportSheet from "@/components/ui/bottom-sheet/report/ReportSheet";
+
 import type { ReportTargetType } from "@/redux/api/others/reportApi";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
@@ -7,6 +7,7 @@ import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
 import { useTranslation } from "react-i18next";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
+import ReportSheet from "./ReportSheet";
 
 // ওয়েবসাইটের আসল domain এখানে বসাও
 export const SHARE_BASE_URL = "https://your-domain.com";
@@ -18,7 +19,7 @@ interface Props {
 }
 
 const ContentMenuSheet = ({ targetType, targetId, shareUrl }: Props) => {
-  const { open, close } = useBottomSheet();
+  const { replace, close } = useBottomSheet();
   const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -32,9 +33,9 @@ const ContentMenuSheet = ({ targetType, targetId, shareUrl }: Props) => {
     }, 300);
   };
 
+  // menu এর জায়গায় ReportSheet বসবে
   const handleReport = () => {
-    // menu এর জায়গায় সরাসরি ReportSheet বসিয়ে দিচ্ছি (sheet খোলা অবস্থাতেই content বদলাবে)
-    open(<ReportSheet targetType={targetType} targetId={targetId} />, {
+    replace(<ReportSheet targetType={targetType} targetId={targetId} />, {
       scrollable: false,
     });
   };

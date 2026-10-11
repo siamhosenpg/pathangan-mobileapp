@@ -1,7 +1,8 @@
-import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
+import { useSheetCloseGuard } from "@/components/ui/bottom-sheet/BottomSheetProvider";
 import {
   useCreateCommentMutation,
   useGetCommentsByPostQuery,
+  useUpdateCommentMutation,
 } from "@/redux/api/commentsApi";
 import type { Comment } from "@/types/commentsTypes";
 import { getErrorMessage } from "@/utils/getErrorMessage";
@@ -151,10 +152,10 @@ const ErrorState = ({
 // ===================== MAIN =====================
 const CommentSheet = ({ postId }: Props) => {
   const { t } = useTranslation();
-  const { open } = useBottomSheet();
 
   const [text, setText] = useState("");
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
+  const [editingComment, setEditingComment] = useState<Comment | null>(null);
   const [page, setPage] = useState(1);
   // reply দেওয়ার পর কোন thread খুলতে হবে
   const [expandRequest, setExpandRequest] = useState<ExpandRequest | null>(
@@ -168,24 +169,100 @@ const CommentSheet = ({ postId }: Props) => {
       limit: PAGE_SIZE,
     });
 
-  const [createComment, { isLoading: isSubmitting }] =
-    useCreateCommentMutation();
+  const [createComment, { isLoading: isCreating }] = useCreateCommentMutation();
+  const [updateComment, { isLoading: isUpdating }] = useUpdateCommentMutation();
+  const isSubmitting = isCreating || isUpdating;
 
   const comments = data?.data ?? [];
-
   const showFullError = !isLoading && isError && comments.length === 0;
 
-  // ৩ ডট menu থেকে ফিরে এলে comment sheet আবার খোলার জন্য
-  const reopenSheet = useCallback(() => {
-    open(<CommentSheet postId={postId} />);
-  }, [open, postId]);
+  // ===================== DRAFT TRACKING =====================
+  // নতুন comment/reply: কিছু লেখা থাকলে draft
+  // edit: আগের text থেকে বদলালে draft
+  const hasDraft = editingComment
+    ? text.trim() !== editingComment.text.trim()
+    : text.trim().length > 0;
 
+  // callback গুলো যেন stable থাকে, তাই ref এ রাখছি
+  const hasDraftRef = useRef(false);
+  const editingRef = useRef<Comment | null>(null);
+  hasDraftRef.current = hasDraft;
+  editingRef.current = editingComment;
+
+  // sheet বন্ধ করতে গেলে (backdrop / drag / back button) লেখা থাকলে confirm
+  useSheetCloseGuard({
+    when: hasDraft,
+    title: editingComment
+      ? t("commentData.discardEditTitle")
+      : t("commentData.discardTitle"),
+    message: editingComment
+      ? t("commentData.discardEditMessage")
+      : t("commentData.discardMessage"),
+    confirmText: t("commentData.discard"),
+    cancelText: t("commentData.keepWriting"),
+  });
+
+  // বর্তমান লেখা/edit নষ্ট হবে এমন কাজের আগে confirm
+  const withDraftCheck = useCallback(
+    (proceed: () => void) => {
+      if (!hasDraftRef.current) {
+        proceed();
+        return;
+      }
+      Alert.alert(
+        t("commentData.replaceDraftTitle"),
+        t("commentData.replaceDraftMessage"),
+        [
+          { text: t("commentData.keepWriting"), style: "cancel" },
+          {
+            text: t("commentData.discard"),
+            style: "destructive",
+            onPress: proceed,
+          },
+        ],
+      );
+    },
+    [t],
+  );
+
+  // ===================== SUBMIT =====================
   const handleSubmit = async () => {
-    if (!text.trim() || isSubmitting) return;
+    const trimmed = text.trim();
+    if (!trimmed || isSubmitting) return;
+
+    // ---- edit mode ----
+    if (editingComment) {
+      // কিছু বদলায়নি হলে শুধু edit mode থেকে বের হবো
+      if (trimmed === editingComment.text.trim()) {
+        setEditingComment(null);
+        setText("");
+        Keyboard.dismiss();
+        return;
+      }
+
+      try {
+        await updateComment({
+          commentId: editingComment._id,
+          text: trimmed,
+          postId,
+          parentCommentId: editingComment.parentCommentId,
+        }).unwrap();
+
+        setEditingComment(null);
+        setText("");
+        Keyboard.dismiss();
+      } catch (err) {
+        // text আর edit mode থাকবে, যাতে আবার চেষ্টা করা যায়
+        Alert.alert(t("commentData.updateFailed"), getErrorMessage(err));
+      }
+      return;
+    }
+
+    // ---- নতুন comment / reply ----
     try {
       const result = await createComment({
         postId,
-        text: text.trim(),
+        text: trimmed,
         ...(replyingTo ? { parentCommentId: replyingTo._id } : {}),
       }).unwrap();
 
@@ -205,24 +282,57 @@ const CommentSheet = ({ postId }: Props) => {
     }
   };
 
-  const handleReply = useCallback((comment: Comment) => {
-    setReplyingTo(comment);
-  }, []);
+  // ===================== REPLY / EDIT HANDLERS =====================
+  const handleReply = useCallback(
+    (comment: Comment) => {
+      // edit চলার সময় reply চাপলে edit বাদ দিয়ে reply mode এ যাবে
+      if (editingRef.current) {
+        withDraftCheck(() => {
+          setEditingComment(null);
+          setText("");
+          setReplyingTo(comment);
+        });
+        return;
+      }
+      setReplyingTo(comment);
+    },
+    [withDraftCheck],
+  );
 
   const handleCancelReply = useCallback(() => {
     setReplyingTo(null);
   }, []);
 
+  const handleEdit = useCallback(
+    (comment: Comment) => {
+      withDraftCheck(() => {
+        setReplyingTo(null);
+        setEditingComment(comment);
+        setText(comment.text);
+      });
+    },
+    [withDraftCheck],
+  );
+
+  const handleCancelEdit = useCallback(() => {
+    withDraftCheck(() => {
+      setEditingComment(null);
+      setText("");
+      Keyboard.dismiss();
+    });
+  }, [withDraftCheck]);
+
+  // ===================== LIST =====================
   const renderItem = useCallback(
     ({ item }: { item: Comment }) => (
       <CommentCard
         comment={item}
         onReply={handleReply}
-        onReopen={reopenSheet}
+        onEdit={handleEdit}
         expandRequest={expandRequest}
       />
     ),
-    [handleReply, reopenSheet, expandRequest],
+    [handleReply, handleEdit, expandRequest],
   );
 
   const handleEndReached = useCallback(() => {
@@ -313,6 +423,8 @@ const CommentSheet = ({ postId }: Props) => {
         isLoading={isSubmitting}
         replyingTo={replyingTo}
         onCancelReply={handleCancelReply}
+        editingComment={editingComment}
+        onCancelEdit={handleCancelEdit}
       />
     </View>
   );

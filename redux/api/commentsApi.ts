@@ -7,6 +7,7 @@ import type {
   GetCommentsResponse,
   GetRepliesResponse,
   UpdateCommentRequest,
+  UpdateCommentResponse,
 } from "@/types/commentsTypes";
 
 const commentApi = baseApi.injectEndpoints({
@@ -153,8 +154,9 @@ const commentApi = baseApi.injectEndpoints({
     }),
 
     // ===================== UPDATE COMMENT =====================
+    // ===================== UPDATE COMMENT / REPLY =====================
     updateComment: builder.mutation<
-      { success: boolean; data: Comment },
+      UpdateCommentResponse,
       UpdateCommentRequest
     >({
       query: ({ commentId, text }) => ({
@@ -162,9 +164,45 @@ const commentApi = baseApi.injectEndpoints({
         method: "PUT",
         body: { text },
       }),
-      invalidatesTags: (result, error, { commentId }) => [
-        { type: "Comment", id: commentId },
-      ],
+
+      async onQueryStarted(
+        { commentId, postId, parentCommentId },
+        { dispatch, queryFulfilled },
+      ) {
+        try {
+          const { data } = await queryFulfilled;
+
+          const applyEdit = (c: Comment) => {
+            c.text = data.data.text;
+            c.isEdited = true;
+            c.updatedAt = data.data.updatedAt;
+          };
+
+          if (!parentCommentId) {
+            dispatch(
+              commentApi.util.updateQueryData(
+                "getCommentsByPost",
+                { postId, page: 1, limit: 10 },
+                (draft) => {
+                  const target = draft.data.find((c) => c._id === commentId);
+                  if (target) applyEdit(target);
+                },
+              ),
+            );
+          } else {
+            dispatch(
+              commentApi.util.updateQueryData(
+                "getRepliesByComment",
+                { commentId: parentCommentId, page: 1, limit: 5 },
+                (draft) => {
+                  const target = draft.data.find((c) => c._id === commentId);
+                  if (target) applyEdit(target);
+                },
+              ),
+            );
+          }
+        } catch {}
+      },
     }),
 
     // ===================== DELETE COMMENT / REPLY =====================

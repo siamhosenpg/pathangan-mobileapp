@@ -451,6 +451,21 @@
     "hideReplies": "Hide replies",
     "loadMoreReplies": "View more replies",
     "repliesLoadFailed": "Could not load replies",
-    "retry": "Retry"
+    "retry": "Retry",
+    "edit": "Edit",
+    "edited": "Edited",
+    "editingComment": "Editing comment",
+    "updateFailed": "Could not update the comment",
+    "replyingTo": "Replying to",
+    "writeComment": "Write a comment...",
+    "writeReply": "Write a reply...",
+    "discardTitle": "Discard your comment?",
+    "discardMessage": "You haven't posted this comment. If you close now, your text will be lost.",
+    "discardEditTitle": "Discard changes?",
+    "discardEditMessage": "Your edit hasn't been saved. If you close now, your changes will be lost.",
+    "discard": "Discard",
+    "keepWriting": "Keep writing",
+    "replaceDraftTitle": "Discard current text?",
+    "replaceDraftMessage": "Your current text or edit will be lost."
   }
 }

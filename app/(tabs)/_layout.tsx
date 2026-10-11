@@ -90,11 +90,11 @@ export default function TabLayout() {
               },
               tabBarIconStyle: { marginTop: 8 },
               tabBarLabelStyle: {
-                fontSize: 8,
-                fontWeight: "600",
+                fontSize: 9,
+                fontWeight: "700",
                 marginBottom: 0,
                 marginTop: 4,
-                textTransform: "uppercase",
+                textTransform: "capitalize",
               },
             }}
           >

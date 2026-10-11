@@ -65,12 +65,7 @@ const ProfileAbout = ({ work, educations, user }: Props) => {
       )}
       {/* Basic Info */}
       {hasInfo && (
-        <View>
-          <View className="flex-row items-center gap-2 mb-3 ">
-            <Text className="text-text text-sm dark:text-dark-text font-semibold ">
-              {t("personalInfo")}
-            </Text>
-          </View>
+        <View className="bg-background-secondary dark:bg-dark-background-secondary px-4 py-4  gap-3  rounded-xl  ">
           <View className=" py-1 gap-3">
             {user.email && (
               <View className="flex-row items-center gap-3">
@@ -78,7 +73,7 @@ const ProfileAbout = ({ work, educations, user }: Props) => {
                   <Ionicons name="mail-outline" size={15} />
                 </View>
                 <View>
-                  <Text className="text-text-tertiary dark:text-dark-text-tertiary text-xs">
+                  <Text className="text-text-tertiary dark:text-dark-text-tertiary text-xs font-medium">
                     {t("email")}
                   </Text>
                   <Text className="text-text dark:text-dark-text text-sm font-medium">
@@ -93,7 +88,7 @@ const ProfileAbout = ({ work, educations, user }: Props) => {
                   <Ionicons name="location-outline" size={15} />
                 </View>
                 <View>
-                  <Text className="text-text-tertiary dark:text-dark-text-tertiary text-xs">
+                  <Text className="text-text-tertiary dark:text-dark-text-tertiary text-xs font-medium">
                     অবস্থান
                   </Text>
                   <Text className="text-text dark:text-dark-text text-sm font-medium">
@@ -108,7 +103,7 @@ const ProfileAbout = ({ work, educations, user }: Props) => {
                   <Ionicons name="transgender-outline" size={15} />
                 </View>
                 <View>
-                  <Text className="text-text-tertiary dark:text-dark-text-tertiary text-xs">
+                  <Text className="text-text-tertiary dark:text-dark-text-tertiary text-xs font-medium">
                     {t("gender")}
                   </Text>
                   <Text className="text-text dark:text-dark-text text-sm font-medium">
@@ -123,7 +118,7 @@ const ProfileAbout = ({ work, educations, user }: Props) => {
                   <Ionicons name="calendar-outline" size={15} />
                 </View>
                 <View>
-                  <Text className="text-text-tertiary dark:text-dark-text-tertiary text-xs">
+                  <Text className="text-text-tertiary dark:text-dark-text-tertiary text-xs font-medium">
                     {t("joined")}
                   </Text>
                   <Text className="text-text dark:text-dark-text text-sm font-medium">

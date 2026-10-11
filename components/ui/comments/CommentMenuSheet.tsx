@@ -20,12 +20,12 @@ import ReportSheet from "../bottom-sheet/report/ReportSheet";
 interface Props {
   comment: Comment;
   isOwn: boolean;
-  // menu শেষ হলে comment sheet আবার খোলার জন্য
-  onBack?: () => void;
+  // নিজের comment হলে edit mode চালু করার জন্য (CommentSheet এর input এ)
+  onEdit?: (comment: Comment) => void;
 }
 
-const CommentMenuSheet = ({ comment, isOwn, onBack }: Props) => {
-  const { open, close } = useBottomSheet();
+const CommentMenuSheet = ({ comment, isOwn, onEdit }: Props) => {
+  const { close, replace } = useBottomSheet();
   const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -33,23 +33,25 @@ const CommentMenuSheet = ({ comment, isOwn, onBack }: Props) => {
 
   const [deleteComment, { isLoading: isDeleting }] = useDeleteCommentMutation();
 
-  const goBack = () => {
-    if (onBack) onBack();
-    else close();
-  };
-
+  // টেক্সট কপি — শুধু menu বন্ধ হবে, comment sheet নিচেই থাকবে
   const handleCopyText = async () => {
     await Clipboard.setStringAsync(comment.text);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    goBack();
+    close();
     setTimeout(() => {
       Alert.alert(t("commentData.textCopied"));
     }, 300);
   };
 
+  // menu বন্ধ হওয়ার animation শেষ হলে comment sheet এর input এ edit mode চালু হবে
+  const handleEdit = () => {
+    close();
+    setTimeout(() => onEdit?.(comment), 260);
+  };
+
+  // menu এর জায়গায় ReportSheet বসবে; report শেষে close() করলে comment sheet ফিরে আসবে
   const handleReport = () => {
-    // menu এর জায়গায় ReportSheet বসবে
-    open(<ReportSheet targetType="comment" targetId={comment._id} />, {
+    replace(<ReportSheet targetType="comment" targetId={comment._id} />, {
       scrollable: false,
     });
   };
@@ -70,7 +72,7 @@ const CommentMenuSheet = ({ comment, isOwn, onBack }: Props) => {
                 postId: comment.postId,
                 parentCommentId: comment.parentCommentId,
               }).unwrap();
-              goBack();
+              close();
             } catch (err) {
               Alert.alert(t("commentData.deleteFailed"), getErrorMessage(err));
             }
@@ -88,6 +90,22 @@ const CommentMenuSheet = ({ comment, isOwn, onBack }: Props) => {
           {t("commentData.options")}
         </Text>
       </View>
+
+      {/* নিজের comment হলে Edit */}
+      {isOwn && onEdit && (
+        <TouchableOpacity
+          onPress={handleEdit}
+          activeOpacity={0.7}
+          className="flex-row items-center gap-3 px-3 py-3 rounded-2xl active:bg-background-secondary dark:active:bg-dark-background-secondary"
+        >
+          <View className="w-9 h-9 rounded-full items-center justify-center bg-accent/10">
+            <Ionicons name="create-outline" size={18} color="#00914d" />
+          </View>
+          <Text className="flex-1 text-sm font-medium text-text dark:text-dark-text">
+            {t("commentData.edit")}
+          </Text>
+        </TouchableOpacity>
+      )}
 
       <TouchableOpacity
         onPress={handleCopyText}

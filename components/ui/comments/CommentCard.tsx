@@ -32,7 +32,7 @@ interface ItemProps {
   isReply?: boolean;
   parentAuthorId?: string;
   onReply?: (comment: Comment) => void;
-  onReopen?: () => void;
+  onEdit?: (comment: Comment) => void;
 }
 
 const CommentItem = ({
@@ -40,7 +40,7 @@ const CommentItem = ({
   isReply = false,
   parentAuthorId,
   onReply,
-  onReopen,
+  onEdit,
 }: ItemProps) => {
   const router = useRouter();
   const { t } = useTranslation();
@@ -60,9 +60,14 @@ const CommentItem = ({
       ? comment.replyToUserId
       : null;
 
+  // menu আলাদা sheet হিসেবে comment sheet এর উপরে খুলবে
   const openMenu = () => {
     open(
-      <CommentMenuSheet comment={comment} isOwn={isOwn} onBack={onReopen} />,
+      <CommentMenuSheet
+        comment={comment}
+        isOwn={isOwn}
+        onEdit={isOwn ? onEdit : undefined}
+      />,
     );
   };
 
@@ -131,6 +136,12 @@ const CommentItem = ({
             className="text-[11px] font-medium text-text-tertiary dark:text-dark-text-tertiary"
           />
 
+          {comment.isEdited && (
+            <Text className="text-[11px] font-medium text-text-tertiary dark:text-dark-text-tertiary">
+              {t("commentData.edited")}
+            </Text>
+          )}
+
           {onReply && (
             <TouchableOpacity
               onPress={() => onReply(comment)}
@@ -152,14 +163,14 @@ interface RepliesListProps {
   rootId: string;
   parentAuthorId: string;
   onReply?: (comment: Comment) => void;
-  onReopen?: () => void;
+  onEdit?: (comment: Comment) => void;
 }
 
 const RepliesList = ({
   rootId,
   parentAuthorId,
   onReply,
-  onReopen,
+  onEdit,
 }: RepliesListProps) => {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
@@ -188,7 +199,7 @@ const RepliesList = ({
           isReply
           parentAuthorId={parentAuthorId}
           onReply={onReply}
-          onReopen={onReopen}
+          onEdit={onEdit}
         />
       ))}
 
@@ -229,11 +240,11 @@ const RepliesList = ({
 interface Props {
   comment: Comment;
   onReply?: (comment: Comment) => void;
-  onReopen?: () => void;
+  onEdit?: (comment: Comment) => void;
   expandRequest?: ExpandRequest | null;
 }
 
-const CommentCard = ({ comment, onReply, onReopen, expandRequest }: Props) => {
+const CommentCard = ({ comment, onReply, onEdit, expandRequest }: Props) => {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const repliesCount = comment.repliesCount ?? 0;
@@ -247,7 +258,7 @@ const CommentCard = ({ comment, onReply, onReopen, expandRequest }: Props) => {
 
   return (
     <View className="border-b border-border/20 dark:border-dark-border/20">
-      <CommentItem comment={comment} onReply={onReply} onReopen={onReopen} />
+      <CommentItem comment={comment} onReply={onReply} onEdit={onEdit} />
 
       {repliesCount > 0 && (
         <View style={{ paddingLeft: REPLY_INDENT }}>
@@ -269,7 +280,7 @@ const CommentCard = ({ comment, onReply, onReopen, expandRequest }: Props) => {
               rootId={comment._id}
               parentAuthorId={comment.commentUserId._id}
               onReply={onReply}
-              onReopen={onReopen}
+              onEdit={onEdit}
             />
           )}
         </View>
