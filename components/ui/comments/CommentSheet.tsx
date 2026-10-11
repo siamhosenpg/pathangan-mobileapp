@@ -1,3 +1,4 @@
+import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
 import {
   useCreateCommentMutation,
   useGetCommentsByPostQuery,
@@ -16,7 +17,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import CommentCard from "./CommentCard";
+import CommentCard, { type ExpandRequest } from "./CommentCard";
 import CommentFeedInput from "./CommentFeedInput";
 
 interface Props {
@@ -150,10 +151,15 @@ const ErrorState = ({
 // ===================== MAIN =====================
 const CommentSheet = ({ postId }: Props) => {
   const { t } = useTranslation();
+  const { open } = useBottomSheet();
 
   const [text, setText] = useState("");
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
   const [page, setPage] = useState(1);
+  // reply দেওয়ার পর কোন thread খুলতে হবে
+  const [expandRequest, setExpandRequest] = useState<ExpandRequest | null>(
+    null,
+  );
 
   const { data, error, isLoading, isFetching, isError, refetch } =
     useGetCommentsByPostQuery({
@@ -167,22 +173,34 @@ const CommentSheet = ({ postId }: Props) => {
 
   const comments = data?.data ?? [];
 
-  // Full-screen error only when there is nothing to show
   const showFullError = !isLoading && isError && comments.length === 0;
+
+  // ৩ ডট menu থেকে ফিরে এলে comment sheet আবার খোলার জন্য
+  const reopenSheet = useCallback(() => {
+    open(<CommentSheet postId={postId} />);
+  }, [open, postId]);
 
   const handleSubmit = async () => {
     if (!text.trim() || isSubmitting) return;
     try {
-      await createComment({
+      const result = await createComment({
         postId,
         text: text.trim(),
         ...(replyingTo ? { parentCommentId: replyingTo._id } : {}),
       }).unwrap();
+
+      // reply হলে ওই thread খুলে দেওয়া
+      if (replyingTo) {
+        setExpandRequest({
+          rootId: result.data.parentCommentId ?? replyingTo._id,
+          nonce: Date.now(),
+        });
+      }
+
       setText("");
       setReplyingTo(null);
       Keyboard.dismiss();
     } catch (err) {
-      // text and replyingTo are kept so the user can retry
       Alert.alert("মন্তব্য পাঠানো যায়নি", getErrorMessage(err));
     }
   };
@@ -197,13 +215,17 @@ const CommentSheet = ({ postId }: Props) => {
 
   const renderItem = useCallback(
     ({ item }: { item: Comment }) => (
-      <CommentCard comment={item} onReply={handleReply} />
+      <CommentCard
+        comment={item}
+        onReply={handleReply}
+        onReopen={reopenSheet}
+        expandRequest={expandRequest}
+      />
     ),
-    [handleReply],
+    [handleReply, reopenSheet, expandRequest],
   );
 
   const handleEndReached = useCallback(() => {
-    // On error, don't auto-retry; the user taps the retry button
     if (isError) return;
     if (data?.hasMore && !isFetching) {
       setPage((prev) => prev + 1);
@@ -211,12 +233,10 @@ const CommentSheet = ({ postId }: Props) => {
   }, [isError, data?.hasMore, isFetching]);
 
   const renderFooter = useCallback(() => {
-    // 1) Loading next page -> skeleton
     if (isFetching && comments.length > 0) {
       return <CommentSkeletonItem />;
     }
 
-    // 2) Load more failed -> keep existing comments, small retry below
     if (isError && comments.length > 0) {
       return (
         <View className="py-6 px-8 items-center gap-3">
@@ -228,7 +248,6 @@ const CommentSheet = ({ postId }: Props) => {
       );
     }
 
-    // 3) Reached the end of a long list
     if (!data?.hasMore && comments.length >= PAGE_SIZE) {
       return (
         <View className="py-6 items-center">
@@ -268,6 +287,7 @@ const CommentSheet = ({ postId }: Props) => {
       ) : (
         <FlashList
           data={comments}
+          extraData={expandRequest}
           keyExtractor={(item) => item._id}
           renderItem={renderItem}
           ListEmptyComponent={EmptyComments}

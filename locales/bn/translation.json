@@ -424,5 +424,22 @@
     "copyLink": "লিংক কপি করুন",
     "report": "রিপোর্ট করুন",
     "linkCopied": "লিংক কপি হয়েছে"
+  },
+  "commentData": {
+    "options": "মন্তব্য অপশন",
+    "copyText": "টেক্সট কপি করুন",
+    "textCopied": "টেক্সট কপি হয়েছে",
+    "report": "রিপোর্ট করুন",
+    "delete": "মুছুন",
+    "deleteTitle": "মন্তব্য মুছবেন?",
+    "deleteMessage": "এই মন্তব্যটি স্থায়ীভাবে মুছে যাবে।",
+    "cancel": "বাতিল",
+    "deleteFailed": "মন্তব্য মুছা যায়নি",
+    "reply": "উত্তর দিন",
+    "viewReplies": "{{count}} টি উত্তর দেখুন",
+    "hideReplies": "উত্তর লুকান",
+    "loadMoreReplies": "আরও উত্তর দেখুন",
+    "repliesLoadFailed": "উত্তর লোড করা যায়নি",
+    "retry": "আবার চেষ্টা করুন"
   }
 }

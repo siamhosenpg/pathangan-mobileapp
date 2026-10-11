@@ -1,7 +1,11 @@
 import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
+import { SHARE_BASE_URL } from "@/components/ui/bottom-sheet/report/ContentMenuSheet"; // তোমার আসল path দাও
+
 import { useDeleteAnswerMutation } from "@/redux/api/answer/answersApi";
 import { useAppSelector } from "@/redux/hooks";
 import { Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
+import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -12,6 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import ReportSheet from "../../bottom-sheet/report/ReportSheet";
 import AnswerPopupContent from "./AnswerPopupContent";
 
 interface Props {
@@ -48,8 +53,21 @@ const AnswerThreeDotMenu = ({
 
   const [deleteAnswer, { isLoading: isDeleting }] = useDeleteAnswerMutation();
 
-  const handleCopyLink = () => {
+  // লিংক কপি
+  const handleCopyLink = async () => {
+    await Clipboard.setStringAsync(`${SHARE_BASE_URL}/answer/${answerId}`);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     close();
+    setTimeout(() => {
+      Alert.alert(t("contentMenu.linkCopied"));
+    }, 300);
+  };
+
+  // menu এর জায়গায় ReportSheet বসবে
+  const handleReport = () => {
+    open(<ReportSheet targetType="answer" targetId={answerId} />, {
+      scrollable: false,
+    });
   };
 
   // menu বন্ধ করে edit popup খোলা
@@ -103,20 +121,22 @@ const AnswerThreeDotMenu = ({
     });
   }
 
-  menuItems.push(
-    {
-      icon: "link-outline",
-      title: t("answerData.copyLink"),
-      subtitle: t("answerData.copyLinkSub"),
-      onPress: handleCopyLink,
-    },
-    {
+  menuItems.push({
+    icon: "link-outline",
+    title: t("answerData.copyLink"),
+    subtitle: t("answerData.copyLinkSub"),
+    onPress: handleCopyLink,
+  });
+
+  // নিজের answer report করা যায় না
+  if (!isOwnAnswer) {
+    menuItems.push({
       icon: "flag-outline",
       title: t("answerData.reportAnswer"),
       subtitle: t("answerData.reportAnswerSub"),
-      onPress: close,
-    },
-  );
+      onPress: handleReport,
+    });
+  }
 
   if (isOwnAnswer) {
     menuItems.push({

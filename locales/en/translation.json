@@ -435,5 +435,22 @@
     "copyLink": "Copy link",
     "report": "Report",
     "linkCopied": "Link copied"
+  },
+  "commentData": {
+    "options": "Comment options",
+    "copyText": "Copy text",
+    "textCopied": "Text copied",
+    "report": "Report",
+    "delete": "Delete",
+    "deleteTitle": "Delete comment?",
+    "deleteMessage": "This comment will be permanently deleted.",
+    "cancel": "Cancel",
+    "deleteFailed": "Could not delete the comment",
+    "reply": "Reply",
+    "viewReplies": "View {{count}} replies",
+    "hideReplies": "Hide replies",
+    "loadMoreReplies": "View more replies",
+    "repliesLoadFailed": "Could not load replies",
+    "retry": "Retry"
   }
 }

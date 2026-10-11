@@ -9,12 +9,22 @@ export interface CommentUser {
   greenmarkVerified?: boolean;
 }
 
+// reply কার উদ্দেশ্যে (@mention)
+export interface ReplyToUser {
+  _id: string;
+  name: string;
+  username: string;
+}
+
 export interface Comment {
   _id: string;
   postId: string;
   commentUserId: CommentUser;
   text: string;
   parentCommentId: string | null;
+  replyToUserId?: ReplyToUser | null;
+  repliesCount?: number;
+  reportCount?: number;
   createdAt: string;
   updatedAt: string;
 }

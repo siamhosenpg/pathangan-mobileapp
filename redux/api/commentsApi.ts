@@ -11,8 +11,7 @@ import type {
 
 const commentApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // ===================== GET COMMENTS =====================
-    // ===================== GET COMMENTS — Infinite =====================
+    // ===================== GET COMMENTS (infinite style) =====================
     getCommentsByPost: builder.query<
       GetCommentsResponse,
       { postId: string; page?: number; limit?: number }
@@ -21,41 +20,58 @@ const commentApi = baseApi.injectEndpoints({
         url: `/comments/${postId}`,
         params: { page, limit },
       }),
-      // pages merge করো
       serializeQueryArgs: ({ queryArgs }) => queryArgs.postId,
       merge: (currentCache, newItems, { arg }) => {
-        if (arg.page === 1) {
+        if ((arg.page ?? 1) === 1) {
           return newItems;
         }
+        const existingIds = new Set(currentCache.data.map((c) => c._id));
         return {
           ...newItems,
-          data: [...currentCache.data, ...newItems.data],
+          data: [
+            ...currentCache.data,
+            ...newItems.data.filter((c) => !existingIds.has(c._id)),
+          ],
         };
       },
-      forceRefetch: ({ currentArg, previousArg }) => {
-        return currentArg?.page !== previousArg?.page;
-      },
+      forceRefetch: ({ currentArg, previousArg }) =>
+        currentArg?.page !== previousArg?.page,
       providesTags: (result, error, { postId }) => [
         { type: "Comment", id: postId },
       ],
     }),
 
-    // ===================== GET REPLIES =====================
+    // ===================== GET REPLIES (infinite style) =====================
     getRepliesByComment: builder.query<
       GetRepliesResponse,
       { commentId: string; page?: number; limit?: number }
     >({
-      query: ({ commentId, page = 1, limit = 20 }) => ({
+      query: ({ commentId, page = 1, limit = 5 }) => ({
         url: `/comments/replies/${commentId}`,
         params: { page, limit },
       }),
-
+      serializeQueryArgs: ({ queryArgs }) => queryArgs.commentId,
+      merge: (currentCache, newItems, { arg }) => {
+        if ((arg.page ?? 1) === 1) {
+          return newItems;
+        }
+        const existingIds = new Set(currentCache.data.map((c) => c._id));
+        return {
+          ...newItems,
+          data: [
+            ...currentCache.data,
+            ...newItems.data.filter((c) => !existingIds.has(c._id)),
+          ],
+        };
+      },
+      forceRefetch: ({ currentArg, previousArg }) =>
+        currentArg?.page !== previousArg?.page,
       providesTags: (result, error, { commentId }) => [
         { type: "Comment", id: `replies-${commentId}` },
       ],
     }),
 
-    // ===================== CREATE COMMENT =====================
+    // ===================== CREATE COMMENT / REPLY =====================
     createComment: builder.mutation<
       { success: boolean; data: Comment },
       CreateCommentRequest
@@ -66,21 +82,21 @@ const commentApi = baseApi.injectEndpoints({
         body,
       }),
 
-      // ===================== CREATE COMMENT - onQueryStarted =====================
-      async onQueryStarted(
-        { postId, parentCommentId },
-        { dispatch, queryFulfilled },
-      ) {
+      async onQueryStarted({ postId }, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
+          const created = data.data;
+          // backend সবসময় root comment এর id ফেরত দেয় (reply এর reply হলেও)
+          const rootId = created.parentCommentId;
 
-          if (!parentCommentId) {
+          if (!rootId) {
+            // নতুন root comment → তালিকার শুরুতে
             dispatch(
               commentApi.util.updateQueryData(
                 "getCommentsByPost",
                 { postId, page: 1, limit: 10 },
                 (draft) => {
-                  draft.data.unshift(data.data);
+                  draft.data.unshift(created);
                   draft.total += 1;
                   draft.count += 1;
                 },
@@ -95,7 +111,6 @@ const commentApi = baseApi.injectEndpoints({
                   if (!draft?.pages) return;
 
                   for (const page of draft.pages) {
-                    // ✅ page.posts — backend এর response key
                     const post = page.posts?.find((p: any) => p._id === postId);
                     if (post) {
                       post.commentsCount += 1;
@@ -105,36 +120,36 @@ const commentApi = baseApi.injectEndpoints({
                 },
               ),
             );
-          }
-
-          if (parentCommentId) {
+          } else {
+            // reply → replies cache এর শেষে (cache থাকলে)
             dispatch(
               commentApi.util.updateQueryData(
                 "getRepliesByComment",
-                { commentId: parentCommentId, page: 1, limit: 20 },
+                { commentId: rootId, page: 1, limit: 5 },
                 (draft) => {
-                  draft.data.push(data.data);
+                  if (!draft.data.some((c) => c._id === created._id)) {
+                    draft.data.push(created);
+                  }
                   draft.totalReplies += 1;
                   draft.count += 1;
+                },
+              ),
+            );
+
+            // root comment এর repliesCount বাড়ানো
+            dispatch(
+              commentApi.util.updateQueryData(
+                "getCommentsByPost",
+                { postId, page: 1, limit: 10 },
+                (draft) => {
+                  const root = draft.data.find((c) => c._id === rootId);
+                  if (root) root.repliesCount = (root.repliesCount ?? 0) + 1;
                 },
               ),
             );
           }
         } catch {}
       },
-
-      invalidatesTags: (result, error, { postId, parentCommentId }) => [
-        { type: "Comment", id: postId },
-
-        ...(parentCommentId
-          ? [
-              {
-                type: "Comment" as const,
-                id: `replies-${parentCommentId}`,
-              },
-            ]
-          : []),
-      ],
     }),
 
     // ===================== UPDATE COMMENT =====================
@@ -147,13 +162,12 @@ const commentApi = baseApi.injectEndpoints({
         method: "PUT",
         body: { text },
       }),
-
       invalidatesTags: (result, error, { commentId }) => [
         { type: "Comment", id: commentId },
       ],
     }),
 
-    // ===================== DELETE COMMENT =====================
+    // ===================== DELETE COMMENT / REPLY =====================
     deleteComment: builder.mutation<
       { success: boolean; message: string },
       {
@@ -167,7 +181,6 @@ const commentApi = baseApi.injectEndpoints({
         method: "DELETE",
       }),
 
-      // ===================== DELETE COMMENT - onQueryStarted =====================
       async onQueryStarted(
         { commentId, postId, parentCommentId },
         { dispatch, queryFulfilled },
@@ -196,7 +209,6 @@ const commentApi = baseApi.injectEndpoints({
                   if (!draft?.pages) return;
 
                   for (const page of draft.pages) {
-                    // ✅ page.posts — backend এর response key
                     const post = page.posts?.find((p: any) => p._id === postId);
                     if (post) {
                       post.commentsCount = Math.max(0, post.commentsCount - 1);
@@ -206,13 +218,11 @@ const commentApi = baseApi.injectEndpoints({
                 },
               ),
             );
-          }
-
-          if (parentCommentId) {
+          } else {
             dispatch(
               commentApi.util.updateQueryData(
                 "getRepliesByComment",
-                { commentId: parentCommentId, page: 1, limit: 10 },
+                { commentId: parentCommentId, page: 1, limit: 5 },
                 (draft) => {
                   draft.data = draft.data.filter((c) => c._id !== commentId);
                   draft.totalReplies = Math.max(0, draft.totalReplies - 1);
@@ -220,22 +230,27 @@ const commentApi = baseApi.injectEndpoints({
                 },
               ),
             );
+
+            dispatch(
+              commentApi.util.updateQueryData(
+                "getCommentsByPost",
+                { postId, page: 1, limit: 10 },
+                (draft) => {
+                  const root = draft.data.find(
+                    (c) => c._id === parentCommentId,
+                  );
+                  if (root) {
+                    root.repliesCount = Math.max(
+                      0,
+                      (root.repliesCount ?? 0) - 1,
+                    );
+                  }
+                },
+              ),
+            );
           }
         } catch {}
       },
-
-      invalidatesTags: (result, error, { postId, parentCommentId }) => [
-        { type: "Comment", id: postId },
-
-        ...(parentCommentId
-          ? [
-              {
-                type: "Comment" as const,
-                id: `replies-${parentCommentId}`,
-              },
-            ]
-          : []),
-      ],
     }),
   }),
 });
