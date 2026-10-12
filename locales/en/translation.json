@@ -467,5 +467,28 @@
     "keepWriting": "Keep writing",
     "replaceDraftTitle": "Discard current text?",
     "replaceDraftMessage": "Your current text or edit will be lost."
+  },
+  "blockedData": {
+    "title": "Blocked Users",
+    "subtitle": "Users you have blocked",
+    "empty": "You haven't blocked anyone yet",
+    "emptyHint": "If someone behaves badly, you can block them.",
+    "loadFailed": "Couldn't load the list",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "blockedUsers": "Blocked Users",
+
+    "block": "Block",
+    "blockConfirmTitle": "Block {{name}}?",
+    "blockConfirmMessage": "If you block them, you won't be able to see each other's profile and posts. You can unblock anytime.",
+    "blockAction": "Block",
+    "blockFailed": "Couldn't block the user",
+
+    "unblock": "Unblock",
+    "unblockMenu": "Unblock",
+    "unblockConfirmTitle": "Unblock {{name}}?",
+    "unblockConfirmMessage": "If you unblock them, you will be able to see each other's profile and posts again. Are you sure?",
+    "unblockAction": "Unblock",
+    "unblockFailed": "Couldn't unblock the user, please try again"
   }
 }

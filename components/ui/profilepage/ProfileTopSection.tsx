@@ -172,6 +172,7 @@ const ProfileTopSection = ({ data }: Props) => {
                     username={data.username}
                     name={data.name}
                     bio={data?.bio}
+                    profileImage={data.profileImage}
                   />,
                 )
               }

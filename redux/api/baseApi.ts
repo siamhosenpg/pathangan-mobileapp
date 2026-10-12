@@ -77,6 +77,7 @@ export const baseApi = createApi({
     "Handout",
     "Chapter",
     "Report",
+    "Block",
   ],
   endpoints: () => ({}),
 });

@@ -2,6 +2,7 @@ import SaveIcon from "@/assets/icons/bookmark.svg";
 import handouticon from "@/assets/icons/journal.svg";
 import SettingsIcon from "@/assets/icons/settings.svg";
 import LogoutIcon from "@/assets/icons/sign-out-alt.svg";
+import BlockIcon from "@/assets/icons/user-lock.svg";
 import GreenMark from "@/components/ui/badges/GreenMark";
 import { useLogoutMutation } from "@/redux/api/authApi";
 import { clearUser } from "@/redux/features/auth/authSlice";
@@ -70,6 +71,11 @@ export function MenuDrawerContent() {
       icon: handouticon,
       label: t("createHandout"),
       route: "/(pages)/handouts/create",
+    },
+    {
+      icon: BlockIcon,
+      label: t("blockedData.blockedUsers"),
+      route: "/(pages)/profile/blocked-users",
     },
   ];
 

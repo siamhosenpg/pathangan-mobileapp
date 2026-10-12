@@ -1,7 +1,18 @@
+import {
+  default as CheckIcon,
+  default as ChevronIcon,
+} from "@/assets/icons/angle-small-right.svg";
+import FlagIcon from "@/assets/icons/finish-flag.svg";
+import ShareIcon from "@/assets/icons/redo.svg";
+import UserAddIcon from "@/assets/icons/user-add.svg";
+import BanIcon from "@/assets/icons/user-lock.svg";
+import UserRemoveIcon from "@/assets/icons/user-unlock.svg";
 import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
+import { useBlockActions } from "@/hooks/block/useBlockActions";
 import { useFollowState } from "@/hooks/useFollowState";
+import { useGetBlockStatusQuery } from "@/redux/api/blockApi";
 import { getErrorMessage } from "@/utils/getErrorMessage";
-import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,6 +23,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import type { SvgProps } from "react-native-svg";
 import ReportSheet from "../bottom-sheet/report/ReportSheet";
 
 // TODO: put your real app/web profile URL here
@@ -19,14 +31,15 @@ const PROFILE_BASE_URL = "https://pathangan.com/profile";
 const ACCENT = "#00914d";
 
 interface Props {
-  userId: string; // mongo _id (used for follow/unfollow and report targetId)
+  userId: string; // mongo _id (used for follow/unfollow, block and report targetId)
   username: string;
   name: string;
   bio?: string;
+  profileImage?: string | null; // block করলে blocked লিস্টে সাথে সাথে ছবি দেখানোর জন্য
 }
 
 interface MenuItemProps {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: React.FC<SvgProps>;
   label: string;
   onPress: () => void;
   danger?: boolean;
@@ -35,7 +48,7 @@ interface MenuItemProps {
 }
 
 const MenuItem = ({
-  icon,
+  icon: Icon,
   label,
   onPress,
   danger,
@@ -50,14 +63,8 @@ const MenuItem = ({
     : accent
       ? ACCENT
       : isDark
-        ? "#9CA3AF"
-        : "#6B7280";
-
-  const iconBg = danger
-    ? "bg-red-500/10"
-    : accent
-      ? "bg-accent/10"
-      : "bg-gray-500/10 dark:bg-gray-400/10";
+        ? "#f1f1f1"
+        : "#111111";
 
   const labelColor = danger
     ? "text-red-500"
@@ -70,12 +77,10 @@ const MenuItem = ({
       onPress={onPress}
       disabled={loading}
       activeOpacity={0.7}
-      className="flex-row items-center gap-3 px-3 py-3 rounded-2xl active:bg-background-secondary dark:active:bg-dark-background-secondary"
+      className="flex-row items-center gap-3 px-3 py-4 rounded-2xl active:bg-background-secondary dark:active:bg-dark-background-secondary"
     >
-      <View
-        className={`w-9 h-9 rounded-full items-center justify-center ${iconBg}`}
-      >
-        <Ionicons name={icon} size={18} color={iconColor} />
+      <View className={` rounded-full items-center justify-center `}>
+        <Icon width={18} height={18} color={iconColor} />
       </View>
 
       <Text className={`flex-1  font-semibold ${labelColor}`}>{label}</Text>
@@ -83,9 +88,9 @@ const MenuItem = ({
       {loading ? (
         <ActivityIndicator size="small" color={iconColor} />
       ) : (
-        <Ionicons
-          name="chevron-forward"
-          size={16}
+        <ChevronIcon
+          width={18}
+          height={18}
           color={isDark ? "#6B7280" : "#9CA3AF"}
         />
       )}
@@ -93,12 +98,24 @@ const MenuItem = ({
   );
 };
 
-const ProfileMenuSheet = ({ userId, username, name, bio }: Props) => {
+const ProfileMenuSheet = ({
+  userId,
+  username,
+  name,
+  bio,
+  profileImage,
+}: Props) => {
   const { open, close } = useBottomSheet();
   const { t } = useTranslation();
 
   // Live follow state, shared with FollowButtonProfile
   const { isFollowing, isReady, toggle } = useFollowState(userId);
+
+  // Block state (optimistic cache থেকে আসে)
+  const { data: blockStatus, isLoading: blockLoading } =
+    useGetBlockStatusQuery(userId);
+  const isBlocked = blockStatus?.blockedByMe ?? false;
+  const { confirmBlock, confirmUnblock } = useBlockActions();
 
   const runToggle = async () => {
     const wasFollowing = isFollowing;
@@ -153,6 +170,23 @@ const ProfileMenuSheet = ({ userId, username, name, bio }: Props) => {
     }
   };
 
+  const handleBlockPress = () => {
+    if (blockLoading) return;
+
+    const target = { _id: userId, name, username, profileImage };
+
+    if (isBlocked) {
+      confirmUnblock(target, () => close());
+      return;
+    }
+
+    confirmBlock(target, () => {
+      close();
+      // ব্লক করা প্রোফাইলে থাকার মানে নেই, পেছনে যাও
+      if (router.canGoBack()) router.back();
+    });
+  };
+
   const handleReport = () => {
     // Replace the menu content with the report sheet
     // (close + reopen causes flicker, so replace directly)
@@ -183,7 +217,7 @@ const ProfileMenuSheet = ({ userId, username, name, bio }: Props) => {
 
       <View className="flex flex-col gap-1">
         <MenuItem
-          icon={isFollowing ? "person-remove-outline" : "person-add-outline"}
+          icon={isFollowing ? UserRemoveIcon : UserAddIcon}
           label={
             isFollowing ? t("profileMenu.unfollow") : t("profileMenu.follow")
           }
@@ -193,7 +227,7 @@ const ProfileMenuSheet = ({ userId, username, name, bio }: Props) => {
         />
 
         <MenuItem
-          icon="share-social-outline"
+          icon={ShareIcon}
           label={t("profileMenu.shareProfile")}
           onPress={handleShare}
         />
@@ -201,7 +235,18 @@ const ProfileMenuSheet = ({ userId, username, name, bio }: Props) => {
         <View className="h-px bg-border dark:bg-dark-border my-1 mx-3" />
 
         <MenuItem
-          icon="flag-outline"
+          icon={isBlocked ? CheckIcon : BanIcon}
+          label={
+            isBlocked ? t("blockedData.unblockMenu") : t("blockedData.block")
+          }
+          onPress={handleBlockPress}
+          danger={!isBlocked}
+          accent={isBlocked}
+          loading={blockLoading}
+        />
+
+        <MenuItem
+          icon={FlagIcon}
           label={t("profileMenu.reportProfile")}
           onPress={handleReport}
           danger
