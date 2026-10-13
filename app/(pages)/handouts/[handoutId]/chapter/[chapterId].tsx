@@ -2,6 +2,7 @@ import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider
 import ContentMenuSheet, {
   SHARE_BASE_URL,
 } from "@/components/ui/bottom-sheet/report/ContentMenuSheet"; // তোমার আসল path দাও
+import { ChapterRating } from "@/components/ui/rating/ChapterRating"; // তোমার আসল path দাও
 import { useGetChaptersByHandoutQuery } from "@/redux/api/handout/chapterApi";
 import { useGetHandoutBySlugQuery } from "@/redux/api/handout/handoutApi";
 import { Ionicons } from "@expo/vector-icons";
@@ -199,6 +200,13 @@ export default function ChapterReaderScreen() {
             {para}
           </Text>
         ))}
+
+        {/* ✅ এই chapter এ rating */}
+
+        <ChapterRating
+          chapterId={currentChapter._id}
+          handoutId={realHandoutId}
+        />
 
         {/* prev / next */}
         <View className="flex-row items-center justify-between mt-6 gap-3">

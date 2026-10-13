@@ -24,6 +24,7 @@ export interface GiveRatingRequest {
 export interface MyRatingResponse {
   success: true;
   userRating: number | null;
+  canRate: boolean; // false হলে UI তে rating দেওয়ার option দেখাবে না
 }
 
 export interface DeleteRatingResponse {
@@ -166,7 +167,7 @@ export const ratingApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // GET /ratings/answer/:answerId/my — আমার নিজের rating
+    // GET /ratings/answer/:answerId/my — আমার নিজের rating + canRate
     getMyRating: builder.query<MyRatingResponse, string>({
       query: (answerId) => `/ratings/answer/${answerId}/my`,
       providesTags: (_result, _error, answerId) => [

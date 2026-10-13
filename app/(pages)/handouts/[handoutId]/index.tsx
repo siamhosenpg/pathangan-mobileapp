@@ -4,7 +4,9 @@ import ContentMenuSheet, {
   SHARE_BASE_URL,
 } from "@/components/ui/bottom-sheet/report/ContentMenuSheet"; // তোমার আসল path দাও
 import TimeAgo from "@/components/ui/datetime/TimeAgo";
+import StarRating from "@/components/ui/rating/StarRating"; // তোমার আসল path দাও
 import { useGetHandoutBySlugQuery } from "@/redux/api/handout/handoutApi";
+import { useGetHandoutRatingQuery } from "@/redux/api/rating/chapterRatingApi";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useColorScheme } from "nativewind";
@@ -53,6 +55,13 @@ export default function HandoutDetailScreen() {
 
   const handout = data?.data;
   const iconColor = isDark ? "#f1f1f1" : "#1b1b1b";
+
+  // chapter গুলোর rating এর average (chapter এ rating দিলে নিজে থেকে update হবে)
+  const { data: ratingData } = useGetHandoutRatingQuery(handout?._id ?? "", {
+    skip: !handout?._id,
+  });
+  const averageRating = ratingData?.averageRating ?? 0;
+  const ratingCount = ratingData?.ratingCount ?? 0;
 
   if (isLoading) {
     return (
@@ -154,6 +163,26 @@ export default function HandoutDetailScreen() {
               >
                 {handout.title}
               </Text>
+              {/* ✅ handout এর rating (chapter rating গুলোর average) */}
+              <View className="flex-row items-center gap-3">
+                <StarRating rating={averageRating} size={16} />
+                {ratingCount > 0 ? (
+                  <View className="flex-row items-center gap-1">
+                    <Text className="text-sm font-semibold text-text dark:text-dark-text">
+                      {averageRating.toFixed(1)}
+                    </Text>
+                    <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
+                      {t("ratingData.ratingCount", { value: ratingCount })}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
+                    {t("handoutData.noRatings", {
+                      defaultValue: "এখনো কোনো রেটিং নেই",
+                    })}
+                  </Text>
+                )}
+              </View>
 
               {/* ক্যাটাগরি ব্যাজ */}
               <View className="flex-row items-center gap-2">

@@ -87,13 +87,37 @@ export function AnswerRating({ answerId }: Props) {
 
   const [error, setError] = useState("");
 
+  // data আসার আগে কিছু দেখাবো না (stars ঝলকাবে না)
+  if (!myRating) return null;
+
   const isBusy = isGiving || isDeleting;
-  const currentRating = myRating?.userRating ?? 0;
+  const currentRating = myRating.userRating ?? 0;
   const averageRating = ratingStats?.averageRating ?? 0;
   const ratingCount = ratingStats?.ratingCount ?? 0;
   const hasRated = currentRating > 0;
+  const canRate = myRating.canRate;
 
   const emptyStarColor = isDark ? "#3f3f46" : "#d4d4d8";
+
+  // ✅ rate করার অনুমতি নেই (নিজের answer / private answer এর receiver):
+  // rating দেওয়ার option নেই, শুধু average দেখা যাবে
+  if (!canRate) {
+    if (ratingCount === 0) return null;
+
+    return (
+      <View className="mt-4 pt-4 border-t border-border dark:border-dark-border">
+        <View className="flex-row items-center gap-2">
+          <FontAwesome name="star" size={16} color={ACTIVE_COLOR} />
+          <Text className="text-sm font-semibold text-text dark:text-dark-text">
+            {averageRating.toFixed(1)}
+          </Text>
+          <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
+            {t("ratingData.ratingCount", { value: ratingCount })}
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   const handleRating = async (star: number) => {
     // একই rating আবার দিলে বা আগের request চলাকালীন কিছু করা হবে না
