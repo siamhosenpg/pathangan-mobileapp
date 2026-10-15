@@ -92,10 +92,10 @@
     "other": "Other",
     "descriptionPlaceholder": "Write the details, at least {{min}} characters",
     "charCount": "{{current}}/{{min}} characters completed",
-    "submit": "Submit report",
-    "successTitle": "Report submitted",
+    "submit": "Submit Report",
+    "successTitle": "Report Submitted",
     "successMessage": "Our team will review this shortly.",
-    "alreadyReportedTitle": "Already reported",
+    "alreadyReportedTitle": "Already Reported",
     "alreadyReportedMessage": "You have already reported this content.",
     "errorTitle": "Something went wrong"
   },
@@ -490,5 +490,70 @@
     "unblockConfirmMessage": "If you unblock them, you will be able to see each other's profile and posts again. Are you sure?",
     "unblockAction": "Unblock",
     "unblockFailed": "Couldn't unblock the user, please try again"
+  },
+  "authData": {
+    "logoLetter": "P",
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to your account",
+      "orEmail": "or continue with email",
+      "emailLabel": "Email",
+      "emailPlaceholder": "example@email.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "forgotPassword": "Forgot?",
+      "submit": "Log in",
+      "submitting": "Logging in...",
+      "noAccount": "Don't have an account?",
+      "registerLink": "Sign up"
+    },
+    "register": {
+      "title": "Create account",
+      "subtitle": "Join Pathangan in just a few seconds",
+      "orEmail": "or continue with email",
+      "nameLabel": "Full name",
+      "namePlaceholder": "Enter your full name",
+      "emailLabel": "Email",
+      "emailPlaceholder": "example@email.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "At least 6 characters",
+      "strengthText": "Password: {{label}}",
+      "strengthWeak": "Weak",
+      "strengthFair": "Fair",
+      "strengthStrong": "Strong",
+      "termsPrefix": "I have read and agree to Pathangan's",
+      "termsLink": "Terms of Use",
+      "termsSuffix": ".",
+      "submit": "Sign up",
+      "submitting": "Creating account...",
+      "haveAccount": "Already have an account?",
+      "loginLink": "Log in"
+    },
+    "validation": {
+      "nameRequired": "Enter your full name",
+      "emailRequired": "Enter your email",
+      "emailInvalid": "Enter a valid email",
+      "passwordRequired": "Enter your password",
+      "passwordShort": "Password must be at least 6 characters",
+      "termsRequired": "You must agree to the terms to continue"
+    },
+    "errors": {
+      "network": "Can't reach the server. Please try again shortly.",
+      "invalidCredentials": "Incorrect email or password.",
+      "emailInUse": "An account with this email already exists.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "terms": {
+      "sheetTitle": "Terms of Use",
+      "understood": "Got it",
+      "lastUpdated": "Last updated: {{date}}"
+    },
+    "gate": {
+      "title": "Terms & Policies",
+      "subtitle": "You must agree to continue",
+      "agreeText": "I have read and understood all the terms above and agree to follow them.",
+      "agreeButton": "I Agree, Continue",
+      "saving": "Saving..."
+    }
   }
 }

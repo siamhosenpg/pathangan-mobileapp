@@ -14,6 +14,7 @@ import { MenuDrawerContent } from "@/components/layout/menu/MenuDrawerContent";
 import AuthGuard from "@/components/ui/guard/AuthGuard";
 import { useTranslation } from "react-i18next";
 
+import TermsGate from "@/components/layout/terms/TermsGate";
 import HomeBold from "../../assets/icons/house.svg";
 import Home from "../../assets/icons/houselite.svg";
 import Sheet from "../../assets/icons/journal.svg";
@@ -56,6 +57,7 @@ export default function TabLayout() {
     <DrawerContext.Provider value={{ drawerRef, openDrawer, closeDrawer }}>
       <AuthGuard>
         <StatusBar style={isDark ? "light" : "dark"} />
+        <TermsGate />
         <DrawerLayout
           ref={drawerRef}
           drawerWidth={DRAWER_WIDTH}

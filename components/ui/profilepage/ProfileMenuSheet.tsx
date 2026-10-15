@@ -58,20 +58,6 @@ const MenuItem = ({
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const iconColor = danger
-    ? "#EF4444"
-    : accent
-      ? ACCENT
-      : isDark
-        ? "#f1f1f1"
-        : "#111111";
-
-  const labelColor = danger
-    ? "text-red-500"
-    : accent
-      ? "text-accent"
-      : "text-text dark:text-dark-text";
-
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -80,13 +66,13 @@ const MenuItem = ({
       className="flex-row items-center gap-3 px-3 py-4 rounded-2xl active:bg-background-secondary dark:active:bg-dark-background-secondary"
     >
       <View className={` rounded-full items-center justify-center `}>
-        <Icon width={18} height={18} color={iconColor} />
+        <Icon width={18} height={18} color={isDark ? "#f1f1f1" : "#111111"} />
       </View>
 
-      <Text className={`flex-1  font-semibold ${labelColor}`}>{label}</Text>
+      <Text className={`flex-1  font-semibold `}>{label}</Text>
 
       {loading ? (
-        <ActivityIndicator size="small" color={iconColor} />
+        <ActivityIndicator size="small" />
       ) : (
         <ChevronIcon
           width={18}

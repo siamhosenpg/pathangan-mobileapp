@@ -27,11 +27,11 @@ interface StatItemProps {
 }
 
 const StatItem = ({ icon, label }: StatItemProps) => (
-  <View className="items-center gap-1.5 flex-1">
-    <Ionicons name={icon} size={18} color="#00914d" />
+  <View className="items-center gap-1.5 flex-1 flex-row justify-center">
+    <Ionicons name={icon} size={18} color="#111" />
     <Text
       numberOfLines={1}
-      className="text-xs font-medium text-text-secondary dark:text-dark-text-secondary"
+      className="text-xs font-semibold text-text-secondary dark:text-dark-text-secondary"
     >
       {label}
     </Text>
@@ -134,9 +134,9 @@ export default function HandoutDetailScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40, paddingTop: 4 }}
       >
-        <View className="px-5">
+        <View className="">
           {/* কভার (বামে) + টাইটেল/ক্যাটাগরি/ইউজার (ডানে) */}
-          <View className="flex-row gap-4">
+          <View className="flex-row gap-4 px-5">
             <View className="w-28 aspect-[2/3] rounded-2xl overflow-hidden bg-background-tertiary dark:bg-dark-background-tertiary">
               {handout.coverImage ? (
                 <Image
@@ -186,7 +186,7 @@ export default function HandoutDetailScreen() {
 
               {/* ক্যাটাগরি ব্যাজ */}
               <View className="flex-row items-center gap-2">
-                <View className="bg-accent-transparent px-3 py-1 rounded-full self-start">
+                <View className="border-accent  border  px-3 py-1 rounded-full self-start">
                   <Text className="text-accent text-xs font-semibold">
                     {t(`handoutData.categories.${handout.category}`, {
                       defaultValue: handout.category,
@@ -194,7 +194,7 @@ export default function HandoutDetailScreen() {
                   </Text>
                 </View>
                 {handout.status === "draft" && (
-                  <View className="bg-yellow-500/15 px-3 py-1 rounded-full self-start">
+                  <View className="border-yellow-500  border  px-3 py-1 rounded-full self-start">
                     <Text className="text-yellow-600 dark:text-yellow-400 text-xs font-semibold">
                       {t("handoutData.status.draft")}
                     </Text>
@@ -210,7 +210,7 @@ export default function HandoutDetailScreen() {
                     className="w-7 h-7 rounded-full"
                   />
                 ) : (
-                  <View className="w-7 h-7 rounded-full bg-accent-transparent items-center justify-center">
+                  <View className="w-7 h-7 rounded-full border border-border dark:border-dark-border items-center justify-center">
                     <Ionicons name="person" size={13} color="#00914d" />
                   </View>
                 )}
@@ -238,30 +238,31 @@ export default function HandoutDetailScreen() {
             </View>
           </View>
 
-          <View className="pt-6 gap-5">
+          <View className="pt-6 ">
             {/* বর্ণনা */}
-            <Text className="text-sm text-text-secondary dark:text-dark-text-secondary leading-6">
+            <Text className="text-sm pb-2 font-medium text-text-secondary dark:text-dark-text-secondary leading-6  px-5">
               {handout.description}
             </Text>
 
             {/* ট্যাগ */}
             {handout.tags?.length > 0 && (
-              <View className="flex-row flex-wrap gap-2">
+              <View className="flex-row flex-wrap gap-2 px-5 py-3">
                 {handout.tags.map((tag) => (
                   <View
                     key={tag}
-                    className="px-3 py-1 rounded-full bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border"
+                    className="px-3 py-1 rounded-full  bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border"
                   >
-                    <Text className="text-xs text-text-secondary dark:text-dark-text-secondary">
+                    <Text className="text-xs font-semibold text-text-tertiary dark:text-dark-text-tertiary">
                       #{tag}
                     </Text>
                   </View>
                 ))}
               </View>
             )}
+            <View className="border-t border-border/35 dark:border-dark-border/35" />
 
             {/* স্ট্যাটস */}
-            <View className="flex-row items-center bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border rounded-3xl px-2 py-4">
+            <View className="flex-row items-center   border-b border-border dark:border-dark-border  px-2 py-3">
               <StatItem
                 icon="reader-outline"
                 label={t("handoutData.chapters", {
@@ -285,11 +286,11 @@ export default function HandoutDetailScreen() {
             </View>
 
             {/* Table of Contents */}
-            <Text className="text-lg font-bold text-text dark:text-dark-text">
+            <Text className=" font-bold text-text border-b border-border/50 dark:border-dark-border/50 dark:text-dark-text px-5 py-3.5  text-base">
               {t("handoutData.chaptersHeading")}
             </Text>
 
-            <View className="gap-2.5">
+            <View className="">
               {handout.chapters.map((chapter, index) => (
                 <TouchableOpacity
                   key={chapter._id}
@@ -297,10 +298,10 @@ export default function HandoutDetailScreen() {
                   onPress={() =>
                     router.push(`/handouts/${slug}/chapter/${chapter._id}`)
                   }
-                  className="flex-row items-center gap-3 bg-background-secondary dark:bg-dark-background-secondary rounded-2xl px-4 py-3.5 border border-border dark:border-dark-border"
+                  className="flex-row items-center gap-3  px-4 py-3 border-b border-border/50 dark:border-dark-border/50"
                 >
-                  <View className="w-9 h-9 rounded-full bg-accent-transparent items-center justify-center">
-                    <Text className="text-accent text-sm font-bold">
+                  <View className="w-9 h-9 rounded-full  bg-accent/20   items-center justify-center">
+                    <Text className="text-text-secondary dark:text-dark-text-secondary  text-sm font-bold">
                       {index + 1}
                     </Text>
                   </View>

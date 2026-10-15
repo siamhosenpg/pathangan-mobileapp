@@ -70,6 +70,15 @@ const userApi = baseApi.injectEndpoints({
         method: "DELETE",
       }),
     }),
+
+    // শর্তাবলীতে সম্মতি দেওয়ার জন্য
+    acceptTerms: builder.mutation<{ message: string }, void>({
+      query: () => ({
+        url: "/users/accept-terms",
+        method: "POST",
+        body: { agreed: true },
+      }),
+    }),
   }),
 });
 
@@ -81,4 +90,5 @@ export const {
   useDeleteUserMutation,
   useSavePushTokenMutation,
   useRemovePushTokenMutation,
+  useAcceptTermsMutation, // ✅ নতুন
 } = userApi;

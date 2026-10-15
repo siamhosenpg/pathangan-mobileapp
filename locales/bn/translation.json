@@ -479,5 +479,71 @@
     "unblockConfirmMessage": "আনব্লক করলে আপনারা আবার একে অপরের প্রোফাইল ও পোস্ট দেখতে পারবেন। আপনি কি নিশ্চিত?",
     "unblockAction": "আনব্লক করুন",
     "unblockFailed": "আনব্লক করা যায়নি"
+  },
+
+  "authData": {
+    "logoLetter": "প",
+    "login": {
+      "title": "স্বাগতম",
+      "subtitle": "আপনার অ্যাকাউন্টে প্রবেশ করুন",
+      "orEmail": "অথবা ইমেইল দিয়ে",
+      "emailLabel": "ইমেইল",
+      "emailPlaceholder": "example@email.com",
+      "passwordLabel": "পাসওয়ার্ড",
+      "passwordPlaceholder": "আপনার পাসওয়ার্ড লিখুন",
+      "forgotPassword": "ভুলে গেছেন?",
+      "submit": "লগইন করুন",
+      "submitting": "লগইন হচ্ছে...",
+      "noAccount": "অ্যাকাউন্ট নেই?",
+      "registerLink": "রেজিস্ট্রেশন করুন"
+    },
+    "register": {
+      "title": "অ্যাকাউন্ট খুলুন",
+      "subtitle": "কয়েক সেকেন্ডেই পাঠাঙ্গনে যোগ দিন",
+      "orEmail": "অথবা ইমেইল দিয়ে",
+      "nameLabel": "পুরো নাম",
+      "namePlaceholder": "আপনার পুরো নাম লিখুন",
+      "emailLabel": "ইমেইল",
+      "emailPlaceholder": "example@email.com",
+      "passwordLabel": "পাসওয়ার্ড",
+      "passwordPlaceholder": "কমপক্ষে ৬ অক্ষর",
+      "strengthText": "পাসওয়ার্ড: {{label}}",
+      "strengthWeak": "দুর্বল",
+      "strengthFair": "মোটামুটি",
+      "strengthStrong": "শক্তিশালী",
+      "termsPrefix": "আমি পাঠাঙ্গনের",
+      "termsLink": "ব্যবহারের শর্তাবলী",
+      "termsSuffix": " পড়েছি এবং এতে সম্মত।",
+      "submit": "রেজিস্ট্রেশন করুন",
+      "submitting": "অ্যাকাউন্ট তৈরি হচ্ছে...",
+      "haveAccount": "আগে থেকেই অ্যাকাউন্ট আছে?",
+      "loginLink": "লগইন করুন"
+    },
+    "validation": {
+      "nameRequired": "পুরো নাম লিখুন",
+      "emailRequired": "ইমেইল লিখুন",
+      "emailInvalid": "সঠিক ইমেইল লিখুন",
+      "passwordRequired": "পাসওয়ার্ড লিখুন",
+      "passwordShort": "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে",
+      "termsRequired": "চালিয়ে যেতে শর্তাবলীতে সম্মত হতে হবে"
+    },
+    "errors": {
+      "network": "সার্ভারের সাথে সংযোগ হচ্ছে না। একটু পরে চেষ্টা করুন।",
+      "invalidCredentials": "ইমেইল বা পাসওয়ার্ড ভুল।",
+      "emailInUse": "এই ইমেইল দিয়ে আগেই অ্যাকাউন্ট খোলা হয়েছে।",
+      "generic": "কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।"
+    },
+    "terms": {
+      "sheetTitle": "ব্যবহারের শর্তাবলী",
+      "understood": "বুঝেছি",
+      "lastUpdated": "সর্বশেষ হালনাগাদ: {{date}}"
+    },
+    "gate": {
+      "title": "শর্তাবলী ও নীতিমালা",
+      "subtitle": "চালিয়ে যেতে সম্মত হওয়া আবশ্যক",
+      "agreeText": "আমি উপরের সব শর্তাবলী পড়েছি, বুঝেছি এবং এগুলো মেনে চলতে সম্মত।",
+      "agreeButton": "সম্মত আছি, এগিয়ে যান",
+      "saving": "সংরক্ষণ হচ্ছে..."
+    }
   }
 }

@@ -200,7 +200,7 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
           <Text className="text-base font-bold text-text dark:text-dark-text">
             {t("reportdata.whyReport")}
           </Text>
-          <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary mt-0.5">
+          <Text className="text-xs font-semibold text-text-tertiary dark:text-dark-text-tertiary mt-0.5">
             {t("reportdata.chooseReason")}
           </Text>
         </View>
@@ -249,7 +249,7 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
                 </View>
 
                 <Text
-                  className={`flex-1 text-sm font-medium ${
+                  className={`flex-1  font-semibold ${
                     isSelected ? "text-accent" : "text-text dark:text-dark-text"
                   }`}
                 >
@@ -288,7 +288,7 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
                 returnKeyType="done"
                 blurOnSubmit
                 onSubmitEditing={Keyboard.dismiss}
-                className="bg-background-secondary dark:bg-dark-background-secondary rounded-2xl px-3.5 py-3 text-sm text-text dark:text-dark-text"
+                className="bg-background-secondary dark:bg-dark-background-secondary rounded-2xl font-medium px-3.5 py-3  text-text dark:text-dark-text"
                 style={{
                   minHeight: 80,
                   maxHeight: 140,
@@ -328,7 +328,7 @@ const ReportSheet = ({ targetType, targetId }: Props) => {
           {isLoading ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text className="text-white font-semibold text-sm">
+            <Text className="text-white font-semibold ">
               {t("reportdata.submit")}
             </Text>
           )}

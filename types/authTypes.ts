@@ -2,6 +2,8 @@ export interface RegisterRequest {
   name: string;
   email: string;
   password: string;
+  username?: string;
+  termsAccepted: boolean; // ✅ নতুন
 }
 
 export interface LoginRequest {
@@ -17,6 +19,7 @@ export interface AuthUser {
   email: string;
   badges?: string[];
   greenmarkVerified?: boolean;
+  termsUpToDate?: boolean; // ✅ নতুন
 }
 
 export interface AuthResponse {
