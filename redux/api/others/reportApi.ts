@@ -6,7 +6,8 @@ export type ReportTargetType =
   | "answer"
   | "comment"
   | "handout"
-  | "chapter";
+  | "chapter"
+  | "private_question";
 
 export type ReportReason =
   | "spam"

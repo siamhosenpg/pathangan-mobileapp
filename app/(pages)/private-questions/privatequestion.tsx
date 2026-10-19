@@ -1,8 +1,11 @@
-import InboxTab from "@/components/layout/private-questions/InboxTab";
-import SentTab from "@/components/layout/private-questions/SentTab";
+import PeopleTab from "@/components/layout/private-questions/PeopleTab";
 import PrivateQuestionHeader from "@/components/ui/headers/PrivateQuestionHeader";
+import type {
+  PrivateQuestionPerson,
+  QuestionMode,
+} from "@/types/privateQuestionTypes";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useState } from "react";
 import { Animated, Dimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -11,11 +14,11 @@ const { width } = Dimensions.get("window");
 const Index = () => {
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<"inbox" | "sent">("inbox");
+  const [activeTab, setActiveTab] = useState<QuestionMode>("inbox");
   const [sentMounted, setSentMounted] = useState(false);
   const translateX = useState(new Animated.Value(0))[0];
 
-  const switchTab = (tab: "inbox" | "sent") => {
+  const switchTab = (tab: QuestionMode) => {
     setActiveTab(tab);
     if (tab === "sent") setSentMounted(true);
 
@@ -34,8 +37,12 @@ const Index = () => {
     }
   };
 
-  const handlePress = (id: string) => {
-    router.push(`/private-questions/${id}`);
+  // ইউজারের উপর ট্যাপ → ওই ইউজারের সাথে প্রশ্নগুলোর পেজ
+  const handlePressPerson = (
+    person: PrivateQuestionPerson,
+    mode: QuestionMode,
+  ) => {
+    router.push(`/private-questions/user/${person.userId}?mode=${mode}`);
   };
 
   return (
@@ -57,14 +64,22 @@ const Index = () => {
           transform: [{ translateX }],
         }}
       >
-        {/* INBOX */}
+        {/* INBOX — যারা আমাকে প্রশ্ন করেছে */}
         <View style={{ width }}>
-          <InboxTab onPress={handlePress} />
+          <PeopleTab
+            mode="inbox"
+            onPress={(p) => handlePressPerson(p, "inbox")}
+          />
         </View>
 
-        {/* SENT */}
+        {/* SENT — আমি যাদের প্রশ্ন করেছি */}
         <View style={{ width }}>
-          {sentMounted && <SentTab onPress={handlePress} />}
+          {sentMounted && (
+            <PeopleTab
+              mode="sent"
+              onPress={(p) => handlePressPerson(p, "sent")}
+            />
+          )}
         </View>
       </Animated.View>
     </SafeAreaView>

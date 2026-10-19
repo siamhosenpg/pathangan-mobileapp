@@ -1,16 +1,23 @@
+import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
+import PrivateContentMenuSheet from "@/components/ui/bottom-sheet/PrivateContentMenuSheet";
+
 import {
   useCreatePrivateAnswerMutation,
+  useDeletePrivateAnswerMutation,
   useGetPrivateAnswerByQuestionQuery,
 } from "@/redux/api/answer/privateAnswerApi";
-
-import { useGetPrivateQuestionByIdQuery } from "@/redux/api/privateQuestion/privateQuestionApi";
-import { useAppSelector } from "@/redux/hooks";
+import {
+  useDeletePrivateQuestionMutation,
+  useGetPrivateQuestionByIdQuery,
+} from "@/redux/api/privateQuestion/privateQuestionApi";
+import { getErrorMessage } from "@/utils/getErrorMessage";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -22,22 +29,22 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-// ── ডিলিট হওয়া ইউজার হ্যান্ডেল করার helper ─────────────
+const MIN_ANSWER = 5;
+const MAX_ANSWER = 2000;
 const DELETED_USER_NAME = "ডিলিট হওয়া ইউজার";
 
+// ── null-safe user helper ──
 const resolveUser = (raw: any) => {
-  // populate করা ইউজার না থাকলে (null / string id) ডিলিট ধরে নেওয়া হবে
   const user = raw && typeof raw === "object" ? raw : null;
   return {
     isDeleted: !user,
     name: user?.name || user?.username || DELETED_USER_NAME,
     username: user?.username || "",
     profileImage: user?.profileImage as string | undefined,
-    id: user?._id as string | undefined,
   };
 };
 
-// ── Avatar ──────────────────────────────────────────────
+// ── Avatar ──
 const Avatar = ({
   name,
   profileImage,
@@ -72,15 +79,35 @@ const Avatar = ({
   );
 };
 
-// ── PrivateQuestionDetailPage ────────────────────────────
+// ── 3-dot বাটন ──
+const MenuButton = ({
+  onPress,
+  isDark,
+}: {
+  onPress: () => void;
+  isDark: boolean;
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+    className="w-8 h-8 items-center justify-center"
+  >
+    <Ionicons
+      name="ellipsis-horizontal"
+      size={20}
+      color={isDark ? "#9CA3AF" : "#6B7280"}
+    />
+  </TouchableOpacity>
+);
+
 const PrivateQuestionDetailPage = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { open } = useBottomSheet();
 
-  const currentUser = useAppSelector((state) => state.auth.user);
   const [answerText, setAnswerText] = useState("");
 
   // ── Queries ──
@@ -88,21 +115,22 @@ const PrivateQuestionDetailPage = () => {
     useGetPrivateQuestionByIdQuery(id);
   const question = qData?.question;
 
-  // ── null-safe sender / receiver ──
-  const sender = resolveUser(question?.senderId);
-  const receiver = resolveUser(question?.receiverId);
-
-  const currentUserId = currentUser?.id ?? (currentUser as any)?._id;
-  const isReceiver =
-    !!currentUserId && !!receiver.id && currentUserId === receiver.id;
-
-  // ── Private answer query
   const { data: aData, isLoading: aLoading } =
     useGetPrivateAnswerByQuestionQuery(id, { skip: !id });
   const existingAnswer = aData?.answer ?? null;
 
+  // ── Mutations ──
   const [createAnswer, { isLoading: submitting }] =
     useCreatePrivateAnswerMutation();
+  const [deleteQuestion] = useDeletePrivateQuestionMutation();
+  const [deleteAnswer] = useDeletePrivateAnswerMutation();
+
+  const sender = resolveUser(question?.senderId);
+  const receiver = resolveUser(question?.receiverId);
+
+  // backend নিজেই বলে দেয় আমি sender নাকি receiver
+  const isSender = !!question?.isSender;
+  const isReceiver = !!question?.isReceiver;
 
   // ── Submit answer ──
   const handleSubmit = async () => {
@@ -113,13 +141,16 @@ const PrivateQuestionDetailPage = () => {
         text: answerText.trim(),
       }).unwrap();
       setAnswerText("");
-    } catch {}
+    } catch (err) {
+      Alert.alert("ত্রুটি", getErrorMessage(err));
+    }
   };
 
   const charCount = answerText.length;
-  const maxChar = 2000;
   const canSubmit =
-    answerText.trim().length > 0 && charCount <= maxChar && !submitting;
+    answerText.trim().length >= MIN_ANSWER &&
+    charCount <= MAX_ANSWER &&
+    !submitting;
 
   if (qLoading) {
     return (
@@ -138,9 +169,87 @@ const PrivateQuestionDetailPage = () => {
         <Text className="text-text-tertiary dark:text-dark-text-tertiary">
           প্রশ্নটি পাওয়া যায়নি
         </Text>
+        <TouchableOpacity onPress={() => router.back()} className="mt-4">
+          <Text className="text-accent font-semibold">ফিরে যান</Text>
+        </TouchableOpacity>
       </View>
     );
   }
+
+  // ── Delete (confirm popup সহ) ──
+  const confirmDeleteQuestion = () => {
+    Alert.alert(
+      "প্রশ্নটি মুছে ফেলবেন?",
+      "আপনি কি সত্যিই এই প্রশ্নটি মুছে ফেলতে চান? এর উত্তর আর সেই উত্তরের রেটিংও মুছে যাবে।",
+      [
+        { text: "না", style: "cancel" },
+        {
+          text: "হ্যাঁ, মুছে ফেলুন",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteQuestion(question._id).unwrap();
+              router.back();
+            } catch (err) {
+              Alert.alert("ত্রুটি", getErrorMessage(err));
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const confirmDeleteAnswer = () => {
+    if (!existingAnswer) return;
+    Alert.alert(
+      "উত্তরটি মুছে ফেলবেন?",
+      "আপনি কি সত্যিই আপনার উত্তরটি মুছে ফেলতে চান? এর রেটিংও মুছে যাবে।",
+      [
+        { text: "না", style: "cancel" },
+        {
+          text: "হ্যাঁ, মুছে ফেলুন",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteAnswer(existingAnswer._id).unwrap();
+            } catch (err) {
+              Alert.alert("ত্রুটি", getErrorMessage(err));
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  // ── 3-dot মেনু খোলা ──
+  const openQuestionMenu = () => {
+    open(
+      <PrivateContentMenuSheet
+        targetType="private_question"
+        targetId={question._id}
+        isOwner={isSender}
+        onEdit={() =>
+          router.push(`/private-questions/edit/${question._id}?type=question`)
+        }
+        onDelete={confirmDeleteQuestion}
+      />,
+    );
+  };
+
+  const openAnswerMenu = () => {
+    if (!existingAnswer) return;
+    open(
+      <PrivateContentMenuSheet
+        targetType="answer"
+        targetId={existingAnswer._id}
+        isOwner={isReceiver}
+        onEdit={() =>
+          router.push(`/private-questions/edit/${question._id}?type=answer`)
+        }
+        onDelete={confirmDeleteAnswer}
+      />,
+    );
+  };
 
   return (
     <KeyboardAvoidingView
@@ -164,7 +273,6 @@ const PrivateQuestionDetailPage = () => {
           প্রশ্নের বিবরণ
         </Text>
 
-        {/* Status badge */}
         <View
           className={`px-3 py-1 rounded-full ${
             question.status === "answered"
@@ -217,19 +325,27 @@ const PrivateQuestionDetailPage = () => {
               >
                 {sender.name}
               </Text>
-              {!sender.isDeleted && !!sender.username && (
+              <View className="flex-row items-center gap-1">
+                {!sender.isDeleted && !!sender.username && (
+                  <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
+                    @{sender.username} ·
+                  </Text>
+                )}
                 <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
-                  @{sender.username}
+                  {new Date(question.createdAt).toLocaleDateString("bn-BD", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
                 </Text>
-              )}
+                {question.isEdited && (
+                  <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
+                    · সম্পাদিত
+                  </Text>
+                )}
+              </View>
             </View>
-            <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
-              {new Date(question.createdAt).toLocaleDateString("bn-BD", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
-            </Text>
+            <MenuButton onPress={openQuestionMenu} isDark={isDark} />
           </View>
 
           <Text className="text-base text-text dark:text-dark-text leading-relaxed">
@@ -255,16 +371,27 @@ const PrivateQuestionDetailPage = () => {
                   size="sm"
                   isDeleted={receiver.isDeleted}
                 />
-                <Text
-                  className={`text-sm font-semibold ${
-                    receiver.isDeleted
-                      ? "text-text-tertiary dark:text-dark-text-tertiary italic"
-                      : "text-text dark:text-dark-text"
-                  }`}
-                >
-                  {receiver.name}
-                </Text>
+                <View className="flex-1">
+                  <Text
+                    className={`text-sm font-semibold ${
+                      receiver.isDeleted
+                        ? "text-text-tertiary dark:text-dark-text-tertiary italic"
+                        : "text-text dark:text-dark-text"
+                    }`}
+                  >
+                    {receiver.name}
+                  </Text>
+                  <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
+                    {new Date(existingAnswer.createdAt).toLocaleDateString(
+                      "bn-BD",
+                      { day: "numeric", month: "short", year: "numeric" },
+                    )}
+                    {existingAnswer.isEdited ? " · সম্পাদিত" : ""}
+                  </Text>
+                </View>
+                <MenuButton onPress={openAnswerMenu} isDark={isDark} />
               </View>
+
               <Text className="text-sm text-text dark:text-dark-text leading-relaxed">
                 {existingAnswer.text}
               </Text>
@@ -286,7 +413,7 @@ const PrivateQuestionDetailPage = () => {
               placeholder="আপনার উত্তর লিখুন..."
               placeholderTextColor={isDark ? "#8a8a8a" : "#6d6d6d"}
               multiline
-              maxLength={2100}
+              maxLength={MAX_ANSWER + 100}
               textAlignVertical="top"
               className="text-sm text-text dark:text-dark-text leading-relaxed min-h-[80px] max-h-[160px]"
             />
@@ -295,12 +422,12 @@ const PrivateQuestionDetailPage = () => {
           <View className="flex-row items-center justify-between">
             <Text
               className={`text-xs ${
-                charCount > maxChar
+                charCount > MAX_ANSWER
                   ? "text-red-500"
                   : "text-text-tertiary dark:text-dark-text-tertiary"
               }`}
             >
-              {charCount}/{maxChar}
+              {charCount}/{MAX_ANSWER}
             </Text>
 
             <TouchableOpacity

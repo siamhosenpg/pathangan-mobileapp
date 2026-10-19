@@ -7,6 +7,7 @@ import ProfileTopSection from "@/components/ui/profilepage/ProfileTopSection";
 import ProfileTopSectionSkeleton from "@/components/ui/profilepage/ProfileTopSectionSkeleton";
 import { useGetUserByUsernameQuery } from "@/redux/api/userApi";
 import { useLocalSearchParams } from "expo-router";
+import { useCallback } from "react";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -19,13 +20,18 @@ export default function UserProfileScreen() {
     isLoading,
     isFetching,
     isError,
+    refetch,
   } = useGetUserByUsernameQuery(username ?? "", {
     skip: !username,
     refetchOnMountOrArgChange: true,
   });
 
+  // উপরে টেনে নামালে profile data আবার আনবে
+  // (spinner ProfilePosts এর RefreshControl ই দেখায়, posts ও সেখানেই refetch হয়)
+  const handleRefresh = useCallback(() => refetch(), [refetch]);
+
   // Skeleton only when there is nothing to show yet.
-  // Background refetches (e.g. after follow) must not replace the page.
+  // Background refetches (e.g. after follow, pull-to-refresh) must not replace the page.
   const showSkeleton = isLoading || (!user && isFetching);
 
   if (showSkeleton) {
@@ -75,7 +81,11 @@ export default function UserProfileScreen() {
       className="flex-1 bg-background dark:bg-dark-background"
     >
       <BackHeader />
-      <ProfilePosts userid={user._id} listHeader={profileHeader} />
+      <ProfilePosts
+        userid={user._id}
+        listHeader={profileHeader}
+        onRefresh={handleRefresh}
+      />
     </SafeAreaView>
   );
 }

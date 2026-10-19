@@ -1,9 +1,14 @@
 import { baseApi } from "@/redux/api/baseApi";
 import type {
   DeleteQuestionResponse,
+  EditPrivateQuestionRequest,
+  GetPeopleParams,
   GetQuestionsParams,
+  GetThreadParams,
   PrivateQuestionListResponse,
+  PrivateQuestionPeopleResponse,
   PrivateQuestionSingleResponse,
+  PrivateQuestionThreadResponse,
   SendPrivateQuestionRequest,
   UnreadCountResponse,
   UpdateQuestionStatusRequest,
@@ -25,7 +30,7 @@ export const privateQuestionApi = baseApi.injectEndpoints({
       invalidatesTags: ["PrivateQuestion"],
     }),
 
-    // ===================== GET INBOX =====================
+    // ===================== GET INBOX (flat) =====================
     getInbox: builder.infiniteQuery<
       PrivateQuestionListResponse,
       GetQuestionsParams | void,
@@ -47,7 +52,7 @@ export const privateQuestionApi = baseApi.injectEndpoints({
       providesTags: ["PrivateQuestion"],
     }),
 
-    // ===================== GET SENT QUESTIONS =====================
+    // ===================== GET SENT (flat) =====================
     getSentQuestions: builder.infiniteQuery<
       PrivateQuestionListResponse,
       GetQuestionsParams | void,
@@ -68,19 +73,79 @@ export const privateQuestionApi = baseApi.injectEndpoints({
       providesTags: ["PrivateQuestion"],
     }),
 
-    // ===================== GET UNREAD COUNT =====================
+    // ===================== PEOPLE LIST (infinite) =====================
+    getPrivateQuestionPeople: builder.infiniteQuery<
+      PrivateQuestionPeopleResponse,
+      GetPeopleParams,
+      string | null
+    >({
+      query: ({ queryArg, pageParam }) => {
+        const params = new URLSearchParams();
+
+        params.set("mode", queryArg.mode);
+        if (pageParam) params.set("cursor", pageParam);
+        if (queryArg.limit) params.set("limit", String(queryArg.limit));
+
+        return `/private-questions/people?${params.toString()}`;
+      },
+      infiniteQueryOptions: {
+        initialPageParam: null,
+        getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+      },
+      providesTags: ["PrivateQuestion"],
+    }),
+
+    // ===================== একজনের সাথে প্রশ্নগুলো (infinite) =====================
+    getQuestionsWithUser: builder.infiniteQuery<
+      PrivateQuestionThreadResponse,
+      GetThreadParams,
+      string | null
+    >({
+      query: ({ queryArg, pageParam }) => {
+        const params = new URLSearchParams();
+
+        params.set("mode", queryArg.mode);
+        if (pageParam) params.set("cursor", pageParam);
+        if (queryArg.limit) params.set("limit", String(queryArg.limit));
+
+        return `/private-questions/with/${queryArg.userId}?${params.toString()}`;
+      },
+      infiniteQueryOptions: {
+        initialPageParam: null,
+        getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+      },
+      providesTags: ["PrivateQuestion", "PrivateAnswer"],
+    }),
+
+    // ===================== UNREAD COUNT =====================
     getUnreadCount: builder.query<UnreadCountResponse, void>({
       query: () => "/private-questions/unread-count",
       providesTags: ["PrivateQuestion"],
     }),
 
-    // ===================== GET SINGLE QUESTION =====================
+    // ===================== SINGLE QUESTION =====================
     getPrivateQuestionById: builder.query<
       PrivateQuestionSingleResponse,
       string
     >({
       query: (id) => `/private-questions/${id}`,
       providesTags: (_result, _err, id) => [{ type: "PrivateQuestion", id }],
+    }),
+
+    // ===================== EDIT QUESTION =====================
+    editPrivateQuestion: builder.mutation<
+      PrivateQuestionSingleResponse,
+      EditPrivateQuestionRequest
+    >({
+      query: ({ id, questionText }) => ({
+        url: `/private-questions/${id}`,
+        method: "PATCH",
+        body: { questionText },
+      }),
+      invalidatesTags: (_result, _err, { id }) => [
+        "PrivateQuestion",
+        { type: "PrivateQuestion", id },
+      ],
     }),
 
     // ===================== UPDATE STATUS =====================
@@ -99,13 +164,14 @@ export const privateQuestionApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // ===================== DELETE QUESTION =====================
+    // ===================== SOFT DELETE QUESTION =====================
+    // প্রশ্ন গেলে উত্তর আর rating ও যায়, তাই সংশ্লিষ্ট tag গুলোও invalidate
     deletePrivateQuestion: builder.mutation<DeleteQuestionResponse, string>({
       query: (id) => ({
         url: `/private-questions/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["PrivateQuestion"],
+      invalidatesTags: ["PrivateQuestion", "PrivateAnswer"],
     }),
   }),
 });
@@ -114,8 +180,11 @@ export const {
   useSendPrivateQuestionMutation,
   useGetInboxInfiniteQuery,
   useGetSentQuestionsInfiniteQuery,
+  useGetPrivateQuestionPeopleInfiniteQuery,
+  useGetQuestionsWithUserInfiniteQuery,
   useGetUnreadCountQuery,
   useGetPrivateQuestionByIdQuery,
+  useEditPrivateQuestionMutation,
   useUpdateQuestionStatusMutation,
   useDeletePrivateQuestionMutation,
 } = privateQuestionApi;
