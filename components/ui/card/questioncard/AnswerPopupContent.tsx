@@ -17,6 +17,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { useSheetCloseGuard } from "../../bottom-sheet/BottomSheetProvider";
 import { useBottomSheet } from "../../bottom-sheet/useBottomSheet";
 
 interface Props {
@@ -52,7 +53,18 @@ const AnswerPopupContent = ({
   const isSubmitDisabled =
     !answer.trim() || isLoading || (isEdit && !hasChanges);
 
-  // কিছু লেখা/বদলানো থাকলে close করার আগে confirm
+  // কিছু লেখা/বদলানো থাকলে backdrop ট্যাপ, নিচে drag আর Android back button
+  // দিয়ে বন্ধ করতে গেলেও confirm alert আসবে (provider এটা সামলায়)
+  useSheetCloseGuard({
+    when: isDirty && !isLoading,
+    title: t("answerData.areYouSure"),
+    message: t("answerData.discardAnswer"),
+    confirmText: t("answerData.goBack"),
+    cancelText: t("answerData.cancel"),
+  });
+
+  // শুধু উপরের X বাটনের জন্য: close() সরাসরি guard এড়িয়ে যায়,
+  // তাই এখানে নিজেই confirm দেখাই
   const handleClose = () => {
     if (isDirty) {
       Alert.alert(
@@ -89,6 +101,7 @@ const AnswerPopupContent = ({
         await createAnswer({ questionId, text: trimmed }).unwrap();
         setAnswer("");
       }
+      // সফল submit এর পর close() চালালে guard কাজ করে না, তাই alert আসবে না
       close();
     } catch (err: any) {
       // server message ইংরেজিতে আসে, তাই status দিয়ে check করা হলো
@@ -114,20 +127,11 @@ const AnswerPopupContent = ({
                 ? t("answerData.editAnswer")
                 : t("answerData.writeAnswer")}
             </Text>
-            <TouchableOpacity
-              onPress={handleClose}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons name="close" size={20} color="#9CA3AF" />
-            </TouchableOpacity>
           </View>
 
           {/* Question preview */}
           <View className="px-1 py-3 mb-3 border-b border-border dark:border-dark-border">
-            <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary mb-1">
-              {t("answerData.question")}:
-            </Text>
-            <Text className="text-sm font-semibold text-text dark:text-dark-text leading-snug">
+            <Text className=" font-medium text-text dark:text-dark-text leading-snug">
               {questionText}
             </Text>
           </View>
@@ -146,17 +150,19 @@ const AnswerPopupContent = ({
             autoFocus={isEdit}
             textAlignVertical="top"
             maxLength={10000}
-            className="text-sm text-text dark:text-dark-text bg-background-secondary dark:bg-dark-background-secondary rounded-xl px-4 py-3"
+            className=" text-text dark:text-dark-text  py-2"
             style={{
               minHeight: 120,
-              maxHeight: 180,
-              borderColor: error ? "#EF4444" : "transparent",
+              maxHeight: 230,
+              borderColor: "transparent",
               borderWidth: 1,
             }}
           />
 
           {error ? (
-            <Text className="text-xs text-red-500 mt-1">{error}</Text>
+            <Text className="text-xs font-medium text-red-500 mt-1">
+              {error}
+            </Text>
           ) : null}
 
           {/* Footer */}
@@ -168,7 +174,7 @@ const AnswerPopupContent = ({
             <TouchableOpacity
               onPress={handleSubmit}
               disabled={isSubmitDisabled}
-              className="flex-row items-center gap-2 px-5 py-2 rounded-full bg-accent"
+              className="flex-row items-center gap-2 px-5 py-2.5 rounded-full bg-accent"
               style={{ opacity: isSubmitDisabled ? 0.4 : 1 }}
             >
               {isLoading ? (
@@ -180,7 +186,7 @@ const AnswerPopupContent = ({
                   color="#fff"
                 />
               )}
-              <Text className="text-white text-sm font-medium">
+              <Text className="text-white  font-semibold">
                 {isLoading
                   ? isEdit
                     ? t("answerData.updating")

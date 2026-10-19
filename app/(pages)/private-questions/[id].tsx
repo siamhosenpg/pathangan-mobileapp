@@ -22,15 +22,32 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+// ── ডিলিট হওয়া ইউজার হ্যান্ডেল করার helper ─────────────
+const DELETED_USER_NAME = "ডিলিট হওয়া ইউজার";
+
+const resolveUser = (raw: any) => {
+  // populate করা ইউজার না থাকলে (null / string id) ডিলিট ধরে নেওয়া হবে
+  const user = raw && typeof raw === "object" ? raw : null;
+  return {
+    isDeleted: !user,
+    name: user?.name || user?.username || DELETED_USER_NAME,
+    username: user?.username || "",
+    profileImage: user?.profileImage as string | undefined,
+    id: user?._id as string | undefined,
+  };
+};
+
 // ── Avatar ──────────────────────────────────────────────
 const Avatar = ({
   name,
   profileImage,
   size = "md",
+  isDeleted = false,
 }: {
   name: string;
   profileImage?: string;
   size?: "sm" | "md";
+  isDeleted?: boolean;
 }) => {
   const dim = size === "sm" ? "w-8 h-8" : "w-11 h-11";
   const text = size === "sm" ? "text-xs" : "text-base";
@@ -38,7 +55,7 @@ const Avatar = ({
     <View
       className={`${dim} rounded-full overflow-hidden border border-border dark:border-dark-border`}
     >
-      {profileImage ? (
+      {profileImage && !isDeleted ? (
         <Image
           source={{ uri: profileImage }}
           className="w-full h-full"
@@ -47,7 +64,7 @@ const Avatar = ({
       ) : (
         <View className="w-full h-full bg-accent/20 items-center justify-center">
           <Text className={`${text} font-bold text-accent uppercase`}>
-            {name?.charAt(0)}
+            {isDeleted ? "?" : name?.charAt(0)}
           </Text>
         </View>
       )}
@@ -71,16 +88,19 @@ const PrivateQuestionDetailPage = () => {
     useGetPrivateQuestionByIdQuery(id);
   const question = qData?.question;
 
-  const isReceiver =
-    currentUser?.id === question?.receiverId?._id ||
-    (currentUser as any)?._id === question?.receiverId?._id;
+  // ── null-safe sender / receiver ──
+  const sender = resolveUser(question?.senderId);
+  const receiver = resolveUser(question?.receiverId);
 
-  // ── Private answer query — ✅ নতুন API
+  const currentUserId = currentUser?.id ?? (currentUser as any)?._id;
+  const isReceiver =
+    !!currentUserId && !!receiver.id && currentUserId === receiver.id;
+
+  // ── Private answer query
   const { data: aData, isLoading: aLoading } =
     useGetPrivateAnswerByQuestionQuery(id, { skip: !id });
-  const existingAnswer = aData?.answer ?? null; // ✅ .answers[0] না, সরাসরি .answer
+  const existingAnswer = aData?.answer ?? null;
 
-  // ── ✅ নতুন mutation, updateStatus আর লাগবে না
   const [createAnswer, { isLoading: submitting }] =
     useCreatePrivateAnswerMutation();
 
@@ -93,7 +113,6 @@ const PrivateQuestionDetailPage = () => {
         text: answerText.trim(),
       }).unwrap();
       setAnswerText("");
-      // ✅ refetch লাগবে না — invalidatesTags cache update করবে
     } catch {}
   };
 
@@ -183,16 +202,26 @@ const PrivateQuestionDetailPage = () => {
         <View className="mx-4 mt-4 p-4 rounded-2xl border border-border dark:border-dark-border bg-background-secondary dark:bg-dark-background-secondary">
           <View className="flex-row items-center gap-3 mb-3">
             <Avatar
-              name={question.senderId.name}
-              profileImage={question.senderId.profileImage}
+              name={sender.name}
+              profileImage={sender.profileImage}
+              isDeleted={sender.isDeleted}
             />
             <View className="flex-1">
-              <Text className="text-sm font-semibold text-text dark:text-dark-text">
-                {question.senderId.name}
+              <Text
+                className={`text-sm font-semibold ${
+                  sender.isDeleted
+                    ? "text-text-tertiary dark:text-dark-text-tertiary italic"
+                    : "text-text dark:text-dark-text"
+                }`}
+                numberOfLines={1}
+              >
+                {sender.name}
               </Text>
-              <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
-                @{question.senderId.username}
-              </Text>
+              {!sender.isDeleted && !!sender.username && (
+                <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
+                  @{sender.username}
+                </Text>
+              )}
             </View>
             <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
               {new Date(question.createdAt).toLocaleDateString("bn-BD", {
@@ -221,12 +250,19 @@ const PrivateQuestionDetailPage = () => {
             <View className="p-4 rounded-2xl border border-accent/30 bg-accent/5 dark:bg-accent/10">
               <View className="flex-row items-center gap-3 mb-3">
                 <Avatar
-                  name={question.receiverId.name}
-                  profileImage={question.receiverId.profileImage}
+                  name={receiver.name}
+                  profileImage={receiver.profileImage}
                   size="sm"
+                  isDeleted={receiver.isDeleted}
                 />
-                <Text className="text-sm font-semibold text-text dark:text-dark-text">
-                  {question.receiverId.name}
+                <Text
+                  className={`text-sm font-semibold ${
+                    receiver.isDeleted
+                      ? "text-text-tertiary dark:text-dark-text-tertiary italic"
+                      : "text-text dark:text-dark-text"
+                  }`}
+                >
+                  {receiver.name}
                 </Text>
               </View>
               <Text className="text-sm text-text dark:text-dark-text leading-relaxed">

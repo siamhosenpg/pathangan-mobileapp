@@ -190,7 +190,7 @@ const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
               </View>
 
               {/* Input */}
-              <View className="rounded-2xl border border-border dark:border-dark-border bg-background-secondary dark:bg-dark-background p-4 mb-3">
+              <View className="rounded-2xl   ">
                 <TextInput
                   ref={inputRef}
                   value={questionText}
@@ -202,9 +202,9 @@ const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
                   placeholderTextColor={isDark ? "#8a8a8a" : "#6d6d6d"}
                   multiline
                   maxLength={520}
-                  numberOfLines={4}
+                  numberOfLines={6}
                   textAlignVertical="top"
-                  className="text-sm text-text dark:text-dark-text leading-relaxed min-h-[100px]"
+                  className=" text-text dark:text-dark-text leading-relaxed min-h-[100px]"
                   style={{ fontFamily: undefined }}
                 />
               </View>
@@ -242,7 +242,7 @@ const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
                       color={canSend ? "#fff" : isDark ? "#8a8a8a" : "#6d6d6d"}
                     />
                     <Text
-                      className={`text-sm font-semibold ${
+                      className={` font-semibold ${
                         canSend
                           ? "text-white"
                           : "text-text-tertiary dark:text-dark-text-tertiary"

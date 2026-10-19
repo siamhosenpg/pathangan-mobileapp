@@ -13,6 +13,7 @@ import {
 
 import NotificationCard from "./NotificationCard";
 
+import { useBottomSheet } from "@/components/ui/bottom-sheet/useBottomSheet";
 import {
   useDeleteAllNotificationsMutation,
   useDeleteNotificationMutation,
@@ -25,6 +26,7 @@ import { getErrorMessage } from "@/utils/getErrorMessage";
 
 interface PanelProps {
   // card-এ ক্লিক করে নেভিগেট করার সময় panel বন্ধ করতে
+  // না দিলে bottom sheet-এর নিজস্ব close ব্যবহার হবে
   onClose?: () => void;
 }
 
@@ -123,6 +125,9 @@ const animateLayout = () =>
 const NotificationPanel = ({ onClose }: PanelProps) => {
   const { t } = useTranslation();
 
+  // sheet-এর ভেতরেই আছি, তাই সরাসরি close পাওয়া যায়
+  const { close } = useBottomSheet();
+
   const {
     data,
     error,
@@ -169,6 +174,13 @@ const NotificationPanel = ({ onClose }: PanelProps) => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
+  };
+
+  // card-এ ক্লিক করলে panel বন্ধ হবে
+  // (শুধু একটাই চালাই, নাহলে দুইবার close হয়ে নিচের sheet-ও বন্ধ হয়ে যেতে পারে)
+  const handleNavigate = () => {
+    if (onClose) onClose();
+    else close();
   };
 
   // ---------- handlers ----------
@@ -296,7 +308,7 @@ const NotificationPanel = ({ onClose }: PanelProps) => {
                 markAsRead(id);
               }}
               onDelete={handleDelete}
-              onNavigate={onClose}
+              onNavigate={handleNavigate}
             />
           )}
           ListFooterComponent={renderFooter}

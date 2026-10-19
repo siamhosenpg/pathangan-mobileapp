@@ -160,7 +160,7 @@ export function MenuDrawerContent() {
           <View className="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950 items-center justify-center">
             <LogoutIcon width={19} height={19} color="#ef4444" />
           </View>
-          <Text className="text-red-500 dark:text-red-400 text-[15px]">
+          <Text className="text-red-500 font-semibold dark:text-red-400 text-[15px]">
             {t("logout")}
           </Text>
         </TouchableOpacity>

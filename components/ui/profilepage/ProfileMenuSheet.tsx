@@ -69,7 +69,9 @@ const MenuItem = ({
         <Icon width={18} height={18} color={isDark ? "#f1f1f1" : "#111111"} />
       </View>
 
-      <Text className={`flex-1  font-semibold `}>{label}</Text>
+      <Text className={`flex-1 text-text dark:text-dark-text  font-semibold `}>
+        {label}
+      </Text>
 
       {loading ? (
         <ActivityIndicator size="small" />

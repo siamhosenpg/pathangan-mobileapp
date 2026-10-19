@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
 import { Pressable, View } from "react-native";
 import NotificationBadge from "./NotificationBadge";
 import NotificationPanel from "./NotificationPanel";
@@ -9,7 +8,8 @@ import { useBottomSheet } from "@/components/ui/bottom-sheet/useBottomSheet";
 import { useGetUnreadNotificationCountQuery } from "@/redux/api/notification/notificationApi";
 
 const NotificationNav = () => {
-  const { open } = useBottomSheet();
+  // card-এ ক্লিক করলে sheet বন্ধ করার জন্য close দরকার
+  const { open, close } = useBottomSheet();
 
   const { data } = useGetUnreadNotificationCountQuery();
 
@@ -18,7 +18,8 @@ const NotificationNav = () => {
   const handleOpen = () => {
     open(
       <View style={{ flex: 1 }}>
-        <NotificationPanel />
+        {/* card-এ ক্লিক করলে এই close চলবে, তারপর নেভিগেশন হবে */}
+        <NotificationPanel onClose={close} />
       </View>,
     );
   };

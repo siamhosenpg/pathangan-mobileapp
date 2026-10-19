@@ -10,7 +10,6 @@ interface PrivateQuestionCardProps {
   onStatusChange?: (id: string, status: "answered" | "ignored") => void;
 }
 
-// label এর বদলে এখন translation key
 const statusConfig = {
   pending: {
     labelKey: "questionStatus.pending",
@@ -36,14 +35,16 @@ const Avatar = ({
   name,
   profileImage,
   isUnread,
+  isDeleted,
 }: {
   name: string;
   profileImage?: string;
   isUnread: boolean;
+  isDeleted: boolean;
 }) => (
   <View className="relative">
     <View className="w-11 h-11 rounded-full overflow-hidden border border-border dark:border-dark-border">
-      {profileImage ? (
+      {profileImage && !isDeleted ? (
         <Image
           source={{ uri: profileImage }}
           className="w-full h-full"
@@ -52,7 +53,7 @@ const Avatar = ({
       ) : (
         <View className="w-full h-full bg-accent/20 items-center justify-center">
           <Text className="text-base font-bold text-accent uppercase">
-            {name?.charAt(0)}
+            {isDeleted ? "?" : name?.charAt(0)}
           </Text>
         </View>
       )}
@@ -70,11 +71,22 @@ const PrivateQuestionCard: React.FC<PrivateQuestionCardProps> = ({
   onStatusChange,
 }) => {
   const { t, i18n } = useTranslation();
-  const config = statusConfig[question.status];
-  const otherUser = mode === "inbox" ? question.senderId : question.receiverId;
+  const config = statusConfig[question.status] ?? statusConfig.pending;
+
+  // ডিলিট হওয়া ইউজার হলে এটা null (বা string id) হতে পারে
+  const rawOtherUser =
+    mode === "inbox" ? question.senderId : question.receiverId;
+  const otherUser =
+    rawOtherUser && typeof rawOtherUser === "object" ? rawOtherUser : null;
+
+  const isDeleted = !otherUser;
+  const displayName =
+    otherUser?.name || otherUser?.username || t("deletedUser", "Deleted User");
+  const displayUsername = otherUser?.username || "deleted-user";
+  const profileImage = otherUser?.profileImage;
+
   const isUnread = mode === "inbox" && !question.isRead;
 
-  // ভাষা অনুযায়ী তারিখের ফরম্যাট
   const dateLocale = i18n.language === "bn" ? "bn-BD" : "en-US";
 
   return (
@@ -91,20 +103,27 @@ const PrivateQuestionCard: React.FC<PrivateQuestionCardProps> = ({
       <View className="flex-row items-center justify-between mb-3">
         <View className="flex-row items-center gap-3 flex-1 mr-2">
           <Avatar
-            name={otherUser.name}
-            profileImage={otherUser.profileImage}
+            name={displayName}
+            profileImage={profileImage}
             isUnread={isUnread}
+            isDeleted={isDeleted}
           />
           <View className="flex-1">
             <Text
-              className="text-sm font-semibold text-text dark:text-dark-text"
+              className={`text-sm font-semibold ${
+                isDeleted
+                  ? "text-text-tertiary dark:text-dark-text-tertiary italic"
+                  : "text-text dark:text-dark-text"
+              }`}
               numberOfLines={1}
             >
-              {otherUser.name}
+              {displayName}
             </Text>
-            <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
-              @{otherUser.username}
-            </Text>
+            {!isDeleted && (
+              <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
+                @{displayUsername}
+              </Text>
+            )}
           </View>
         </View>
 

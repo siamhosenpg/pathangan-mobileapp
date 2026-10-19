@@ -47,6 +47,24 @@ const getText = (type: Notification["type"], t: TFn) => {
   }
 };
 
+// type অনুযায়ী avatar-এর কোণায় ছোট badge-এর icon ও রঙ
+const getTypeBadge = (
+  type: Notification["type"],
+): { icon: keyof typeof Ionicons.glyphMap; color: string } | null => {
+  switch (type) {
+    case "like":
+      return { icon: "heart", color: "#EF4444" };
+    case "comment":
+      return { icon: "chatbubble", color: "#3B82F6" };
+    case "follow":
+      return { icon: "person-add", color: "#00914d" };
+    case "share":
+      return { icon: "arrow-redo", color: "#F59E0B" };
+    default:
+      return null;
+  }
+};
+
 const timeAgo = (date: string, t: TFn) => {
   const diff = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
@@ -87,7 +105,7 @@ const NotificationCard = ({ item, onRead, onDelete, onNavigate }: Props) => {
   const enterOpacity = useRef(new Animated.Value(0)).current; // fade-in
   const exitOpacity = useRef(new Animated.Value(1)).current; // delete-এর সময়
   const exitX = useRef(new Animated.Value(0)).current;
-  const unreadBg = useRef(new Animated.Value(item.read ? 0 : 1)).current;
+  const unreadDot = useRef(new Animated.Value(item.read ? 0 : 1)).current;
   const deleting = useRef(false);
 
   // প্রথমবার দেখা দিলে হালকা fade-in
@@ -99,14 +117,14 @@ const NotificationCard = ({ item, onRead, onDelete, onNavigate }: Props) => {
     }).start();
   }, [enterOpacity]);
 
-  // read হলে unread-এর ব্যাকগ্রাউন্ড ধীরে ধীরে মিলিয়ে যাবে
+  // read হলে বাঁ পাশের bubble ধীরে ধীরে ছোট হয়ে মিলিয়ে যাবে
   useEffect(() => {
-    Animated.timing(unreadBg, {
+    Animated.timing(unreadDot, {
       toValue: item.read ? 0 : 1,
       duration: 300,
       useNativeDriver: true,
     }).start();
-  }, [item.read, unreadBg]);
+  }, [item.read, unreadDot]);
 
   const handlePress = () => {
     // আগে থেকে read হলে অকারণে request পাঠাবো না
@@ -157,6 +175,8 @@ const NotificationCard = ({ item, onRead, onDelete, onNavigate }: Props) => {
     });
   };
 
+  const badge = getTypeBadge(item.type);
+
   return (
     <Animated.View
       style={{
@@ -166,35 +186,54 @@ const NotificationCard = ({ item, onRead, onDelete, onNavigate }: Props) => {
     >
       <TouchableOpacity
         onPress={handlePress}
-        activeOpacity={0.9}
-        className="flex-row items-start px-4 py-3.5 gap-3"
+        activeOpacity={0.8}
+        className="flex-row items-start pl-7 pr-4 py-3.5 gap-3 border-b border-border/40 dark:border-dark-border/40"
       >
-        {/* unread background (animated) */}
+        {/* unread bubble (বাঁ পাশে, animated) */}
         <Animated.View
           pointerEvents="none"
-          className="bg-accent/10"
+          className="bg-accent"
           style={{
             position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            opacity: unreadBg,
+            left: 11,
+            top: 33,
+            width: 10,
+            height: 10,
+            borderRadius: 5,
+            opacity: unreadDot,
+            transform: [{ scale: unreadDot }],
           }}
         />
 
-        {/* avatar */}
-        <View className="w-12 h-12 rounded-full bg-accent/30 items-center justify-center overflow-hidden">
-          {item.actorId?.profileImage ? (
-            <Image
-              source={{ uri: item.actorId.profileImage }}
-              className="w-full h-full"
-              resizeMode="cover"
-            />
-          ) : (
-            <Text className="font-bold text-accent">
-              {item.actorId?.name?.[0]?.toUpperCase() ?? "?"}
-            </Text>
+        {/* avatar + type badge */}
+        <View className="w-12 h-12">
+          <View className="w-12 h-12 rounded-full bg-accent/30 items-center justify-center overflow-hidden">
+            {item.actorId?.profileImage ? (
+              <Image
+                source={{ uri: item.actorId.profileImage }}
+                className="w-full h-full"
+                resizeMode="cover"
+              />
+            ) : (
+              <Text className="font-bold text-accent">
+                {item.actorId?.name?.[0]?.toUpperCase() ?? "?"}
+              </Text>
+            )}
+          </View>
+
+          {badge && (
+            <View
+              className="absolute items-center justify-center rounded-full border-2 border-background dark:border-dark-background"
+              style={{
+                right: -4,
+                bottom: -4,
+                width: 22,
+                height: 22,
+                backgroundColor: badge.color,
+              }}
+            >
+              <Ionicons name={badge.icon} size={11} color="#fff" />
+            </View>
           )}
         </View>
 
@@ -202,7 +241,11 @@ const NotificationCard = ({ item, onRead, onDelete, onNavigate }: Props) => {
         <View className="flex-1">
           <View>
             <View className="flex-row items-center gap-1">
-              <Text className="font-semibold text-sm text-text dark:text-dark-text">
+              <Text
+                className={`text-sm text-text dark:text-dark-text ${
+                  item.read ? "font-semibold" : "font-bold"
+                }`}
+              >
                 {item.actorId?.name ?? item.actorId?.username ?? "Deleted User"}
               </Text>
               <GreenMark
@@ -210,12 +253,24 @@ const NotificationCard = ({ item, onRead, onDelete, onNavigate }: Props) => {
                 size={16}
               />
             </View>
-            <Text className="text-text dark:text-dark-text">
+            <Text
+              className={`font-medium ${
+                item.read
+                  ? "text-text-secondary dark:text-dark-text-secondary"
+                  : "text-text dark:text-dark-text"
+              }`}
+            >
               {getText(item.type, t)}
             </Text>
           </View>
 
-          <Text className="text-xs font-medium text-text-tertiary dark:text-dark-text-tertiary mt-1">
+          <Text
+            className={`text-xs font-medium mt-1 ${
+              item.read
+                ? "text-text-tertiary dark:text-dark-text-tertiary"
+                : "text-accent"
+            }`}
+          >
             {timeAgo(item.createdAt, t)}
           </Text>
         </View>
