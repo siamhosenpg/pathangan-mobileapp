@@ -2,9 +2,9 @@ import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider
 import type { ReportTargetType } from "@/redux/api/others/reportApi";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
+import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity, View } from "react-native";
 import ReportSheet from "./report/ReportSheet";
-// তোমার ContentMenuSheet এর পাশের ReportSheet এর আসল path দাও
 
 interface Props {
   targetType: Extract<ReportTargetType, "private_question" | "answer">;
@@ -21,6 +21,7 @@ const PrivateContentMenuSheet = ({
   onEdit,
   onDelete,
 }: Props) => {
+  const { t } = useTranslation();
   const { replace, close } = useBottomSheet();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -60,7 +61,7 @@ const PrivateContentMenuSheet = ({
               />
             </View>
             <Text className="flex-1 text-sm font-medium text-text dark:text-dark-text">
-              সম্পাদনা করুন
+              {t("privateData.editMenu")}
             </Text>
           </TouchableOpacity>
 
@@ -73,7 +74,7 @@ const PrivateContentMenuSheet = ({
               <Ionicons name="trash-outline" size={18} color="#ef4444" />
             </View>
             <Text className="flex-1 text-sm font-medium text-red-500">
-              মুছে ফেলুন
+              {t("privateData.deleteMenu")}
             </Text>
           </TouchableOpacity>
         </>
@@ -87,7 +88,7 @@ const PrivateContentMenuSheet = ({
             <Ionicons name="flag-outline" size={18} color="#ef4444" />
           </View>
           <Text className="flex-1 text-sm font-medium text-red-500">
-            রিপোর্ট করুন
+            {t("privateData.reportMenu")}
           </Text>
         </TouchableOpacity>
       )}

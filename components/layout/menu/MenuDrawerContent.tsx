@@ -1,5 +1,6 @@
 import SaveIcon from "@/assets/icons/bookmark.svg";
 import handouticon from "@/assets/icons/journal.svg";
+import PrivateMessageicon from "@/assets/icons/privatemessage.svg";
 import SettingsIcon from "@/assets/icons/settings.svg";
 import LogoutIcon from "@/assets/icons/sign-out-alt.svg";
 import BlockIcon from "@/assets/icons/user-lock.svg";
@@ -60,6 +61,11 @@ export function MenuDrawerContent() {
       icon: SaveIcon,
       label: t("savedPosts"),
       route: "/(tabs)/saved",
+    },
+    {
+      icon: PrivateMessageicon,
+      label: t("privateMessages"),
+      route: "/private-questions/privatequestion",
     },
 
     {

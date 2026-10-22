@@ -2,6 +2,7 @@ import type {
   PrivateQuestionPerson,
   QuestionMode,
 } from "@/types/privateQuestionTypes";
+import { useTranslation } from "react-i18next";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
 export function toBanglaNumber(value: number): string {
@@ -9,7 +10,15 @@ export function toBanglaNumber(value: number): string {
   return String(value).replace(/[0-9]/g, (d) => banglaDigits[parseInt(d)]);
 }
 
-export const DELETED_USER_NAME = "ডিলিট হওয়া ইউজার";
+// ভাষা অনুযায়ী সংখ্যা (bn হলে বাংলা অঙ্ক, না হলে ইংরেজি)
+export function formatNumber(value: number, lang?: string): string {
+  return lang?.startsWith("bn") ? toBanglaNumber(value) : String(value);
+}
+
+// ভাষা অনুযায়ী তারিখের locale
+export function getDateLocale(lang?: string): string {
+  return lang?.startsWith("bn") ? "bn-BD" : "en-US";
+}
 
 // ── Avatar (অন্য পেজেও ব্যবহার হবে) ──
 export const UserAvatar = ({
@@ -59,21 +68,21 @@ interface Props {
 }
 
 const PrivateQuestionPersonCard = ({ person, mode, onPress }: Props) => {
+  const { t, i18n } = useTranslation();
   const isDeleted = !person.user;
-  const name = person.user?.name || person.user?.username || DELETED_USER_NAME;
+  const name =
+    person.user?.name || person.user?.username || t("privateData.deletedUser");
   const hasUnread = mode === "inbox" && person.unreadCount > 0;
 
   return (
     <TouchableOpacity
       onPress={() => onPress(person)}
       activeOpacity={0.72}
-      className={`mx-4 mb-3 rounded-2xl border p-4 ${
-        hasUnread
-          ? "border-accent/30 bg-accent/5 dark:bg-accent/10"
-          : "border-border dark:border-dark-border bg-background-secondary dark:bg-dark-background-secondary"
+      className={` border-b p-4 ${
+        hasUnread ? "border-accent/30" : "border-border dark:border-dark-border"
       }`}
     >
-      <View className="flex-row items-center gap-3">
+      <View className="flex-row items-center gap-2">
         <UserAvatar
           name={name}
           profileImage={person.user?.profileImage}
@@ -83,7 +92,7 @@ const PrivateQuestionPersonCard = ({ person, mode, onPress }: Props) => {
 
         <View className="flex-1">
           <Text
-            className={`text-sm font-semibold ${
+            className={` font-semibold ${
               isDeleted
                 ? "text-text-tertiary dark:text-dark-text-tertiary italic"
                 : "text-text dark:text-dark-text"
@@ -92,40 +101,41 @@ const PrivateQuestionPersonCard = ({ person, mode, onPress }: Props) => {
           >
             {name}
           </Text>
-          {!isDeleted && !!person.user?.username && (
-            <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
-              @{person.user.username}
-            </Text>
-          )}
+          <Text className=" mt-0.5 text-xs text-text-tertiary dark:text-dark-text-tertiary">
+            {new Date(person.lastQuestionAt).toLocaleDateString(
+              getDateLocale(i18n.language),
+              {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              },
+            )}
+          </Text>
         </View>
 
         <View className="items-end gap-1">
-          <View className="px-2.5 py-1 rounded-full bg-accent/10">
+          <View className=" py-2">
             <Text className="text-xs font-semibold text-accent">
-              {toBanglaNumber(person.totalCount)} টি প্রশ্ন
+              {t("privateData.questionCount", {
+                num: formatNumber(person.totalCount, i18n.language),
+              })}
             </Text>
           </View>
           {hasUnread && (
             <Text className="text-xs font-medium text-accent">
-              {toBanglaNumber(person.unreadCount)} টি নতুন
+              {t("privateData.newCount", {
+                num: formatNumber(person.unreadCount, i18n.language),
+              })}
             </Text>
           )}
         </View>
       </View>
 
       <Text
-        className="mt-3 text-sm text-text-secondary dark:text-dark-text-secondary leading-relaxed"
+        className="mt-2 font-medium text-text-secondary dark:text-dark-text-secondary leading-relaxed"
         numberOfLines={2}
       >
         {person.lastQuestionText}
-      </Text>
-
-      <Text className="mt-2 text-xs text-text-tertiary dark:text-dark-text-tertiary">
-        {new Date(person.lastQuestionAt).toLocaleDateString("bn-BD", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })}
       </Text>
     </TouchableOpacity>
   );

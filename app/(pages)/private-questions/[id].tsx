@@ -1,5 +1,6 @@
 import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
 import PrivateContentMenuSheet from "@/components/ui/bottom-sheet/PrivateContentMenuSheet";
+import { getDateLocale } from "@/components/ui/card/questioncard/PrivateQuestionPersonCard";
 
 import {
   useCreatePrivateAnswerMutation,
@@ -7,6 +8,7 @@ import {
   useGetPrivateAnswerByQuestionQuery,
 } from "@/redux/api/answer/privateAnswerApi";
 import {
+  privateQuestionApi,
   useDeletePrivateQuestionMutation,
   useGetPrivateQuestionByIdQuery,
 } from "@/redux/api/privateQuestion/privateQuestionApi";
@@ -14,7 +16,8 @@ import { getErrorMessage } from "@/utils/getErrorMessage";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -28,17 +31,17 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useDispatch } from "react-redux";
 
-const MIN_ANSWER = 5;
+const MIN_ANSWER = 15;
 const MAX_ANSWER = 2000;
-const DELETED_USER_NAME = "ডিলিট হওয়া ইউজার";
 
 // ── null-safe user helper ──
-const resolveUser = (raw: any) => {
+const resolveUser = (raw: any, deletedName: string) => {
   const user = raw && typeof raw === "object" ? raw : null;
   return {
     isDeleted: !user,
-    name: user?.name || user?.username || DELETED_USER_NAME,
+    name: user?.name || user?.username || deletedName,
     username: user?.username || "",
     profileImage: user?.profileImage as string | undefined,
   };
@@ -101,18 +104,23 @@ const MenuButton = ({
 );
 
 const PrivateQuestionDetailPage = () => {
+  const { t, i18n } = useTranslation();
+  const dateLocale = getDateLocale(i18n.language);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { open } = useBottomSheet();
+  const dispatch = useDispatch();
 
   const [answerText, setAnswerText] = useState("");
 
   // ── Queries ──
-  const { data: qData, isLoading: qLoading } =
-    useGetPrivateQuestionByIdQuery(id);
+  const { data: qData, isLoading: qLoading } = useGetPrivateQuestionByIdQuery(
+    id,
+    { skip: !id },
+  );
   const question = qData?.question;
 
   const { data: aData, isLoading: aLoading } =
@@ -125,16 +133,38 @@ const PrivateQuestionDetailPage = () => {
   const [deleteQuestion] = useDeletePrivateQuestionMutation();
   const [deleteAnswer] = useDeletePrivateAnswerMutation();
 
-  const sender = resolveUser(question?.senderId);
-  const receiver = resolveUser(question?.receiverId);
+  // ── Unread fix ──
+  // receiver প্রশ্নটা খুললে backend isRead true করে। কিন্তু list / thread /
+  // unread count এর cache পুরোনো থেকে যায়, তাই একবার invalidate করছি।
+  // ref দিয়ে আটকানো আছে, তাই কোনো লুপ হবে না।
+  const markedIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!question || !id) return;
+    if (markedIdRef.current === id) return;
+    if (question.isReceiver && question.isRead === false) {
+      markedIdRef.current = id;
+      dispatch(privateQuestionApi.util.invalidateTags(["PrivateQuestion"]));
+    }
+  }, [question, id, dispatch]);
+
+  const deletedName = t("privateData.deletedUser");
+  const sender = resolveUser(question?.senderId, deletedName);
+  const receiver = resolveUser(question?.receiverId, deletedName);
 
   // backend নিজেই বলে দেয় আমি sender নাকি receiver
   const isSender = !!question?.isSender;
   const isReceiver = !!question?.isReceiver;
 
+  // ── Answer validation ──
+  const charCount = answerText.length;
+  const trimmedLength = answerText.trim().length;
+  const remaining = MIN_ANSWER - trimmedLength;
+  const canSubmit =
+    trimmedLength >= MIN_ANSWER && charCount <= MAX_ANSWER && !submitting;
+
   // ── Submit answer ──
   const handleSubmit = async () => {
-    if (!answerText.trim() || submitting) return;
+    if (!canSubmit) return;
     try {
       await createAnswer({
         questionId: id,
@@ -142,15 +172,9 @@ const PrivateQuestionDetailPage = () => {
       }).unwrap();
       setAnswerText("");
     } catch (err) {
-      Alert.alert("ত্রুটি", getErrorMessage(err));
+      Alert.alert(t("privateData.error"), getErrorMessage(err));
     }
   };
-
-  const charCount = answerText.length;
-  const canSubmit =
-    answerText.trim().length >= MIN_ANSWER &&
-    charCount <= MAX_ANSWER &&
-    !submitting;
 
   if (qLoading) {
     return (
@@ -167,31 +191,37 @@ const PrivateQuestionDetailPage = () => {
         style={{ paddingTop: insets.top }}
       >
         <Text className="text-text-tertiary dark:text-dark-text-tertiary">
-          প্রশ্নটি পাওয়া যায়নি
+          {t("privateData.questionNotFound")}
         </Text>
         <TouchableOpacity onPress={() => router.back()} className="mt-4">
-          <Text className="text-accent font-semibold">ফিরে যান</Text>
+          <Text className="text-accent font-semibold">
+            {t("privateData.goBack")}
+          </Text>
         </TouchableOpacity>
       </View>
     );
   }
 
+  // উত্তর লেখার ইনপুট দেখানো হবে কিনা
+  const showInput =
+    isReceiver && !aLoading && !existingAnswer && question.status !== "ignored";
+
   // ── Delete (confirm popup সহ) ──
   const confirmDeleteQuestion = () => {
     Alert.alert(
-      "প্রশ্নটি মুছে ফেলবেন?",
-      "আপনি কি সত্যিই এই প্রশ্নটি মুছে ফেলতে চান? এর উত্তর আর সেই উত্তরের রেটিংও মুছে যাবে।",
+      t("privateData.deleteQuestionTitle"),
+      t("privateData.deleteQuestionMessage"),
       [
-        { text: "না", style: "cancel" },
+        { text: t("privateData.no"), style: "cancel" },
         {
-          text: "হ্যাঁ, মুছে ফেলুন",
+          text: t("privateData.yesDelete"),
           style: "destructive",
           onPress: async () => {
             try {
               await deleteQuestion(question._id).unwrap();
               router.back();
             } catch (err) {
-              Alert.alert("ত্রুটি", getErrorMessage(err));
+              Alert.alert(t("privateData.error"), getErrorMessage(err));
             }
           },
         },
@@ -202,18 +232,18 @@ const PrivateQuestionDetailPage = () => {
   const confirmDeleteAnswer = () => {
     if (!existingAnswer) return;
     Alert.alert(
-      "উত্তরটি মুছে ফেলবেন?",
-      "আপনি কি সত্যিই আপনার উত্তরটি মুছে ফেলতে চান? এর রেটিংও মুছে যাবে।",
+      t("privateData.deleteAnswerTitle"),
+      t("privateData.deleteAnswerMessage"),
       [
-        { text: "না", style: "cancel" },
+        { text: t("privateData.no"), style: "cancel" },
         {
-          text: "হ্যাঁ, মুছে ফেলুন",
+          text: t("privateData.yesDelete"),
           style: "destructive",
           onPress: async () => {
             try {
               await deleteAnswer(existingAnswer._id).unwrap();
             } catch (err) {
-              Alert.alert("ত্রুটি", getErrorMessage(err));
+              Alert.alert(t("privateData.error"), getErrorMessage(err));
             }
           },
         },
@@ -270,7 +300,7 @@ const PrivateQuestionDetailPage = () => {
           />
         </TouchableOpacity>
         <Text className="text-lg font-bold text-text dark:text-dark-text flex-1">
-          প্রশ্নের বিবরণ
+          {t("privateData.questionDetails")}
         </Text>
 
         <View
@@ -292,23 +322,25 @@ const PrivateQuestionDetailPage = () => {
             }`}
           >
             {question.status === "answered"
-              ? "উত্তর দেওয়া হয়েছে"
+              ? t("privateData.statusAnswered")
               : question.status === "ignored"
-                ? "উপেক্ষা করা হয়েছে"
-                : "অপেক্ষমান"}
+                ? t("privateData.statusIgnored")
+                : t("privateData.statusPending")}
           </Text>
         </View>
       </View>
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
+        contentContainerStyle={{
+          paddingBottom: showInput ? 24 : insets.bottom + 40,
+        }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         {/* ── Question card ── */}
-        <View className="mx-4 mt-4 p-4 rounded-2xl border border-border dark:border-dark-border bg-background-secondary dark:bg-dark-background-secondary">
-          <View className="flex-row items-center gap-3 mb-3">
+        <View className="p-5 border-b border-border dark:border-dark-border">
+          <View className="flex-row items-center gap-2 mb-3">
             <Avatar
               name={sender.name}
               profileImage={sender.profileImage}
@@ -332,7 +364,7 @@ const PrivateQuestionDetailPage = () => {
                   </Text>
                 )}
                 <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
-                  {new Date(question.createdAt).toLocaleDateString("bn-BD", {
+                  {new Date(question.createdAt).toLocaleDateString(dateLocale, {
                     day: "numeric",
                     month: "short",
                     year: "numeric",
@@ -340,7 +372,7 @@ const PrivateQuestionDetailPage = () => {
                 </Text>
                 {question.isEdited && (
                   <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
-                    · সম্পাদিত
+                    · {t("privateData.edited")}
                   </Text>
                 )}
               </View>
@@ -348,10 +380,26 @@ const PrivateQuestionDetailPage = () => {
             <MenuButton onPress={openQuestionMenu} isDark={isDark} />
           </View>
 
-          <Text className="text-base text-text dark:text-dark-text leading-relaxed">
+          <Text className="text-base text-text font-medium dark:text-dark-text leading-relaxed">
             {question.questionText}
           </Text>
         </View>
+
+        {/* ── Answer input (প্রশ্নের কার্ডের ঠিক নিচে) ── */}
+        {showInput && (
+          <View className="px-5 pt-4">
+            <TextInput
+              value={answerText}
+              onChangeText={setAnswerText}
+              placeholder={t("privateData.answerPlaceholder")}
+              placeholderTextColor={isDark ? "#8a8a8a" : "#6d6d6d"}
+              multiline
+              maxLength={MAX_ANSWER + 100}
+              textAlignVertical="top"
+              className="text-base text-text dark:text-dark-text leading-relaxed min-h-[160px]"
+            />
+          </View>
+        )}
 
         {/* ── Existing answer ── */}
         {aLoading ? (
@@ -359,11 +407,11 @@ const PrivateQuestionDetailPage = () => {
             <ActivityIndicator size="small" color="#00914d" />
           </View>
         ) : existingAnswer ? (
-          <View className="mx-4 mt-4">
+          <View className="mx-5 mt-5">
             <Text className="text-xs font-semibold text-text-tertiary dark:text-dark-text-tertiary uppercase mb-2 px-1">
-              উত্তর
+              {t("privateData.answer")}
             </Text>
-            <View className="p-4 rounded-2xl border border-accent/30 bg-accent/5 dark:bg-accent/10">
+            <View>
               <View className="flex-row items-center gap-3 mb-3">
                 <Avatar
                   name={receiver.name}
@@ -383,16 +431,18 @@ const PrivateQuestionDetailPage = () => {
                   </Text>
                   <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
                     {new Date(existingAnswer.createdAt).toLocaleDateString(
-                      "bn-BD",
+                      dateLocale,
                       { day: "numeric", month: "short", year: "numeric" },
                     )}
-                    {existingAnswer.isEdited ? " · সম্পাদিত" : ""}
+                    {existingAnswer.isEdited
+                      ? ` · ${t("privateData.edited")}`
+                      : ""}
                   </Text>
                 </View>
                 <MenuButton onPress={openAnswerMenu} isDark={isDark} />
               </View>
 
-              <Text className="text-sm text-text dark:text-dark-text leading-relaxed">
+              <Text className="text-base text-text dark:text-dark-text leading-relaxed">
                 {existingAnswer.text}
               </Text>
             </View>
@@ -400,26 +450,13 @@ const PrivateQuestionDetailPage = () => {
         ) : null}
       </ScrollView>
 
-      {/* ── Answer input ── */}
-      {isReceiver && !existingAnswer && question.status !== "ignored" && (
+      {/* ── Fixed bottom bar: character count + submit button ── */}
+      {showInput && (
         <View
-          className="px-4 pt-3 pb-4 border-t border-border dark:border-dark-border bg-background dark:bg-dark-background"
+          className="px-4 pt-3 border-t border-border dark:border-dark-border bg-background dark:bg-dark-background flex-row items-center justify-between"
           style={{ paddingBottom: insets.bottom + 12 }}
         >
-          <View className="rounded-2xl border border-border dark:border-dark-border bg-background-secondary dark:bg-dark-background-secondary p-3 mb-2">
-            <TextInput
-              value={answerText}
-              onChangeText={setAnswerText}
-              placeholder="আপনার উত্তর লিখুন..."
-              placeholderTextColor={isDark ? "#8a8a8a" : "#6d6d6d"}
-              multiline
-              maxLength={MAX_ANSWER + 100}
-              textAlignVertical="top"
-              className="text-sm text-text dark:text-dark-text leading-relaxed min-h-[80px] max-h-[160px]"
-            />
-          </View>
-
-          <View className="flex-row items-center justify-between">
+          <View>
             <Text
               className={`text-xs ${
                 charCount > MAX_ANSWER
@@ -429,38 +466,46 @@ const PrivateQuestionDetailPage = () => {
             >
               {charCount}/{MAX_ANSWER}
             </Text>
-
-            <TouchableOpacity
-              onPress={handleSubmit}
-              disabled={!canSubmit}
-              className={`flex-row items-center gap-2 px-5 py-2.5 rounded-full ${
-                canSubmit
-                  ? "bg-accent"
-                  : "bg-background-tertiary dark:bg-dark-background-tertiary"
-              }`}
-            >
-              {submitting ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <>
-                  <Ionicons
-                    name="send"
-                    size={14}
-                    color={canSubmit ? "#fff" : isDark ? "#8a8a8a" : "#6d6d6d"}
-                  />
-                  <Text
-                    className={`text-sm font-semibold ${
-                      canSubmit
-                        ? "text-white"
-                        : "text-text-tertiary dark:text-dark-text-tertiary"
-                    }`}
-                  >
-                    উত্তর দাও
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
+            {trimmedLength > 0 && remaining > 0 && (
+              <Text className="text-xs text-yellow-700 dark:text-yellow-400 mt-0.5">
+                {t("privateData.minCharsHint", {
+                  num: remaining,
+                  min: MIN_ANSWER,
+                })}
+              </Text>
+            )}
           </View>
+
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={!canSubmit}
+            className={`flex-row items-center gap-2 px-5 py-2.5 rounded-full ${
+              canSubmit
+                ? "bg-accent"
+                : "bg-background-tertiary dark:bg-dark-background-tertiary"
+            }`}
+          >
+            {submitting ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Ionicons
+                  name="send"
+                  size={14}
+                  color={canSubmit ? "#fff" : isDark ? "#8a8a8a" : "#6d6d6d"}
+                />
+                <Text
+                  className={`text-sm font-semibold ${
+                    canSubmit
+                      ? "text-white"
+                      : "text-text-tertiary dark:text-dark-text-tertiary"
+                  }`}
+                >
+                  {t("privateData.submitAnswer")}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
       )}
     </KeyboardAvoidingView>

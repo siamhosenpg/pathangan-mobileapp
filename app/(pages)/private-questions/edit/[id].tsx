@@ -11,11 +11,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -25,10 +28,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const LIMITS = {
   question: { min: 1, max: 1000 },
-  answer: { min: 5, max: 2000 },
+  answer: { min: 15, max: 2000 },
 } as const;
 
 const EditPrivateContentPage = () => {
+  const { t } = useTranslation();
   const { id, type } = useLocalSearchParams<{ id: string; type?: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -38,8 +42,10 @@ const EditPrivateContentPage = () => {
   const isAnswer = type === "answer";
   const limit = isAnswer ? LIMITS.answer : LIMITS.question;
 
-  const { data: qData, isLoading: qLoading } =
-    useGetPrivateQuestionByIdQuery(id);
+  const { data: qData, isLoading: qLoading } = useGetPrivateQuestionByIdQuery(
+    id,
+    { skip: !id },
+  );
   const { data: aData, isLoading: aLoading } =
     useGetPrivateAnswerByQuestionQuery(id, { skip: !id || !isAnswer });
 
@@ -64,12 +70,16 @@ const EditPrivateContentPage = () => {
   }, [originalText, initialized]);
 
   const saving = savingQ || savingA;
+  const charCount = text.length;
   const trimmed = text.trim();
+  const trimmedLength = trimmed.length;
+  const remaining = limit.min - trimmedLength;
   const isChanged = trimmed !== (originalText ?? "").trim();
   const canSave =
     isChanged &&
-    trimmed.length >= limit.min &&
-    trimmed.length <= limit.max &&
+    trimmedLength >= limit.min &&
+    trimmedLength <= limit.max &&
+    charCount <= limit.max &&
     !saving;
 
   // অনুমতি: প্রশ্ন শুধু sender, উত্তর শুধু receiver edit করতে পারবে
@@ -77,6 +87,7 @@ const EditPrivateContentPage = () => {
 
   const handleSave = async () => {
     if (!canSave) return;
+    Keyboard.dismiss();
     try {
       if (isAnswer) {
         if (!answer) return;
@@ -86,19 +97,20 @@ const EditPrivateContentPage = () => {
       }
       router.back();
     } catch (err) {
-      Alert.alert("ত্রুটি", getErrorMessage(err));
+      Alert.alert(t("privateData.error"), getErrorMessage(err));
     }
   };
 
   const handleBack = () => {
+    Keyboard.dismiss();
     if (isChanged && !saving) {
       Alert.alert(
-        "পরিবর্তন বাতিল করবেন?",
-        "আপনার করা পরিবর্তন সেভ হয়নি। বের হয়ে গেলে হারিয়ে যাবে।",
+        t("privateData.discardTitle"),
+        t("privateData.discardMessage"),
         [
-          { text: "থাকুন", style: "cancel" },
+          { text: t("privateData.stay"), style: "cancel" },
           {
-            text: "বের হয়ে যান",
+            text: t("privateData.leave"),
             style: "destructive",
             onPress: () => router.back(),
           },
@@ -126,10 +138,12 @@ const EditPrivateContentPage = () => {
         style={{ paddingTop: insets.top }}
       >
         <Text className="text-text-tertiary dark:text-dark-text-tertiary text-center">
-          এটি পাওয়া যায়নি অথবা আপনার এটি সম্পাদনা করার অনুমতি নেই
+          {t("privateData.notAllowed")}
         </Text>
         <TouchableOpacity onPress={() => router.back()} className="mt-4">
-          <Text className="text-accent font-semibold">ফিরে যান</Text>
+          <Text className="text-accent font-semibold">
+            {t("privateData.goBack")}
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -155,13 +169,87 @@ const EditPrivateContentPage = () => {
         </TouchableOpacity>
 
         <Text className="text-lg font-bold text-text dark:text-dark-text flex-1">
-          {isAnswer ? "উত্তর সম্পাদনা" : "প্রশ্ন সম্পাদনা"}
+          {isAnswer
+            ? t("privateData.editAnswer")
+            : t("privateData.editQuestion")}
         </Text>
+      </View>
+
+      {/* ── উত্তর edit করার সময় প্রশ্নটা উপরে ফিক্সড (বেশি বড় হলে ভেতরে স্ক্রল) ── */}
+      {isAnswer && (
+        <View className="max-h-[30%] border-b border-border dark:border-dark-border">
+          <ScrollView
+            className="p-5"
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text className="text-xs font-semibold text-text-tertiary dark:text-dark-text-tertiary uppercase mb-2">
+              {t("privateData.question")}
+            </Text>
+            <Text className="text-base text-text font-medium dark:text-dark-text leading-relaxed">
+              {question.questionText}
+            </Text>
+          </ScrollView>
+        </View>
+      )}
+
+      {/* ── Input: বাকি পুরো জায়গা নেয়, লেখা বেশি হলে ভেতরে স্ক্রল হয়,
+           তাই কার্সর সবসময় visible থাকে ── */}
+      <View className="flex-1 px-5 pt-4">
+        <TextInput
+          value={text}
+          onChangeText={setText}
+          placeholder={
+            isAnswer
+              ? t("privateData.answerPlaceholder")
+              : t("privateData.questionPlaceholder")
+          }
+          placeholderTextColor={isDark ? "#8a8a8a" : "#6d6d6d"}
+          multiline
+          autoFocus
+          scrollEnabled
+          maxLength={limit.max + 100}
+          textAlignVertical="top"
+          className="flex-1 text-base text-text dark:text-dark-text leading-relaxed"
+        />
+      </View>
+
+      {/* ── Fixed bottom bar: character count + save button ── */}
+      <View
+        className="px-4 pt-3 border-t border-border dark:border-dark-border bg-background dark:bg-dark-background flex-row items-center justify-between"
+        style={{ paddingBottom: insets.bottom + 12 }}
+      >
+        <View className="flex-1 pr-3">
+          <Text
+            className={`text-xs ${
+              charCount > limit.max
+                ? "text-red-500"
+                : "text-text-tertiary dark:text-dark-text-tertiary"
+            }`}
+          >
+            {charCount}/{limit.max}
+          </Text>
+          {trimmedLength > 0 && remaining > 0 ? (
+            <Text className="text-xs text-yellow-700 dark:text-yellow-400 mt-0.5">
+              {t("privateData.minCharsHint", {
+                num: remaining,
+                min: limit.min,
+              })}
+            </Text>
+          ) : (
+            <Text
+              className="text-xs text-text-tertiary dark:text-dark-text-tertiary mt-0.5"
+              numberOfLines={1}
+            >
+              {t("privateData.editedNote")}
+            </Text>
+          )}
+        </View>
 
         <TouchableOpacity
           onPress={handleSave}
           disabled={!canSave}
-          className={`px-5 py-2 rounded-full ${
+          className={`flex-row items-center gap-2 px-5 py-2.5 rounded-full ${
             canSave
               ? "bg-accent"
               : "bg-background-tertiary dark:bg-dark-background-tertiary"
@@ -170,65 +258,24 @@ const EditPrivateContentPage = () => {
           {saving ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text
-              className={`text-sm font-semibold ${
-                canSave
-                  ? "text-white"
-                  : "text-text-tertiary dark:text-dark-text-tertiary"
-              }`}
-            >
-              সেভ
-            </Text>
+            <>
+              <Ionicons
+                name="checkmark"
+                size={16}
+                color={canSave ? "#fff" : isDark ? "#8a8a8a" : "#6d6d6d"}
+              />
+              <Text
+                className={`text-sm font-semibold ${
+                  canSave
+                    ? "text-white"
+                    : "text-text-tertiary dark:text-dark-text-tertiary"
+                }`}
+              >
+                {t("privateData.save")}
+              </Text>
+            </>
           )}
         </TouchableOpacity>
-      </View>
-
-      <View className="flex-1 px-4 pt-4">
-        {/* উত্তর edit করার সময় প্রশ্নটা উপরে দেখাই, যাতে context মনে থাকে */}
-        {isAnswer && (
-          <View className="mb-4 p-3 rounded-2xl border border-border dark:border-dark-border bg-background-secondary dark:bg-dark-background-secondary">
-            <Text className="text-xs font-semibold text-text-tertiary dark:text-dark-text-tertiary mb-1">
-              প্রশ্ন
-            </Text>
-            <Text
-              className="text-sm text-text-secondary dark:text-dark-text-secondary"
-              numberOfLines={3}
-            >
-              {question.questionText}
-            </Text>
-          </View>
-        )}
-
-        <View className="rounded-2xl border border-border dark:border-dark-border bg-background-secondary dark:bg-dark-background-secondary p-3">
-          <TextInput
-            value={text}
-            onChangeText={setText}
-            placeholder={
-              isAnswer ? "আপনার উত্তর লিখুন..." : "আপনার প্রশ্ন লিখুন..."
-            }
-            placeholderTextColor={isDark ? "#8a8a8a" : "#6d6d6d"}
-            multiline
-            autoFocus
-            maxLength={limit.max + 100}
-            textAlignVertical="top"
-            className="text-sm text-text dark:text-dark-text leading-relaxed min-h-[160px] max-h-[320px]"
-          />
-        </View>
-
-        <View className="flex-row items-center justify-between mt-2 px-1">
-          <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
-            সংরক্ষণ করলে "সম্পাদিত" লেখা দেখাবে
-          </Text>
-          <Text
-            className={`text-xs ${
-              text.length > limit.max
-                ? "text-red-500"
-                : "text-text-tertiary dark:text-dark-text-tertiary"
-            }`}
-          >
-            {text.length}/{limit.max}
-          </Text>
-        </View>
       </View>
     </KeyboardAvoidingView>
   );

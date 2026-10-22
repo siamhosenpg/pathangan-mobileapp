@@ -3,10 +3,12 @@ import { useColorScheme } from "nativewind";
 import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity, View } from "react-native";
 
+type TabKey = "inbox" | "sent";
+
 type Props = {
   unreadCount?: number;
-  activeTab: "inbox" | "sent";
-  onTabChange: (tab: "inbox" | "sent") => void;
+  activeTab: TabKey;
+  onTabChange: (tab: TabKey) => void;
   onBack?: () => void;
 };
 
@@ -19,30 +21,35 @@ const PrivateQuestionHeader = ({
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { t } = useTranslation();
-  const isInbox = activeTab === "inbox";
-  const isSent = activeTab === "sent";
 
   const activeColor = "#00914d";
   const inactiveColor = isDark ? "#8a8a8a" : "#6d6d6d";
+  const borderColor = isDark ? "#2a2a2a" : "#e5e5e5";
 
-  // সক্রিয় ট্যাবের shadow
-  const activeTabStyle = {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  };
-
-  // নিষ্ক্রিয় ট্যাবে background সরানো হচ্ছে
-  const inactiveTabStyle = {
-    backgroundColor: "transparent",
-  };
+  const tabs: {
+    key: TabKey;
+    label: string;
+    icon: keyof typeof Ionicons.glyphMap;
+    iconOutline: keyof typeof Ionicons.glyphMap;
+  }[] = [
+    {
+      key: "inbox",
+      label: t("privateData.inbox"),
+      icon: "mail",
+      iconOutline: "mail-outline",
+    },
+    {
+      key: "sent",
+      label: t("privateData.sent"),
+      icon: "send",
+      iconOutline: "send-outline",
+    },
+  ];
 
   return (
     <View className="bg-background dark:bg-dark-background">
       {/* ── TOP BAR ── */}
-      <View className="px-4 pt-3 pb-2 flex-row items-center mb-3">
+      <View className="px-4 pt-3 pb-2 flex-row items-center">
         {/* BACK BUTTON */}
         <TouchableOpacity
           onPress={onBack}
@@ -58,7 +65,7 @@ const PrivateQuestionHeader = ({
 
         {/* TITLE */}
         <Text className="text-lg font-bold text-text dark:text-dark-text flex-1">
-          {t("questions")}
+          {t("privateData.questions")}
         </Text>
 
         {/* UNREAD BADGE */}
@@ -72,48 +79,45 @@ const PrivateQuestionHeader = ({
       </View>
 
       {/* ── TABS ── */}
-      <View className="flex-row bg-background-secondary dark:bg-dark-background-secondary p-1 rounded-xl mx-4 mb-2">
-        {/* INBOX */}
-        <TouchableOpacity
-          onPress={() => onTabChange("inbox")}
-          activeOpacity={0.8}
-          className="flex-1 flex-row items-center justify-center py-2 rounded-lg gap-1 bg-background dark:bg-dark-background"
-          style={isInbox ? activeTabStyle : inactiveTabStyle}
-        >
-          <Ionicons
-            name={isInbox ? "mail" : "mail-outline"}
-            size={16}
-            color={isInbox ? activeColor : inactiveColor}
-          />
+      <View
+        className="flex-row"
+        style={{
+          borderBottomWidth: 1,
+          borderBottomColor: borderColor,
+        }}
+      >
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.key;
 
-          <Text
-            className="text-sm font-medium"
-            style={{ color: isInbox ? activeColor : inactiveColor }}
-          >
-            {t("inbox")}
-          </Text>
-        </TouchableOpacity>
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              onPress={() => onTabChange(tab.key)}
+              activeOpacity={0.7}
+              className="flex-1 flex-row items-center justify-center py-3 gap-1.5"
+              style={{
+                borderBottomWidth: 2,
+                borderBottomColor: isActive ? activeColor : "transparent",
+                marginBottom: -1,
+              }}
+            >
+              <Ionicons
+                name={isActive ? tab.icon : tab.iconOutline}
+                size={16}
+                color={isActive ? activeColor : inactiveColor}
+              />
 
-        {/* SENT */}
-        <TouchableOpacity
-          onPress={() => onTabChange("sent")}
-          activeOpacity={0.8}
-          className="flex-1 flex-row items-center justify-center py-2 rounded-lg gap-1 bg-background dark:bg-dark-background"
-          style={isSent ? activeTabStyle : inactiveTabStyle}
-        >
-          <Ionicons
-            name={isSent ? "send" : "send-outline"}
-            size={16}
-            color={isSent ? activeColor : inactiveColor}
-          />
-
-          <Text
-            className="text-sm font-medium"
-            style={{ color: isSent ? activeColor : inactiveColor }}
-          >
-            {t("sent")}
-          </Text>
-        </TouchableOpacity>
+              <Text
+                className=" font-semibold "
+                style={{
+                  color: isActive ? activeColor : inactiveColor,
+                }}
+              >
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );

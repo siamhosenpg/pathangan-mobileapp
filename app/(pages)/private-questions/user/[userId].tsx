@@ -1,13 +1,11 @@
-import {
-  DELETED_USER_NAME,
-  UserAvatar,
-} from "@/components/ui/card/questioncard/PrivateQuestionPersonCard";
+import { UserAvatar } from "@/components/ui/card/questioncard/PrivateQuestionPersonCard";
 import ThreadQuestionCard from "@/components/ui/card/questioncard/ThreadQuestionCard";
 import { useGetQuestionsWithUserInfiniteQuery } from "@/redux/api/privateQuestion/privateQuestionApi";
 import type { QuestionMode } from "@/types/privateQuestionTypes";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   FlatList,
@@ -18,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const UserQuestionsPage = () => {
+  const { t } = useTranslation();
   const { userId, mode } = useLocalSearchParams<{
     userId: string;
     mode?: string;
@@ -43,7 +42,8 @@ const UserQuestionsPage = () => {
   const questions = data?.pages?.flatMap((p) => p.questions) ?? [];
   const otherUser = data?.pages?.[0]?.user ?? null;
   const isDeleted = !otherUser;
-  const name = otherUser?.name || otherUser?.username || DELETED_USER_NAME;
+  const name =
+    otherUser?.name || otherUser?.username || t("privateData.deletedUser");
 
   const handleBack = () => {
     if (router.canGoBack()) router.back();
@@ -88,7 +88,9 @@ const UserQuestionsPage = () => {
                 {name}
               </Text>
               <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
-                {viewMode === "inbox" ? "তার করা প্রশ্ন" : "আপনার করা প্রশ্ন"}
+                {viewMode === "inbox"
+                  ? t("privateData.theirQuestions")
+                  : t("privateData.yourQuestions")}
               </Text>
             </View>
           </>
@@ -118,7 +120,7 @@ const UserQuestionsPage = () => {
             <View className="items-center justify-center py-20">
               <Text className="text-3xl mb-2">📭</Text>
               <Text className="text-sm text-text-tertiary dark:text-dark-text-tertiary">
-                কোনো প্রশ্ন নেই
+                {t("privateData.noQuestions")}
               </Text>
             </View>
           }
