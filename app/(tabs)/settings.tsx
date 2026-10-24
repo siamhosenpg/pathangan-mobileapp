@@ -8,7 +8,7 @@ import { useAppSelector } from "@/redux/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Image,
@@ -223,6 +223,26 @@ export default function SettingsScreen() {
               onPress={() => {
                 /* logout logic */
               }}
+            />
+          </SettingsCard>
+        </View>
+
+        {/* ── Danger Zone: অ্যাকাউন্ট ডিলিট ── */}
+        <View className="px-5">
+          <Text className="text-[11px] font-medium text-red-400 tracking-widest uppercase mb-2">
+            {t("dangerZone", { defaultValue: "ঝুঁকিপূর্ণ এলাকা" })}
+          </Text>
+          <SettingsCard>
+            <SettingsRow
+              icon="trash-outline"
+              iconBg={isDark ? "#2e1a1a" : "#fff0f0"}
+              iconColor="#f87171"
+              title={t("deleteAccount", { defaultValue: "অ্যাকাউন্ট ডিলিট" })}
+              subtitle={t("deleteAccountSub", {
+                defaultValue: "পাসওয়ার্ড দিয়ে অ্যাকাউন্ট মুছে ফেলুন",
+              })}
+              titleClass="text-red-400"
+              onPress={() => router.push("/delete-account")}
             />
           </SettingsCard>
         </View>

@@ -44,6 +44,7 @@ export interface User {
   badges?: [string];
   greenmarkVerified?: boolean;
   status?: string;
+  provider?: "local" | "google" | "both";
   createdAt?: string;
   activityStats?: ActivityStats;
 }
@@ -59,6 +60,15 @@ export interface GetUserResponse {
 export interface UpdateUserRequest {
   userid: number;
   formData: FormData;
+}
+
+// অ্যাকাউন্ট ডিলিটের জন্য:
+// পাসওয়ার্ড আছে এমন account → password
+// শুধু Google account → confirmText (নিজের username)
+export interface DeleteUserRequest {
+  userid: number;
+  password?: string;
+  confirmText?: string;
 }
 
 export interface SuggestedUsersResponse {

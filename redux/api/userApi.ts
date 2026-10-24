@@ -1,4 +1,5 @@
 import type {
+  DeleteUserRequest,
   SuggestedUsersResponse,
   UpdateUserRequest,
   User,
@@ -45,12 +46,14 @@ const userApi = baseApi.injectEndpoints({
       ],
     }),
 
-    deleteUser: builder.mutation<{ message: string }, number>({
-      query: (userid) => ({
+    // অ্যাকাউন্ট soft delete (পাসওয়ার্ড বা username দিয়ে নিশ্চিত করতে হয়)
+    // invalidatesTags নেই: সফল হলে পেজ থেকে resetApiState + logout করা হয়
+    deleteUser: builder.mutation<{ message: string }, DeleteUserRequest>({
+      query: ({ userid, password, confirmText }) => ({
         url: `/users/user/${userid}`,
         method: "DELETE",
+        body: { password, confirmText },
       }),
-      invalidatesTags: ["User"],
     }),
 
     savePushToken: builder.mutation<{ message: string }, { pushToken: string }>(
@@ -90,5 +93,5 @@ export const {
   useDeleteUserMutation,
   useSavePushTokenMutation,
   useRemovePushTokenMutation,
-  useAcceptTermsMutation, // ✅ নতুন
+  useAcceptTermsMutation,
 } = userApi;
