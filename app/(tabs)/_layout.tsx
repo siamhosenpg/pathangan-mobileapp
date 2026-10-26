@@ -3,10 +3,10 @@ import * as Haptics from "expo-haptics";
 import { Tabs } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "nativewind";
-import { useRef } from "react";
+import { useState } from "react";
 import { Dimensions } from "react-native";
+import { Drawer } from "react-native-drawer-layout";
 import { Pressable } from "react-native-gesture-handler";
-import DrawerLayout from "react-native-gesture-handler/DrawerLayout";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DrawerContext } from "@/components/layout/menu/DrawerContext";
@@ -36,10 +36,13 @@ export default function TabLayout() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
-  const drawerRef = useRef<DrawerLayout>(null);
+  const [open, setOpen] = useState(false);
 
-  const openDrawer = () => drawerRef.current?.openDrawer();
-  const closeDrawer = () => drawerRef.current?.closeDrawer();
+  const openDrawer = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setOpen(true);
+  };
+  const closeDrawer = () => setOpen(false);
 
   const hapticTabButton = (props: any) => (
     <Pressable
@@ -51,24 +54,27 @@ export default function TabLayout() {
     />
   );
 
-  const renderDrawer = () => <MenuDrawerContent />;
-
   return (
-    <DrawerContext.Provider value={{ drawerRef, openDrawer, closeDrawer }}>
+    <DrawerContext.Provider value={{ openDrawer, closeDrawer }}>
       <AuthGuard>
         <StatusBar style={isDark ? "light" : "dark"} />
         <TermsGate />
-        <DrawerLayout
-          ref={drawerRef}
-          drawerWidth={DRAWER_WIDTH}
-          drawerPosition="left"
+        <Drawer
+          open={open}
+          onOpen={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setOpen(true);
+          }}
+          onClose={() => setOpen(false)}
           drawerType="slide"
-          overlayColor="rgba(0,0,0,0.0)"
-          drawerBackgroundColor={isDark ? "#0f0f0f" : "#ffffff"}
-          renderNavigationView={renderDrawer}
-          onDrawerOpen={() =>
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-          }
+          drawerPosition="left"
+          drawerStyle={{
+            width: DRAWER_WIDTH,
+            backgroundColor: isDark ? "#0f0f0f" : "#ffffff",
+          }}
+          overlayStyle={{ backgroundColor: "transparent" }}
+          swipeEnabled
+          renderDrawerContent={() => <MenuDrawerContent />}
         >
           <Tabs
             screenOptions={{
@@ -162,7 +168,7 @@ export default function TabLayout() {
             <Tabs.Screen name="settings" options={{ href: null }} />
             <Tabs.Screen name="saved" options={{ href: null }} />
           </Tabs>
-        </DrawerLayout>
+        </Drawer>
       </AuthGuard>
     </DrawerContext.Provider>
   );

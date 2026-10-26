@@ -1,7 +1,6 @@
 import { createContext, useContext } from "react";
-import DrawerLayout from "react-native-gesture-handler/DrawerLayout";
+
 type DrawerContextType = {
-  drawerRef: React.RefObject<DrawerLayout | null>; // ← | null যোগ করো
   openDrawer: () => void;
   closeDrawer: () => void;
 };

@@ -60,7 +60,7 @@ export function MenuDrawerContent() {
     {
       icon: SaveIcon,
       label: t("savedPosts"),
-      route: "/(tabs)/saved",
+      route: "/(pages)/saved",
     },
     {
       icon: PrivateMessageicon,
@@ -71,7 +71,7 @@ export function MenuDrawerContent() {
     {
       icon: SettingsIcon,
       label: t("settings"),
-      route: "/(tabs)/settings",
+      route: "/(pages)/settings/settings",
     },
     {
       icon: handouticon,

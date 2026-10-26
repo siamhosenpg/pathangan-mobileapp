@@ -40,6 +40,10 @@ type FieldErrors = {
   terms?: string;
 };
 
+type Props = {
+  onSwitch: () => void; // Login ফর্মে যাওয়ার জন্য
+};
+
 // পাসওয়ার্ড কতটা শক্ত (০–৩)
 const getStrength = (pw: string) => {
   let score = 0;
@@ -58,7 +62,7 @@ const STRENGTH_COLORS = [
 ];
 const STRENGTH_KEYS = ["", "strengthWeak", "strengthFair", "strengthStrong"];
 
-export default function RegisterForm() {
+export default function RegisterForm({ onSwitch }: Props) {
   const { t } = useTranslation();
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -278,7 +282,7 @@ export default function RegisterForm() {
               <Text className="text-text-tertiary dark:text-dark-text-tertiary text-sm">
                 {t("authData.register.haveAccount")}
               </Text>
-              <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
+              <TouchableOpacity onPress={onSwitch}>
                 <Text className="text-accent font-semibold text-sm">
                   {t("authData.register.loginLink")}
                 </Text>

@@ -29,7 +29,11 @@ import ArrowRightIcon from "@/assets/icons/angle-small-right.svg";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function LoginForm() {
+type Props = {
+  onSwitch: () => void; // Register ফর্মে যাওয়ার জন্য
+};
+
+export default function LoginForm({ onSwitch }: Props) {
   const { t } = useTranslation();
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -183,7 +187,7 @@ export default function LoginForm() {
               <Text className="text-text-tertiary dark:text-dark-text-tertiary text-sm font-medium">
                 {t("authData.login.noAccount")}
               </Text>
-              <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
+              <TouchableOpacity onPress={onSwitch}>
                 <Text className="text-accent font-semibold text-sm">
                   {t("authData.login.registerLink")}
                 </Text>
