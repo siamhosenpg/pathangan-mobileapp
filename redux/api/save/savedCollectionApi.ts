@@ -21,7 +21,8 @@ const savedCollectionApi = baseApi.injectEndpoints({
     }),
 
     getSingleCollection: builder.query<Collection, string>({
-      query: (id) => ({ url: `/collections/${id}`, method: "GET" }),
+      // আগে URL এ /saves ছিল না — সেটাই বাগ ছিল
+      query: (id) => ({ url: `/saves/collections/${id}`, method: "GET" }),
       providesTags: (result, error, id) => [{ type: "Collection", id }],
     }),
 
@@ -42,9 +43,14 @@ const savedCollectionApi = baseApi.injectEndpoints({
       invalidatesTags: ["Collection"],
     }),
 
-    deleteCollection: builder.mutation<{ message: string }, string>({
-      query: (id) => ({ url: `/collections/${id}`, method: "DELETE" }),
-      invalidatesTags: ["Collection"],
+    deleteCollection: builder.mutation<
+      { message: string; deletedItems: number },
+      string
+    >({
+      // আগে URL এ /saves ছিল না — সেটাই বাগ ছিল
+      query: (id) => ({ url: `/saves/collections/${id}`, method: "DELETE" }),
+      // ভেতরের আইটেমও মুছে যায়, তাই SavedItem ক্যাশও রিফ্রেশ হবে
+      invalidatesTags: ["Collection", "SavedItem"],
     }),
   }),
 });
