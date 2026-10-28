@@ -597,6 +597,7 @@
     "alreadySavedNotice": "এই পোস্টটি ইতিমধ্যে এই কালেকশনে সেভ করা আছে",
     "saveFailed": "সেভ করা যায়নি, আবার চেষ্টা করো",
     "newCollection": "নতুন কালেকশন",
+    "defaultProtected": "ডিফল্ট কালেকশন, বদলানো বা মোছা যাবে না",
     "collectionNamePlaceholder": "কালেকশনের নাম লিখো",
     "create": "তৈরি করো",
     "add": "যোগ",

@@ -6,7 +6,6 @@ import {
   type Collection,
 } from "@/redux/api/save/savedCollectionApi";
 import { getSaveErrorKey } from "@/utils/saveError";
-import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -16,18 +15,36 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from "react-native";
 import CollectionEditSheet from "./CollectionEditSheet";
+
+// ── icons ──
+import CreateIcon from "@/assets/icons/add.svg"; // @/assets/icons/add.svg
+import BookMark from "@/assets/icons/bookmarkBold.svg"; // @/assets/icons/bookmarkBold.svg
+import EditIcon from "@/assets/icons/file-edit.svg"; // @/assets/icons/file-edit.svg (rename বাটন)
+import FolderIcon from "@/assets/icons/folder.svg"; // @/assets/icons/folder.svg
+import LockIcon from "@/assets/icons/lock.svg"; // @/assets/icons/lock.svg (default collection-এর জন্য)
+import TrashIcon from "@/assets/icons/trash.svg"; // @/assets/icons/trash.svg (delete বাটন)
 
 interface Props {
   activeId: string;
   onSelect: (id: string) => void;
 }
 
+const ACCENT = "#00914d";
+const DANGER = "#ef4444";
+
 export function SavedCollectionPanel({ activeId, onSelect }: Props) {
   const { t } = useTranslation();
   const { open } = useBottomSheet();
+
+  // dark / light mode অনুযায়ী রং
+  const isDark = useColorScheme() === "dark";
+  const iconColor = isDark ? "#a3a3a3" : "#6d6d6d";
+  const strongIconColor = isDark ? "#ffffff" : "#111111";
+  const placeholderColor = isDark ? "#8a8a8a" : "#6d6d6d";
 
   const [newName, setNewName] = useState("");
   const [showInput, setShowInput] = useState(false);
@@ -38,6 +55,15 @@ export function SavedCollectionPanel({ activeId, onSelect }: Props) {
   const [createCollection, { isLoading: creating }] =
     useCreateCollectionMutation();
   const [deleteCollection] = useDeleteCollectionMutation();
+
+  // বর্তমানে খোলা collection
+  const activeCol = collections?.find((c) => c._id === activeId);
+
+  const toggleInput = () => {
+    setShowInput((p) => !p);
+    setNewName("");
+    setInputError("");
+  };
 
   const handleCreate = async () => {
     const name = newName.trim();
@@ -89,14 +115,14 @@ export function SavedCollectionPanel({ activeId, onSelect }: Props) {
 
   return (
     <View className="bg-background dark:bg-dark-background border-b border-border dark:border-dark-border">
-      {/* ── চিপ + যোগ বাটন এক row এ ── */}
-      <View className="flex-row items-center gap-2 px-4 py-3">
+      {/* ── চিপ তালিকা + যোগ বাটন ── */}
+      <View className="flex-row items-center gap-3 pl-4 pr-4 pt-3 pb-3">
         {isLoading ? (
           <View className="flex-1 flex-row gap-2">
             {[...Array(3)].map((_, i) => (
               <View
                 key={i}
-                className="h-8 w-20 rounded-full bg-background-secondary dark:bg-dark-background-secondary"
+                className="h-10 w-24 rounded-full bg-background-secondary dark:bg-dark-background-secondary animate-pulse"
               />
             ))}
           </View>
@@ -104,33 +130,33 @@ export function SavedCollectionPanel({ activeId, onSelect }: Props) {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerClassName="flex-row gap-2"
+            contentContainerClassName="flex-row gap-2 pr-2"
             keyboardShouldPersistTaps="handled"
             className="flex-1"
           >
             {collections?.map((col) => {
               const isActive = activeId === col._id;
-              const isDeleting = deletingId === col._id;
+              const CollectionIcon = col.default ? BookMark : FolderIcon;
 
               return (
                 <TouchableOpacity
                   key={col._id}
                   onPress={() => onSelect(col._id)}
-                  activeOpacity={0.75}
-                  style={{ opacity: isDeleting ? 0.5 : 1 }}
-                  className={`flex-row items-center gap-1.5 px-3 py-2 rounded-full border ${
+                  activeOpacity={0.8}
+                  className={`h-10 flex-row items-center gap-2 px-4 rounded-full border ${
                     isActive
                       ? "bg-accent border-accent"
                       : "bg-background-secondary dark:bg-dark-background-secondary border-border dark:border-dark-border"
                   }`}
                 >
-                  <Ionicons
-                    name={col.default ? "bookmark" : "folder-outline"}
-                    size={13}
-                    color={isActive ? "#fff" : "#6d6d6d"}
+                  <CollectionIcon
+                    width={16}
+                    height={16}
+                    color={isActive ? "#ffffff" : iconColor}
                   />
                   <Text
-                    className={`text-sm font-medium ${
+                    numberOfLines={1}
+                    className={`text-sm font-semibold max-w-[140px] ${
                       isActive
                         ? "text-white"
                         : "text-text-secondary dark:text-dark-text-secondary"
@@ -138,58 +164,27 @@ export function SavedCollectionPanel({ activeId, onSelect }: Props) {
                   >
                     {col.default ? t("saveData.defaultName") : col.name}
                   </Text>
-
-                  {/* এডিট ও ডিলিট — ডিফল্টে দেখাবে না */}
-                  {!col.default && (
-                    <>
-                      <TouchableOpacity
-                        onPress={() => handleEdit(col)}
-                        hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-                        className="ml-0.5"
-                      >
-                        <Ionicons
-                          name="pencil"
-                          size={13}
-                          color={isActive ? "rgba(255,255,255,0.8)" : "#9CA3AF"}
-                        />
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        onPress={() => handleDelete(col)}
-                        hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-                      >
-                        <Ionicons
-                          name="close-circle"
-                          size={14}
-                          color={isActive ? "rgba(255,255,255,0.8)" : "#9CA3AF"}
-                        />
-                      </TouchableOpacity>
-                    </>
-                  )}
                 </TouchableOpacity>
               );
             })}
           </ScrollView>
         )}
 
-        {/* যোগ বাটন — সবসময় right এ */}
+        {/* যোগ বাটন — খোলা থাকলে ৪৫° ঘুরে "×" হয়ে যায় */}
         <TouchableOpacity
-          onPress={() => {
-            setShowInput((p) => !p);
-            setNewName("");
-            setInputError("");
-          }}
-          className="w-8 h-8 rounded-full bg-background-secondary dark:bg-dark-background-secondary items-center justify-center shrink-0"
+          onPress={toggleInput}
+          activeOpacity={0.8}
+          className="w-10 h-10 rounded-full bg-accent/10 items-center justify-center shrink-0"
         >
-          <Ionicons
-            name={showInput ? "close" : "add"}
-            size={18}
-            color="#00914d"
-          />
+          <View
+            style={{ transform: [{ rotate: showInput ? "45deg" : "0deg" }] }}
+          >
+            <CreateIcon width={20} height={20} color={ACCENT} />
+          </View>
         </TouchableOpacity>
       </View>
 
-      {/* ── ইনপুট — শুধু showInput এ দেখাবে ── */}
+      {/* ── নতুন collection-এর ইনপুট ── */}
       {showInput && (
         <View className="px-4 pb-3">
           <View className="flex-row gap-2">
@@ -201,7 +196,7 @@ export function SavedCollectionPanel({ activeId, onSelect }: Props) {
               }}
               onSubmitEditing={handleCreate}
               placeholder={t("saveData.collectionNamePlaceholder")}
-              placeholderTextColor="#6d6d6d"
+              placeholderTextColor={placeholderColor}
               maxLength={40}
               autoFocus
               returnKeyType="done"
@@ -225,6 +220,65 @@ export function SavedCollectionPanel({ activeId, onSelect }: Props) {
           {inputError ? (
             <Text className="text-xs text-red-500 mt-1.5">{inputError}</Text>
           ) : null}
+        </View>
+      )}
+
+      {/* ── বর্তমান collection-এর header + edit/delete বাটন ── */}
+      {activeCol && (
+        <View className="flex-row items-center justify-between px-4 pb-3">
+          <View className="flex-1 flex-row items-center gap-3 mr-3">
+            <View className="w-9 h-9 rounded-xl bg-accent/10 items-center justify-center">
+              {activeCol.default ? (
+                <BookMark width={18} height={18} color={ACCENT} />
+              ) : (
+                <FolderIcon width={18} height={18} color={ACCENT} />
+              )}
+            </View>
+
+            <View className="flex-1">
+              <Text
+                numberOfLines={1}
+                className="text-base font-bold text-text dark:text-dark-text"
+              >
+                {activeCol.default ? t("saveData.defaultName") : activeCol.name}
+              </Text>
+              {activeCol.default ? (
+                <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary mt-0.5">
+                  {t("saveData.defaultProtected")}
+                </Text>
+              ) : null}
+            </View>
+          </View>
+
+          {activeCol.default ? (
+            // ডিফল্ট collection বদলানো/মোছা যায় না
+            <View className="w-9 h-9 rounded-full bg-background-secondary dark:bg-dark-background-secondary items-center justify-center">
+              <LockIcon width={16} height={16} color={iconColor} />
+            </View>
+          ) : (
+            <View className="flex-row items-center gap-2">
+              <TouchableOpacity
+                onPress={() => handleEdit(activeCol)}
+                activeOpacity={0.7}
+                className="w-10 h-10 rounded-full bg-background-secondary dark:bg-dark-background-secondary items-center justify-center"
+              >
+                <EditIcon width={18} height={18} color={strongIconColor} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => handleDelete(activeCol)}
+                disabled={!!deletingId}
+                activeOpacity={0.7}
+                className="w-10 h-10 rounded-full bg-red-500/10 items-center justify-center"
+              >
+                {deletingId === activeCol._id ? (
+                  <ActivityIndicator size="small" color={DANGER} />
+                ) : (
+                  <TrashIcon width={18} height={18} color={DANGER} />
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       )}
     </View>

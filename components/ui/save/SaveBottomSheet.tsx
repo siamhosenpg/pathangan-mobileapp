@@ -18,16 +18,30 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from "react-native";
+
+// icons
+import CreateIcon from "@/assets/icons/add.svg";
+import BookMark from "@/assets/icons/bookmarkBold.svg";
+import FolderIcon from "@/assets/icons/folder.svg";
 
 interface Props {
   postId: string;
 }
 
+const ACCENT = "#00914d";
+
 export default function SaveBottomSheet({ postId }: Props) {
   const { t } = useTranslation();
   const { close } = useBottomSheet();
+
+  // dark / light mode অনুযায়ী icon ও placeholder-এর রং
+  const isDark = useColorScheme() === "dark";
+  const iconColor = isDark ? "#a3a3a3" : "#6d6d6d"; // সাধারণ icon
+  const strongIconColor = isDark ? "#ffffff" : "#111111"; // "নতুন কালেকশন" icon
+  const placeholderColor = isDark ? "#8a8a8a" : "#6d6d6d";
 
   const { data: collections, isLoading } = useGetCollectionsQuery();
   const { data: savedStatus } = useCheckIfSavedQuery(postId, {
@@ -121,12 +135,14 @@ export default function SaveBottomSheet({ postId }: Props) {
       {/* কালেকশন তালিকা */}
       {isLoading ? (
         <View className="py-8 items-center">
-          <ActivityIndicator size="small" color="#00914d" />
+          <ActivityIndicator size="small" color={ACCENT} />
         </View>
       ) : (
         collections?.map((col) => {
           const alreadySaved = savedIds.has(col._id);
           const isSavingThis = savingId === col._id;
+          const colIconColor = alreadySaved ? ACCENT : iconColor;
+          const CollectionIcon = col.default ? BookMark : FolderIcon;
 
           return (
             <TouchableOpacity
@@ -136,15 +152,11 @@ export default function SaveBottomSheet({ postId }: Props) {
               activeOpacity={0.7}
               className="flex-row items-center gap-3 py-3 border-b border-border/50 dark:border-dark-border/50"
             >
-              <Ionicons
-                name={col.default ? "bookmark" : "folder-outline"}
-                size={20}
-                color={alreadySaved ? "#00914d" : "#6d6d6d"}
-              />
+              <CollectionIcon width={20} height={20} color={colIconColor} />
 
               <View className="flex-1">
                 <Text
-                  className="text-base text-text dark:text-dark-text"
+                  className="text-base font-semibold text-text dark:text-dark-text"
                   numberOfLines={1}
                 >
                   {col.default ? t("saveData.defaultName") : col.name}
@@ -157,9 +169,9 @@ export default function SaveBottomSheet({ postId }: Props) {
               </View>
 
               {isSavingThis ? (
-                <ActivityIndicator size="small" color="#00914d" />
+                <ActivityIndicator size="small" color={ACCENT} />
               ) : alreadySaved ? (
-                <Ionicons name="checkmark-circle" size={20} color="#00914d" />
+                <Ionicons name="checkmark-circle" size={20} color={ACCENT} />
               ) : null}
             </TouchableOpacity>
           );
@@ -178,7 +190,7 @@ export default function SaveBottomSheet({ postId }: Props) {
               }}
               onSubmitEditing={handleCreate}
               placeholder={t("saveData.collectionNamePlaceholder")}
-              placeholderTextColor="#6d6d6d"
+              placeholderTextColor={placeholderColor}
               maxLength={40}
               autoFocus
               returnKeyType="done"
@@ -209,8 +221,8 @@ export default function SaveBottomSheet({ postId }: Props) {
           activeOpacity={0.7}
           className="flex-row items-center gap-3 py-3"
         >
-          <Ionicons name="add-circle-outline" size={20} color="#00914d" />
-          <Text className="text-base font-medium text-accent-secondary dark:text-dark-accent-secondary">
+          <CreateIcon width={20} height={20} color={strongIconColor} />
+          <Text className="text-base font-semibold text-text dark:text-dark-text">
             {t("saveData.newCollection")}
           </Text>
         </TouchableOpacity>

@@ -7,7 +7,8 @@ import {
   type SavedItem,
 } from "@/redux/api/save/savedItemApi";
 import { Ionicons } from "@expo/vector-icons";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -37,12 +38,26 @@ export function SavedPostsList({ collectionId }: Props) {
 
   const [refreshing, setRefreshing] = useState(false);
 
+  // ── Video visibility state ──
+  const [visibleIndex, setVisibleIndex] = useState<number | null>(null);
+  const lastVisibleIndexRef = useRef<number | null>(null);
+
   // ভেতরের বুকমার্ক বাটন যেন জানে এখন কোন কালেকশন খোলা
   const contextValue = useMemo(() => ({ collectionId }), [collectionId]);
 
   const items = useMemo(
     () => data?.pages.flatMap((page) => page.items) ?? [],
     [data],
+  );
+
+  // screen থেকে চলে গেলে সব video pause, ফিরে এলে আগের index restore
+  useFocusEffect(
+    useCallback(() => {
+      setVisibleIndex(lastVisibleIndexRef.current);
+      return () => {
+        setVisibleIndex(null);
+      };
+    }, []),
   );
 
   // কোনো পোস্ট ডিলিট হয়ে গেলে একটা পেজ পুরো খালি আসতে পারে,
@@ -60,6 +75,8 @@ export function SavedPostsList({ collectionId }: Props) {
   // উপরে টেনে নামালে রিফ্রেশ
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
+    lastVisibleIndexRef.current = null;
+    setVisibleIndex(null);
     try {
       await refetch();
     } catch {
@@ -69,14 +86,40 @@ export function SavedPostsList({ collectionId }: Props) {
     }
   }, [refetch]);
 
-  const renderItem = useCallback(({ item }: { item: SavedItem }) => {
-    const post = item.postId;
-    if (!post) return null;
+  // ── Viewability: FlatList এ এই দুটো অবশ্যই stable (useRef) হতে হবে ──
+  const viewabilityConfigRef = useRef({ itemVisiblePercentThreshold: 60 });
 
-    if (post.postType === "question") return <QuestionCard post={post} />;
-    if (post.postType === "course") return <CourseCardFeed post={post} />;
-    return <Postcard post={post} />;
-  }, []);
+  const onViewableItemsChangedRef = useRef(
+    ({ viewableItems }: { viewableItems: any[] }) => {
+      const visible = viewableItems.find((v) => v.isViewable);
+      const index = visible?.index ?? null;
+      lastVisibleIndexRef.current = index;
+      setVisibleIndex(index);
+    },
+  );
+
+  const renderItem = useCallback(
+    ({ item, index }: { item: SavedItem; index: number }) => {
+      const post = item.postId;
+      if (!post) return null;
+
+      if (post.postType === "question") return <QuestionCard post={post} />;
+      if (post.postType === "course") return <CourseCardFeed post={post} />;
+
+      const isVideoVisible = visibleIndex === index;
+      const isNearVisible =
+        visibleIndex !== null && Math.abs(index - visibleIndex) <= 3;
+
+      return (
+        <Postcard
+          post={post}
+          isVideoVisible={isVideoVisible}
+          isVideoNearVisible={isNearVisible}
+        />
+      );
+    },
+    [visibleIndex],
+  );
 
   const renderFooter = () => {
     if (isFetchingNextPage) {
@@ -133,8 +176,11 @@ export function SavedPostsList({ collectionId }: Props) {
     <SavedCollectionContext.Provider value={contextValue}>
       <FlatList
         data={items}
+        extraData={visibleIndex}
         keyExtractor={(item) => item._id}
         renderItem={renderItem}
+        onViewableItemsChanged={onViewableItemsChangedRef.current}
+        viewabilityConfig={viewabilityConfigRef.current}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
         onEndReached={handleEndReached}

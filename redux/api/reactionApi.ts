@@ -6,6 +6,24 @@ import {
 } from "@/types/reactionTypes";
 import { baseApi } from "./baseApi";
 
+// optimistic: শুধু উল্টে দেয়
+const toggleLikeOnPost = (post: any) => {
+  const wasLiked = post.isReacted;
+  post.isReacted = !wasLiked;
+  post.likesCount = wasLiked
+    ? Math.max(0, (post.likesCount ?? 0) - 1)
+    : (post.likesCount ?? 0) + 1;
+};
+
+// server-sync: নির্দিষ্ট মানে সেট করে। আগে থেকে মিলে গেলে কিছুই করে না
+const setLikeOnPost = (post: any, liked: boolean) => {
+  if (!!post.isReacted === liked) return;
+  post.isReacted = liked;
+  post.likesCount = liked
+    ? (post.likesCount ?? 0) + 1
+    : Math.max(0, (post.likesCount ?? 0) - 1);
+};
+
 export const reactionApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // 🟢 Toggle Like
@@ -17,140 +35,145 @@ export const reactionApi = baseApi.injectEndpoints({
       }),
 
       async onQueryStarted(postId, { dispatch, queryFulfilled, getState }) {
-        const patches: Array<{ undo: () => void }> = [];
+        // সব cache-এ একই updater চালায়, patch গুলো ফেরত দেয়
+        const applyEverywhere = (updater: (post: any) => void) => {
+          const patches: Array<{ undo: () => void }> = [];
 
-        const tryPatch = (patchFn: () => { undo: () => void }) => {
-          try {
-            patches.push(patchFn());
-          } catch {}
-        };
+          const tryPatch = (patchFn: () => { undo: () => void }) => {
+            try {
+              patches.push(patchFn());
+            } catch {}
+          };
 
-        // ── 1. Home Feed (getPosts) ──────────────────────────
-        tryPatch(() =>
-          dispatch(
-            baseApi.util.updateQueryData(
-              "getPosts" as never,
-              { limit: 10 } as never,
-              (draft: any) => {
-                if (!draft?.pages) return;
-                for (const page of draft.pages) {
-                  const post = page.posts?.find((p: any) => p._id === postId);
-                  if (post) {
-                    const wasLiked = post.isReacted;
-                    post.isReacted = !wasLiked;
-                    post.likesCount = wasLiked
-                      ? post.likesCount - 1
-                      : post.likesCount + 1;
-                  }
-                }
-              },
-            ),
-          ),
-        );
-
-        // ── 2. Single Post (getPostById) ─────────────────────
-        tryPatch(() =>
-          dispatch(
-            baseApi.util.updateQueryData(
-              "getPostById" as never,
-              postId as never,
-              (draft: any) => {
-                if (!draft) return;
-                const wasLiked = draft.isReacted;
-                draft.isReacted = !wasLiked;
-                draft.likesCount = wasLiked
-                  ? draft.likesCount - 1
-                  : draft.likesCount + 1;
-              },
-            ),
-          ),
-        );
-
-        // ── 3. All Questions (infinite) ──────────────────────
-        tryPatch(() =>
-          dispatch(
-            baseApi.util.updateQueryData(
-              "getAllQuestions" as never,
-              { limit: 10 } as never,
-              (draft: any) => {
-                if (!draft?.pages) return;
-                for (const page of draft.pages) {
-                  const post = page.questions?.find(
-                    (p: any) => p._id === postId,
-                  );
-                  if (post) {
-                    const wasLiked = post.isReacted;
-                    post.isReacted = !wasLiked;
-                    post.likesCount = wasLiked
-                      ? post.likesCount - 1
-                      : post.likesCount + 1;
-                  }
-                }
-              },
-            ),
-          ),
-        );
-
-        // ── 4. Single Question (getQuestionById) ─────────────
-        tryPatch(() =>
-          dispatch(
-            baseApi.util.updateQueryData(
-              "getQuestionById" as never,
-              postId as never,
-              (draft: any) => {
-                if (!draft) return;
-                const wasLiked = draft.isReacted;
-                draft.isReacted = !wasLiked;
-                draft.likesCount = wasLiked
-                  ? draft.likesCount - 1
-                  : draft.likesCount + 1;
-              },
-            ),
-          ),
-        );
-
-        // ── 5. ✅ Profile Feed (getPostsByUserId) ─────────────
-        // getState() দিয়ে সব active cache entries খুঁজে বের করো
-        const state = getState() as any;
-        const queryCacheEntries = state[baseApi.reducerPath]?.queries ?? {};
-
-        for (const [_key, entry] of Object.entries(queryCacheEntries)) {
-          const cacheEntry = entry as any;
-          // শুধু getPostsByUserId এর active cache গুলো ধরো
-          if (
-            cacheEntry?.endpointName !== "getPostsByUserId" ||
-            cacheEntry?.status !== "fulfilled"
-          )
-            continue;
-
-          const originalArg = cacheEntry.originalArgs;
-
+          // 1. Home Feed
           tryPatch(() =>
             dispatch(
               baseApi.util.updateQueryData(
-                "getPostsByUserId" as never,
-                originalArg as never,
+                "getPosts" as never,
+                { limit: 10 } as never,
                 (draft: any) => {
                   if (!draft?.pages) return;
                   for (const page of draft.pages) {
                     const post = page.posts?.find((p: any) => p._id === postId);
-                    if (post) {
-                      const wasLiked = post.isReacted;
-                      post.isReacted = !wasLiked;
-                      post.likesCount = wasLiked
-                        ? post.likesCount - 1
-                        : post.likesCount + 1;
-                      break;
-                    }
+                    if (post) updater(post);
                   }
                 },
               ),
             ),
           );
-        }
+
+          // 2. Single Post
+          tryPatch(() =>
+            dispatch(
+              baseApi.util.updateQueryData(
+                "getPostById" as never,
+                postId as never,
+                (draft: any) => {
+                  if (draft) updater(draft);
+                },
+              ),
+            ),
+          );
+
+          // 3. All Questions
+          tryPatch(() =>
+            dispatch(
+              baseApi.util.updateQueryData(
+                "getAllQuestions" as never,
+                { limit: 10 } as never,
+                (draft: any) => {
+                  if (!draft?.pages) return;
+                  for (const page of draft.pages) {
+                    const post = page.questions?.find(
+                      (p: any) => p._id === postId,
+                    );
+                    if (post) updater(post);
+                  }
+                },
+              ),
+            ),
+          );
+
+          // 4. Single Question
+          tryPatch(() =>
+            dispatch(
+              baseApi.util.updateQueryData(
+                "getQuestionById" as never,
+                postId as never,
+                (draft: any) => {
+                  if (draft) updater(draft);
+                },
+              ),
+            ),
+          );
+
+          // 5 & 6. Dynamic cache entries (Profile Feed + Saved)
+          const state = getState() as any;
+          const queryCacheEntries = state[baseApi.reducerPath]?.queries ?? {};
+
+          for (const entry of Object.values(queryCacheEntries)) {
+            const cacheEntry = entry as any;
+            if (cacheEntry?.status !== "fulfilled") continue;
+
+            const originalArg = cacheEntry.originalArgs;
+
+            if (cacheEntry.endpointName === "getPostsByUserId") {
+              tryPatch(() =>
+                dispatch(
+                  baseApi.util.updateQueryData(
+                    "getPostsByUserId" as never,
+                    originalArg as never,
+                    (draft: any) => {
+                      if (!draft?.pages) return;
+                      for (const page of draft.pages) {
+                        const post = page.posts?.find(
+                          (p: any) => p._id === postId,
+                        );
+                        if (post) {
+                          updater(post);
+                          break;
+                        }
+                      }
+                    },
+                  ),
+                ),
+              );
+            }
+
+            if (cacheEntry.endpointName === "getSavedItems") {
+              tryPatch(() =>
+                dispatch(
+                  baseApi.util.updateQueryData(
+                    "getSavedItems" as never,
+                    originalArg as never,
+                    (draft: any) => {
+                      if (!draft?.pages) return;
+                      for (const page of draft.pages) {
+                        for (const item of page.items ?? []) {
+                          const post = item?.postId;
+                          if (post && post._id === postId) updater(post);
+                        }
+                      }
+                    },
+                  ),
+                ),
+              );
+            }
+          }
+
+          return patches;
+        };
+
+        // ── Optimistic: আগে উল্টে দাও ──
+        const patches = applyEverywhere(toggleLikeOnPost);
 
         try {
-          await queryFulfilled;
+          const { data } = await queryFulfilled;
+
+          // ── Server যা বলল সেটাই সত্য: cache ভুল থাকলে ঠিক করে দাও ──
+          if (typeof data?.liked === "boolean") {
+            applyEverywhere((post) => setLikeOnPost(post, data.liked));
+          }
         } catch {
           patches.forEach((p) => p.undo());
         }

@@ -14,9 +14,10 @@ export interface IReaction {
 
 // 🔹 Toggle Response
 export interface IToggleReactionResponse {
+  success: boolean;
   message: string;
   liked: boolean;
-  reaction?: IReaction;
+  reaction?: any;
 }
 
 // 🔹 Get Reactions (List)
