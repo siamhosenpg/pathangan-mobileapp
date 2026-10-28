@@ -483,6 +483,7 @@
 
   "authData": {
     "logoLetter": "প",
+    "googleLogin": "গুগল দিয়ে চালিয়ে যান",
     "login": {
       "title": "স্বাগতম",
       "subtitle": "আপনার অ্যাকাউন্টে প্রবেশ করুন",

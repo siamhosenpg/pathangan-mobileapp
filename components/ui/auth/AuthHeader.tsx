@@ -13,12 +13,12 @@ export default function AuthHeader({ title, subtitle }: Props) {
   return (
     <View className="items-center mb-8">
       <Image
-        source={require("@/assets/images/favicon.png")}
-        style={{ width: 72, height: 72 }}
+        source={require("@/assets/images/pathangan-logo.png")}
+        style={{ width: 66, height: 66 }}
         contentFit="contain"
       />
 
-      <Text className="text-2xl font-bold text-text dark:text-dark-text mb-1.5 tracking-tight">
+      <Text className="text-2xl font-bold text-text dark:text-dark-text  mt-3 tracking-tight">
         {title}
       </Text>
       <Text className="text-text-tertiary dark:text-dark-text-tertiary text-sm text-center">

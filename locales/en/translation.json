@@ -493,6 +493,7 @@
   },
   "authData": {
     "logoLetter": "P",
+    "googleLogin": "Continue with Google",
     "login": {
       "title": "Welcome back",
       "subtitle": "Sign in to your account",

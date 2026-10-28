@@ -164,9 +164,6 @@ export default function TabLayout() {
               }}
             />
             <Tabs.Screen name="profile" options={{ href: null }} />
-
-            <Tabs.Screen name="settings" options={{ href: null }} />
-            <Tabs.Screen name="saved" options={{ href: null }} />
           </Tabs>
         </Drawer>
       </AuthGuard>

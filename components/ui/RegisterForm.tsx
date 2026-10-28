@@ -130,6 +130,8 @@ export default function RegisterForm({ onSwitch }: Props) {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        bounces={false}
+        overScrollMode="never"
       >
         <View className="flex-1 px-6 py-10 justify-center">
           <View className="w-full max-w-md self-center">
@@ -202,7 +204,7 @@ export default function RegisterForm({ onSwitch }: Props) {
 
             {/* পাসওয়ার্ড strength */}
             {form.password.length > 0 && (
-              <View className="-mt-1 mb-4">
+              <View className="-mt-2 mb-4">
                 <View className="flex-row gap-1.5">
                   {[1, 2, 3].map((i) => (
                     <View

@@ -42,25 +42,36 @@ const FollowListSheet = ({ userId, type }: Props) => {
   } = useFollowList(type, userId);
 
   const goToProfile = useCallback(
-    (username: string) => {
+    (username?: string) => {
+      // deleted user হলে username থাকে না, তখন কিছু করবে না
+      if (!username) return;
       close();
       // ⚠️ tomar profile route-er path onujayi eta change koro
-      router.push(`/(pages)/profile/${username}` as any);
+      router.push(`/(pages)/${username}` as any);
     },
     [close, router],
   );
 
   const renderItem = useCallback(
     ({ item }: { item: FollowListEntry }) => {
-      const user = item.user;
+      // user null হতে পারে (ইউজার ডিলিট হলে)
+      const user = item.user as any;
+      const isDeleted = !user;
+
+      // bio থাকলে bio, না থাকলে username (শুধু একটাই দেখাবে)
+      const bio = typeof user?.bio === "string" ? user.bio.trim() : "";
+      const subText = bio || (user?.username ? `@${user.username}` : "");
+
       return (
         <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => goToProfile(user.username || "")}
+          activeOpacity={isDeleted ? 1 : 0.7}
+          disabled={isDeleted}
+          onPress={() => goToProfile(user?.username)}
           className="flex-row items-center gap-3 px-4 py-3"
+          style={{ opacity: isDeleted ? 0.6 : 1 }}
         >
           <View className="w-12 h-12 rounded-full border border-border dark:border-dark-border overflow-hidden bg-accent/20">
-            {user.profileImage ? (
+            {user?.profileImage ? (
               <Image
                 source={{ uri: user.profileImage }}
                 className="w-full h-full"
@@ -69,7 +80,7 @@ const FollowListSheet = ({ userId, type }: Props) => {
             ) : (
               <View className="w-full h-full items-center justify-center">
                 <Text className="text-xl font-bold text-accent uppercase">
-                  {user.name?.charAt(0)}
+                  {user?.name?.charAt(0) ?? "?"}
                 </Text>
               </View>
             )}
@@ -82,29 +93,23 @@ const FollowListSheet = ({ userId, type }: Props) => {
                 style={{ flexShrink: 1 }}
                 numberOfLines={1}
               >
-                {user.name}
+                {user?.name ?? "Deleted user"}
               </Text>
-              {user.greenmarkVerified && <GreenMark mark size={14} />}
+              {!!user?.greenmarkVerified && <GreenMark mark size={14} />}
             </View>
-            <Text
-              className="text-xs text-text-secondary dark:text-dark-text-secondary"
-              numberOfLines={1}
-            >
-              @{user.username}
-            </Text>
-            {type === "following" && !!user.bio && (
+            {!!subText && (
               <Text
-                className="mt-0.5 text-xs text-text-secondary dark:text-dark-text-secondary"
+                className="text-xs text-text-secondary dark:text-dark-text-secondary"
                 numberOfLines={1}
               >
-                {user.bio}
+                {subText}
               </Text>
             )}
           </View>
         </TouchableOpacity>
       );
     },
-    [goToProfile, type],
+    [goToProfile],
   );
 
   const keyExtractor = useCallback(
@@ -173,7 +178,7 @@ const FollowListSheet = ({ userId, type }: Props) => {
                   {t("retry")}
                 </Text>
               </TouchableOpacity>
-            ) : null
+            ) : undefined
           }
         />
       )}

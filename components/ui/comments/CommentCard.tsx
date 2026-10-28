@@ -20,6 +20,7 @@ import CommentMenuSheet from "./CommentMenuSheet";
 
 const REPLIES_PAGE_SIZE = 5;
 const REPLY_INDENT = 66; // root avatar (48) + gap + padding
+const DELETED_USER_NAME = "Deleted user";
 
 export interface ExpandRequest {
   rootId: string;
@@ -50,15 +51,31 @@ const CommentItem = ({
   const currentUser = useAppSelector((state) => state.auth.user);
 
   const currentUserId = currentUser?.id || (currentUser as any)?._id;
-  const user = comment.commentUserId;
-  const isOwn = !!currentUserId && currentUserId === user._id;
-  const initials = user.name?.charAt(0).toUpperCase() ?? "?";
+
+  // user delete হয়ে গেলে populate এ null আসে
+  const user = comment.commentUserId as any | null;
+  const isDeletedUser = !user;
+
+  const userName: string = user?.name || DELETED_USER_NAME;
+  const userUsername: string | undefined = user?.username;
+  const userProfileImage: string | undefined = user?.profileImage;
+  const userVerified: boolean = user?.greenmarkVerified || false;
+
+  const isOwn = !!currentUserId && !!user && currentUserId === user._id;
+  const initials = isDeletedUser
+    ? "?"
+    : (user?.name?.charAt(0).toUpperCase() ?? "?");
 
   // root এর লেখক ছাড়া অন্য কাউকে reply করলে তবেই @mention দেখাবে
-  const mention =
-    comment.replyToUserId && comment.replyToUserId._id !== parentAuthorId
-      ? comment.replyToUserId
-      : null;
+  const replyTo = comment.replyToUserId as any | null | undefined;
+  const mentionName: string | null = (() => {
+    // replyToUserId field ই নেই, মানে কাউকে reply না
+    if (replyTo === undefined) return null;
+    // field আছে কিন্তু null, মানে যাকে reply করা হয়েছিল সে delete হয়ে গেছে
+    if (replyTo === null) return DELETED_USER_NAME;
+    if (replyTo._id === parentAuthorId) return null;
+    return replyTo.name || DELETED_USER_NAME;
+  })();
 
   // menu আলাদা sheet হিসেবে comment sheet এর উপরে খুলবে
   const openMenu = () => {
@@ -66,24 +83,31 @@ const CommentItem = ({
       <CommentMenuSheet
         comment={comment}
         isOwn={isOwn}
+        isDeletedUser={isDeletedUser}
         onEdit={isOwn ? onEdit : undefined}
       />,
     );
+  };
+
+  const goToProfile = () => {
+    if (isDeletedUser || !userUsername) return;
+    router.push(`/${userUsername}` as any);
   };
 
   return (
     <View className={`flex-row gap-2.5 py-2 ${isReply ? "" : "px-2"}`}>
       {/* Avatar */}
       <TouchableOpacity
-        onPress={() => router.push(`/${user.username}` as any)}
+        onPress={goToProfile}
+        disabled={isDeletedUser}
         activeOpacity={0.8}
         className={`${
           isReply ? "w-8 h-8" : "w-12 h-12"
         } rounded-full overflow-hidden bg-accent/10 border border-border dark:border-dark-border flex-shrink-0 mt-0.5`}
       >
-        {user.profileImage ? (
+        {userProfileImage ? (
           <Image
-            source={{ uri: user.profileImage }}
+            source={{ uri: userProfileImage }}
             className="w-full h-full"
             resizeMode="cover"
           />
@@ -100,12 +124,16 @@ const CommentItem = ({
         <View className="flex-row items-center justify-between">
           <View className="flex-1 flex-row items-center gap-1 pr-2">
             <Text
-              className="text-sm font-semibold text-text dark:text-dark-text flex-shrink"
+              className={`text-sm font-semibold flex-shrink ${
+                isDeletedUser
+                  ? "text-text-tertiary dark:text-dark-text-tertiary "
+                  : "text-text dark:text-dark-text"
+              }`}
               numberOfLines={1}
             >
-              {user.name}
+              {userName}
             </Text>
-            <GreenMark mark={user.greenmarkVerified || false} size={14} />
+            {!isDeletedUser && <GreenMark mark={userVerified} size={14} />}
           </View>
 
           <TouchableOpacity
@@ -123,8 +151,8 @@ const CommentItem = ({
 
         {/* Text */}
         <Text className="text-base text-text py-0.5 dark:text-dark-text leading-relaxed">
-          {mention && (
-            <Text className="text-accent font-semibold">@{mention.name} </Text>
+          {mentionName && (
+            <Text className="text-accent font-semibold">@{mentionName} </Text>
           )}
           {comment.text}
         </Text>
@@ -161,7 +189,7 @@ const CommentItem = ({
 // ===================== replies তালিকা =====================
 interface RepliesListProps {
   rootId: string;
-  parentAuthorId: string;
+  parentAuthorId?: string;
   onReply?: (comment: Comment) => void;
   onEdit?: (comment: Comment) => void;
 }
@@ -278,7 +306,7 @@ const CommentCard = ({ comment, onReply, onEdit, expandRequest }: Props) => {
           {expanded && (
             <RepliesList
               rootId={comment._id}
-              parentAuthorId={comment.commentUserId._id}
+              parentAuthorId={(comment.commentUserId as any)?._id}
               onReply={onReply}
               onEdit={onEdit}
             />

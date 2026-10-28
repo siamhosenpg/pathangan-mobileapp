@@ -396,7 +396,7 @@ const PrivateQuestionDetailPage = () => {
               multiline
               maxLength={MAX_ANSWER + 100}
               textAlignVertical="top"
-              className="text-base text-text dark:text-dark-text leading-relaxed min-h-[160px]"
+              className="text-base font-medium text-text dark:text-dark-text leading-relaxed min-h-[160px]"
             />
           </View>
         )}
@@ -495,7 +495,7 @@ const PrivateQuestionDetailPage = () => {
                   color={canSubmit ? "#fff" : isDark ? "#8a8a8a" : "#6d6d6d"}
                 />
                 <Text
-                  className={`text-sm font-semibold ${
+                  className={` font-semibold ${
                     canSubmit
                       ? "text-white"
                       : "text-text-tertiary dark:text-dark-text-tertiary"

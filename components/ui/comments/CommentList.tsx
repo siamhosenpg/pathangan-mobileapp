@@ -1,4 +1,3 @@
-import React from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
 interface Comment {
@@ -50,16 +49,16 @@ export default function CommentList({ comments, isLoading }: Props) {
           <View className="flex-1 min-w-0">
             <View className="bg-background-secondary dark:bg-dark-background-secondary rounded-2xl rounded-tl-sm px-3 py-2.5">
               <Text className="text-xs font-bold text-text dark:text-dark-text mb-0.5">
-                {comment.name}
+                {comment?.name || "Unknown User"}
               </Text>
 
               <Text className="text-[13px] text-text-secondary dark:text-dark-text-secondary leading-[19px]">
-                {comment.text}
+                {comment?.text || "No comment text available."}
               </Text>
             </View>
 
             <Text className="text-[11px] text-gray-400 mt-1 pl-1">
-              {comment.time}
+              {comment?.time || "Unknown time"}
             </Text>
           </View>
         </View>

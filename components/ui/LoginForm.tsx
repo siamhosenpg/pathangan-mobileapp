@@ -94,6 +94,8 @@ export default function LoginForm({ onSwitch }: Props) {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        bounces={false}
+        overScrollMode="never"
       >
         <View className="flex-1 px-6 py-10 justify-center">
           <View className="w-full max-w-md self-center">

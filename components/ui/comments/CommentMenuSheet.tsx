@@ -20,11 +20,18 @@ import ReportSheet from "../bottom-sheet/report/ReportSheet";
 interface Props {
   comment: Comment;
   isOwn: boolean;
+  // user delete হয়ে গেলে true, তখন Report দেখানো হবে না
+  isDeletedUser?: boolean;
   // নিজের comment হলে edit mode চালু করার জন্য (CommentSheet এর input এ)
   onEdit?: (comment: Comment) => void;
 }
 
-const CommentMenuSheet = ({ comment, isOwn, onEdit }: Props) => {
+const CommentMenuSheet = ({
+  comment,
+  isOwn,
+  isDeletedUser = false,
+  onEdit,
+}: Props) => {
   const { close, replace } = useBottomSheet();
   const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
@@ -120,8 +127,8 @@ const CommentMenuSheet = ({ comment, isOwn, onEdit }: Props) => {
         </Text>
       </TouchableOpacity>
 
-      {/* অন্যের comment হলে Report */}
-      {!isOwn && (
+      {/* অন্যের comment হলে Report (deleted user এর comment হলে নয়) */}
+      {!isOwn && !isDeletedUser && (
         <TouchableOpacity
           onPress={handleReport}
           activeOpacity={0.7}

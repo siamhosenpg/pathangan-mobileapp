@@ -5,10 +5,13 @@ import ProfileAbout from "@/components/ui/profilepage/ProfileAbout";
 import ProfilePosts from "@/components/ui/profilepage/ProfilePosts";
 import ProfileTopSection from "@/components/ui/profilepage/ProfileTopSection";
 import ProfileTopSectionSkeleton from "@/components/ui/profilepage/ProfileTopSectionSkeleton";
+import { ProfileShakeContext } from "@/contexts/ProfileShakeContext";
+import useShake from "@/hooks/shake/useShake";
 import { useGetUserByUsernameQuery } from "@/redux/api/userApi";
 import { useLocalSearchParams } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function UserProfileScreen() {
@@ -29,6 +32,17 @@ export default function UserProfileScreen() {
   // উপরে টেনে নামালে profile data আবার আনবে
   // (spinner ProfilePosts এর RefreshControl ই দেখায়, posts ও সেখানেই refetch হয়)
   const handleRefresh = useCallback(() => refetch(), [refetch]);
+
+  // ── Shake + haptic (reusable hook) ──
+  // হুকগুলো অবশ্যই early return এর আগে থাকতে হবে
+  const { shake, shakeStyle } = useShake({ haptic: "light" });
+
+  const triggerShake = useCallback(() => shake(), [shake]);
+
+  const shakeContextValue = useMemo(
+    () => ({ currentUsername: username ?? null, triggerShake }),
+    [username, triggerShake],
+  );
 
   // Skeleton only when there is nothing to show yet.
   // Background refetches (e.g. after follow, pull-to-refresh) must not replace the page.
@@ -76,16 +90,21 @@ export default function UserProfileScreen() {
   );
 
   return (
-    <SafeAreaView
-      edges={["top"]}
-      className="flex-1 bg-background dark:bg-dark-background"
-    >
-      <BackHeader />
-      <ProfilePosts
-        userid={user._id}
-        listHeader={profileHeader}
-        onRefresh={handleRefresh}
-      />
-    </SafeAreaView>
+    <ProfileShakeContext.Provider value={shakeContextValue}>
+      <SafeAreaView
+        edges={["top"]}
+        className="flex-1 bg-background dark:bg-dark-background"
+      >
+        <BackHeader />
+        {/* শুধু নিচের অংশ কাঁপবে, BackHeader স্থির থাকবে */}
+        <Animated.View style={[{ flex: 1 }, shakeStyle]}>
+          <ProfilePosts
+            userid={user._id}
+            listHeader={profileHeader}
+            onRefresh={handleRefresh}
+          />
+        </Animated.View>
+      </SafeAreaView>
+    </ProfileShakeContext.Provider>
   );
 }

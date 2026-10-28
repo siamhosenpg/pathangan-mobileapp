@@ -23,13 +23,13 @@ const AnswerCard = ({ answer }: Props) => {
           className="text-text dark:text-dark-text text-base leading-6"
           numberOfLines={4}
         >
-          {answer.text}
+          {answer?.text}
         </Text>
       </View>
       {/* Avatar */}
       <View className=" mt-0.5">
         <Text className="font-semibold  text-text-tertiary dark:text-dark-text-tertiary text-sm">
-          {answer.userId.name}
+          {answer?.userId?.name || "Unknown User"}
         </Text>
       </View>
     </TouchableOpacity>

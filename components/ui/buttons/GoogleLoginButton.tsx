@@ -1,9 +1,11 @@
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import { AntDesign } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 
 export default function GoogleLoginButton() {
   const { promptAsync, request, isLoading } = useGoogleAuth();
+  const { t } = useTranslation();
 
   return (
     <TouchableOpacity
@@ -22,7 +24,7 @@ export default function GoogleLoginButton() {
           </View>
 
           <Text className="text-text dark:text-dark-text text-sm font-medium">
-            Google দিয়ে লগইন করুন
+            {t("authData.googleLogin")}
           </Text>
         </>
       )}

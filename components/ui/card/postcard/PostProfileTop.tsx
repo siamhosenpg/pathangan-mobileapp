@@ -1,4 +1,5 @@
 // PostProfileTop.tsx
+import { useProfileShake } from "@/contexts/ProfileShakeContext";
 import type { PostUser } from "@/types/postTypes";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -22,8 +23,26 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
   const { open } = useBottomSheet();
   const { t } = useTranslation();
 
+  // যে profile এ আছি তার username + shake trigger
+  const { currentUsername, triggerShake } = useProfileShake();
+
   // user না থাকলে (ডিলিট করা অ্যাকাউন্ট)
   const isDeletedUser = !user;
+
+  const handleProfilePress = () => {
+    if (!user?.username) return;
+
+    // এই user এর profile এই আছি — আবার navigate না করে shake করাও
+    if (
+      currentUsername &&
+      currentUsername.toLowerCase() === user.username.toLowerCase()
+    ) {
+      triggerShake();
+      return;
+    }
+
+    router.push(`/${user.username}` as any);
+  };
 
   return (
     <View className="px-4 pb-1 flex-row items-center justify-between gap-2">
@@ -32,9 +51,7 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
           className="border border-border dark:border-dark-border"
           disabled={isDeletedUser}
           activeOpacity={isDeletedUser ? 1 : 1}
-          onPress={() => {
-            if (user?.username) router.push(`/${user.username}` as any);
-          }}
+          onPress={handleProfilePress}
           style={{
             width: 38,
             height: 38,
