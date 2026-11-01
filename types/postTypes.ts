@@ -11,6 +11,29 @@ export interface PostUser {
   bio?: string;
 }
 
+// ===================== MODERATION =====================
+export type ModerationStatus =
+  | "active"
+  | "under_review"
+  | "hidden"
+  | "auto_hidden"
+  | "removed"
+  | "deleted";
+
+// শুধু পোস্টের মালিকের কাছে আসে (auto_hidden হলে)
+export interface ModerationNotice {
+  type: "flagged" | "reported";
+  flagType: string;
+  message: string;
+}
+
+// post তৈরির সময় response-এ আসে
+export interface PostModerationResult {
+  flagged: boolean;
+  flagType: string;
+  message: string | null;
+}
+
 // ===================== NORMAL POST CONTENT =====================
 export interface PostContent {
   parentPost?: Post | null;
@@ -59,12 +82,15 @@ export interface Post {
   content?: PostContent;
   question?: QuestionPost;
   course?: CoursePost;
+  categories?: string[]; // AI দিয়ে বের করা category
   privacy: "public" | "friends" | "private";
   isReacted: boolean; // ← এটা add করো
   viewsCount: number;
   likesCount: number;
   commentsCount: number;
   sharesCount: number;
+  moderationStatus?: ModerationStatus;
+  moderationNotice?: ModerationNotice | null; // শুধু মালিকের জন্য
   createdAt: string;
   updatedAt: string;
   previewAnswers?: Answer[];
@@ -113,6 +139,7 @@ export interface GetPostsByUserIdResponse {
 export interface PostResponse {
   success: boolean;
   post: Post;
+  moderation?: PostModerationResult;
 }
 
 export interface PostCountResponse {

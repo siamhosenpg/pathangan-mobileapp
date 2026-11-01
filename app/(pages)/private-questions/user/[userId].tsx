@@ -131,7 +131,7 @@ const UserQuestionsPage = () => {
                 color="#00914d"
                 style={{ paddingVertical: 16 }}
               />
-            ) : null
+            ) : undefined
           }
           contentContainerStyle={{ paddingTop: 12, paddingBottom: 24 }}
         />

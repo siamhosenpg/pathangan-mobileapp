@@ -65,7 +65,7 @@ const PeopleTab = ({ mode, onPress }: Props) => {
               color="#00914d"
               style={{ paddingVertical: 16 }}
             />
-          ) : null
+          ) : undefined
         }
         contentContainerStyle={{ paddingTop: 10, paddingBottom: 20 }}
       />

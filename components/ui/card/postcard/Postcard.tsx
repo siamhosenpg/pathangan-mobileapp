@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Dimensions, Image, Text, TouchableOpacity, View } from "react-native";
+import ModerationNotice from "./ModerationNotice";
 import PostCountLeft from "./PostCountLeft";
 import PostProfileTop from "./PostProfileTop";
 
@@ -134,6 +135,9 @@ const Postcard = ({
 
   return (
     <View className="bg-background dark:bg-dark-background pt-4  border-b border-border dark:border-dark-border">
+      {/* hidden হলে মালিককে কারণ দেখানো হবে (অন্যদের কাছে notice আসে না) */}
+      <ModerationNotice notice={post.moderationNotice} />
+
       <PostProfileTop user={userid} createdAt={createdAt} postId={post._id} />
 
       <View>

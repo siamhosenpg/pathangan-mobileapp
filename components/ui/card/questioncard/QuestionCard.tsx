@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import ModerationNotice from "../postcard/ModerationNotice";
 import PostCountLeft from "../postcard/PostCountLeft";
 import PostProfileTop from "../postcard/PostProfileTop";
 
@@ -83,6 +84,9 @@ const QuestionCard = ({ post }: Props) => {
 
   return (
     <View className="bg-background dark:bg-dark-background pt-4 border-b border-border dark:border-dark-border">
+      {/* hidden হলে মালিককে কারণ দেখানো হবে (অন্যদের কাছে notice আসে না) */}
+      <ModerationNotice notice={post.moderationNotice} />
+
       <PostProfileTop user={userid} createdAt={createdAt} postId={_id} />
 
       <Text className="mt-2 px-4 text-text dark:text-dark-text font-semibold text-base leading-6">

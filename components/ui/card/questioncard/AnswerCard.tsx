@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 
+import ModerationNotice from "@/components/ui/card/postcard/ModerationNotice";
 import type { Answer } from "@/types/answerTypes";
 
 interface Props {
@@ -17,6 +18,9 @@ const AnswerCard = ({ answer }: Props) => {
       activeOpacity={0.7}
       className="  py-1 rounded-lg  "
     >
+      {/* hidden হলে মালিককে কারণ দেখানো হবে (অন্যদের কাছে notice আসে না) */}
+      <ModerationNotice notice={answer.moderationNotice} compact />
+
       {/* Content */}
       <View className="">
         <Text

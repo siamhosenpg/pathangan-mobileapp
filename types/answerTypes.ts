@@ -1,3 +1,5 @@
+import type { ModerationNotice, PostModerationResult } from "@/types/postTypes";
+
 export interface AnswerUser {
   _id: string;
   name: string;
@@ -15,6 +17,8 @@ export interface Answer {
   downvotesCount: number;
   isBestAnswer: boolean;
   createdAt: string;
+  // শুধু মালিকের কাছে আসে (answer auto_hidden হলে)
+  moderationNotice?: ModerationNotice | null;
 }
 
 export interface GetAnswersResponse {
@@ -34,6 +38,7 @@ export interface CreateAnswerResponse {
   success: boolean;
   message: string;
   answer: Answer;
+  moderation?: PostModerationResult;
 }
 
 export interface VoteAnswerResponse {
@@ -69,4 +74,5 @@ export interface UpdateAnswerResponse {
   success: boolean;
   message: string;
   answer: Answer;
+  moderation?: PostModerationResult;
 }
