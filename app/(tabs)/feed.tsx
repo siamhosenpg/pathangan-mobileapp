@@ -15,12 +15,15 @@ export default function FeedScreen() {
   // "সর্বশেষ" tab প্রথমবার চাপলে তবেই লোড হবে
   const [latestMounted, setLatestMounted] = useState(false);
 
-  // ---------- Collapsing header ----------
-  const [headerH, setHeaderH] = useState(0); // শুধু Header এর উচ্চতা
-  const [tabsH, setTabsH] = useState(0); // শুধু Tabs এর উচ্চতা
+  // ---------- Collapsing header + tabs ----------
+  const [headerH, setHeaderH] = useState(0); // Header এর উচ্চতা
+  const [tabsH, setTabsH] = useState(0); // Tabs এর উচ্চতা
   const headerHRef = useRef(0);
+  const tabsHRef = useRef(0);
+  // Header + Tabs মিলিয়ে মোট কতটা লুকানো যাবে
+  const collapseRef = useRef(0);
 
-  // 0 = header দেখাচ্ছে, headerH = পুরো লুকানো
+  // 0 = সব দেখাচ্ছে, totalH = Header + Tabs পুরো লুকানো
   const offset = useRef(new Animated.Value(0)).current;
   const offsetRef = useRef(0);
   const lastY = useRef<Record<FeedTabKey, number>>({ forYou: 0, latest: 0 });
@@ -43,7 +46,7 @@ export default function FeedScreen() {
   const scheduleSnap = useCallback(() => {
     if (snapTimer.current) clearTimeout(snapTimer.current);
     snapTimer.current = setTimeout(() => {
-      const h = headerHRef.current;
+      const h = collapseRef.current;
       if (h <= 0) return;
       const cur = offsetRef.current;
       if (cur <= 0 || cur >= h) return;
@@ -59,12 +62,12 @@ export default function FeedScreen() {
 
   const makeScrollHandler = useCallback(
     (key: FeedTabKey) => (y: number) => {
-      const h = headerHRef.current;
+      const h = collapseRef.current;
       const delta = y - lastY.current[key];
       lastY.current[key] = y;
       if (h <= 0) return;
 
-      // একদম উপরে (বা iOS bounce) হলে header পুরো দেখাও
+      // একদম উপরে (বা iOS bounce) হলে header + tabs পুরো দেখাও
       if (y <= 0) {
         if (offsetRef.current !== 0) {
           offset.stopAnimation();
@@ -75,7 +78,7 @@ export default function FeedScreen() {
       }
       if (delta === 0) return;
 
-      // আঙুলের সাথে সাথে header নড়বে (0 থেকে h এর মধ্যে)
+      // আঙুলের সাথে সাথে header + tabs নড়বে (0 থেকে h এর মধ্যে)
       const next = Math.min(h, Math.max(0, offsetRef.current + delta));
       if (next !== offsetRef.current) {
         offset.stopAnimation();
@@ -99,21 +102,22 @@ export default function FeedScreen() {
   const handleChangeTab = (next: FeedTabKey) => {
     if (next === "latest") setLatestMounted(true);
     setTab(next);
-    // tab বদলালে header ফিরিয়ে আনো
+    // tab বদলালে header + tabs ফিরিয়ে আনো
     if (offsetRef.current !== 0) animateTo(0);
   };
 
   const totalH = headerH + tabsH;
   const ready = headerH > 0 && tabsH > 0;
 
-  // header + tabs পুরো container উপরে উঠবে, tabs উপরে আটকে থাকবে
+  // header + tabs একসাথে উপরে উঠে যাবে
   const barTranslate = Animated.multiply(offset, -1);
 
   // feed ও একই পরিমাণ উপরে উঠবে, যাতে নিচে ফাঁকা জায়গা না থাকে
   const feedTranslate = Animated.multiply(offset, -1);
 
-  const headerOpacity = offset.interpolate({
-    inputRange: [0, Math.max(headerH, 1)],
+  // উপরে ওঠার সাথে সাথে পুরো বার ধীরে ধীরে মিলিয়ে যাবে
+  const barOpacity = offset.interpolate({
+    inputRange: [0, Math.max(totalH, 1)],
     outputRange: [1, 0],
     extrapolate: "clamp",
   });
@@ -132,8 +136,8 @@ export default function FeedScreen() {
               top: totalH,
               left: 0,
               right: 0,
-              // header লুকালে feed উপরে উঠবে, তাই নিচে headerH বাড়তি জায়গা
-              bottom: -headerH,
+              // header + tabs লুকালে feed উপরে উঠবে, তাই নিচে totalH বাড়তি জায়গা
+              bottom: -totalH,
               transform: [{ translateY: feedTranslate }],
             }}
           >
@@ -170,28 +174,33 @@ export default function FeedScreen() {
             left: 0,
             right: 0,
             zIndex: 10,
+            opacity: barOpacity,
             transform: [{ translateY: barTranslate }],
           }}
         >
-          <Animated.View
+          <View
             className="bg-background dark:bg-dark-background"
-            style={{ opacity: headerOpacity }}
             onLayout={(e) => {
               const h = Math.round(e.nativeEvent.layout.height);
               if (h > 0 && h !== headerHRef.current) {
                 headerHRef.current = h;
+                collapseRef.current = headerHRef.current + tabsHRef.current;
                 setHeaderH(h);
               }
             }}
           >
             <Header />
-          </Animated.View>
+          </View>
 
           <View
             className="bg-background dark:bg-dark-background"
             onLayout={(e) => {
               const h = Math.round(e.nativeEvent.layout.height);
-              if (h > 0 && h !== tabsH) setTabsH(h);
+              if (h > 0 && h !== tabsHRef.current) {
+                tabsHRef.current = h;
+                collapseRef.current = headerHRef.current + tabsHRef.current;
+                setTabsH(h);
+              }
             }}
           >
             <FeedTabs active={tab} onChange={handleChangeTab} />

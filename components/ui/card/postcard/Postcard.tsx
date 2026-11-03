@@ -27,8 +27,11 @@ interface Props {
 const screenWidth = Dimensions.get("window").width;
 const maxImageSize = screenWidth - 0;
 
-// টেক্সট কত character এর পর truncate করে "Read more" দেখানো হবে
-const TEXT_TRUNCATE_LENGTH = 120;
+// মিডিয়া (ছবি/ভিডিও) থাকলে টেক্সট কত character এর পর truncate হবে
+const TEXT_TRUNCATE_LENGTH_WITH_MEDIA = 120;
+
+// মিডিয়া না থাকলে টেক্সট কত character এর পর truncate হবে
+const TEXT_TRUNCATE_LENGTH_NO_MEDIA = 300;
 
 const DynamicImage = ({
   uri,
@@ -105,12 +108,20 @@ const Postcard = ({
 
   const { t } = useTranslation();
 
+  // মিডিয়া আছে কিনা চেক
+  const hasMedia = mediaList.length > 0;
+
+  // মিডিয়া থাকলে 120, না থাকলে 300
+  const truncateLength = hasMedia
+    ? TEXT_TRUNCATE_LENGTH_WITH_MEDIA
+    : TEXT_TRUNCATE_LENGTH_NO_MEDIA;
+
   // টেক্সট truncate করার দরকার আছে কিনা চেক
   const fullText = content?.text ?? "";
-  const isLongText = fullText.length > TEXT_TRUNCATE_LENGTH;
+  const isLongText = fullText.length > truncateLength;
   const displayText =
     !expanded && isLongText
-      ? fullText.slice(0, TEXT_TRUNCATE_LENGTH).trimEnd()
+      ? fullText.slice(0, truncateLength).trimEnd()
       : fullText;
 
   const renderMedia = () => {
@@ -143,7 +154,7 @@ const Postcard = ({
       <View>
         {content?.title && (
           <Text
-            className={`mt-2 px-4 text-text dark:text-dark-text  text-base ${content.text ? "font-semibold" : " font-normal"}`}
+            className={`mt-2 px-4 text-text dark:text-dark-text  text-base ${content.text ? "font-semibold" : " font-medium"}`}
           >
             {content.title}
           </Text>
@@ -151,7 +162,7 @@ const Postcard = ({
 
         {content?.text && (
           <View className="mt-1.5 px-4">
-            <Text className="text-text dark:text-dark-text text-base leading-6">
+            <Text className="text-text font-medium dark:text-dark-text text-base leading-6">
               {displayText}
               {!expanded && isLongText && (
                 <>
@@ -159,7 +170,7 @@ const Postcard = ({
                     {"... "}
                   </Text>
                   <Text
-                    className="text-text-tertiary dark:text-dark-text-tertiary font-medium"
+                    className="text-text-tertiary dark:text-dark-text-tertiary font-semibold"
                     onPress={() => setExpanded(true)}
                   >
                     {t("readMore")}
@@ -178,9 +189,7 @@ const Postcard = ({
           </View>
         )}
 
-        {mediaList.length > 0 && (
-          <View className="w-full mt-2">{renderMedia()}</View>
-        )}
+        {hasMedia && <View className="w-full mt-2">{renderMedia()}</View>}
 
         {/* counts */}
         <View className="flex-row items-center justify-between px-4 py-1.5 border-b  border-border/50 dark:border-dark-border/50">

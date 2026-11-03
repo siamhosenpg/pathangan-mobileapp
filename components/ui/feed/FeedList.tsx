@@ -14,6 +14,7 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState, type ReactElement } from "react";
 import {
   Alert,
+  Dimensions,
   Platform,
   RefreshControl,
   Text,
@@ -41,7 +42,7 @@ interface FeedListProps {
   // pull-to-refresh: cache ছেঁটে refetch করার কাজ wrapper-এর
   refresh: () => Promise<FeedRefreshResult>;
   onScroll?: (scrollY: number) => void;
-  // header-এ বাড়তি কিছু (যেমন বিষয় বাছাইয়ের কার্ড)
+  // header-এ বাড়তি কিছু (যেমন tabs, বিষয় বাছাইয়ের কার্ড)
   headerExtra?: ReactElement | null;
   emptyText?: string;
   // tab লুকানো থাকলে false: ভিডিও থামে, view timer বন্ধ হয়
@@ -49,6 +50,13 @@ interface FeedListProps {
 }
 
 const ItemSeparator = () => <View style={{ height: 0 }} />;
+
+// স্ক্রিনের বাইরে কতটা আগে থেকে item render হবে (ভিডিও আগে থেকে লোড হওয়ার জন্য)
+const DRAW_DISTANCE = Dimensions.get("window").height * 1.5;
+
+// সামনের কতগুলো আর পেছনের কতগুলো ভিডিও আগে থেকে লোড থাকবে
+const PRELOAD_AHEAD = 3;
+const PRELOAD_BEHIND = 1;
 
 export default function FeedList({
   posts,
@@ -156,8 +164,12 @@ export default function FeedList({
       if (post.postType === "course") return <CourseCardFeed post={post} />;
 
       const isVideoVisible = visibleIndex === index;
+
+      // সামনের ভিডিও বেশি আগে থেকে লোড হবে, যাতে স্ক্রিনে আসতেই চলে
       const isNearVisible =
-        visibleIndex !== null && Math.abs(index - visibleIndex) <= 3; // ±2
+        visibleIndex !== null &&
+        index - visibleIndex <= PRELOAD_AHEAD &&
+        visibleIndex - index <= PRELOAD_BEHIND;
 
       return (
         <Postcard
@@ -259,8 +271,10 @@ export default function FeedList({
       scrollEventThrottle={16}
       onViewableItemsChanged={handleViewableItemsChanged}
       data={posts}
+      extraData={visibleIndex}
       keyExtractor={(item) => item._id}
       renderItem={renderItem}
+      drawDistance={DRAW_DISTANCE}
       viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
       ListHeaderComponent={
         <View className="">

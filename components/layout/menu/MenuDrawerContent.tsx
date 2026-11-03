@@ -44,6 +44,12 @@ export function MenuDrawerContent() {
     }, 250);
   };
 
+  // নিজের প্রোফাইলে সরাসরি যাওয়া: pathangan.com/username
+  const goToMyProfile = () => {
+    if (!user?.username) return;
+    navigate(`/(pages)/${encodeURIComponent(user.username)}`);
+  };
+
   const handleLogout = async () => {
     closeDrawer();
     setTimeout(async () => {
@@ -94,7 +100,7 @@ export function MenuDrawerContent() {
       <View className="px-5 pt-4 pb-4  ">
         <TouchableOpacity
           className="flex-row gap-3 items-center px-4 py-3 rounded-2xl bg-background-secondary dark:bg-dark-background-secondary"
-          onPress={() => navigate("/(tabs)/profile")}
+          onPress={goToMyProfile}
           activeOpacity={0.7}
         >
           {user?.profileImage ? (

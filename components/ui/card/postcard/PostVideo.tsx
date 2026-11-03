@@ -49,6 +49,12 @@ const PostVideo = ({
   const is2xActiveRef = useRef(false);
   const currentTimeRef = useRef(0);
 
+  // warm-up এর জন্য সর্বশেষ মান রাখি
+  const isVisibleRef = useRef(isVisible);
+  isVisibleRef.current = isVisible;
+  const isMutedRef = useRef(isMuted);
+  isMutedRef.current = isMuted;
+
   const [recordView] = useRecordViewMutation();
   const viewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -92,6 +98,42 @@ const PostVideo = ({
 
   useEffect(() => {
     playerRef.current = player;
+  }, [player]);
+
+  // ── Warm-up: কাছাকাছি থাকা ভিডিও লোড হলে মিউট করে একটু চালিয়ে থামিয়ে রাখি ──
+  // এতে প্রথম frame আর buffer তৈরি থাকে, স্ক্রিনে আসতেই সাথে সাথে চলে
+  useEffect(() => {
+    if (!player) return;
+
+    let warmedUp = false;
+    let warmTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const sub = player.addListener("statusChange", ({ status }) => {
+      if (status !== "readyToPlay" || warmedUp) return;
+      warmedUp = true;
+
+      // ইতিমধ্যে স্ক্রিনে এসে গেলে warm-up লাগবে না, নিচের effect নিজেই play করবে
+      if (isVisibleRef.current) return;
+
+      try {
+        player.muted = true;
+        player.play();
+        warmTimer = setTimeout(() => {
+          try {
+            if (!isVisibleRef.current) {
+              player.pause();
+              player.currentTime = 0;
+            }
+            player.muted = isMutedRef.current;
+          } catch {}
+        }, 120);
+      } catch {}
+    });
+
+    return () => {
+      sub.remove();
+      if (warmTimer) clearTimeout(warmTimer);
+    };
   }, [player]);
 
   // current time track — full screen এ startTime পাঠানোর জন্য

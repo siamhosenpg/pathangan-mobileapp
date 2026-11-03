@@ -66,9 +66,12 @@ const CommentItem = ({
     ? "?"
     : (user?.name?.charAt(0).toUpperCase() ?? "?");
 
+  // @mention শুধু reply তে দেখাবে। root comment এ কখনোই না।
   // root এর লেখক ছাড়া অন্য কাউকে reply করলে তবেই @mention দেখাবে
   const replyTo = comment.replyToUserId as any | null | undefined;
   const mentionName: string | null = (() => {
+    // root (সাধারণ) comment এ mention থাকবে না
+    if (!isReply) return null;
     // replyToUserId field ই নেই, মানে কাউকে reply না
     if (replyTo === undefined) return null;
     // field আছে কিন্তু null, মানে যাকে reply করা হয়েছিল সে delete হয়ে গেছে
