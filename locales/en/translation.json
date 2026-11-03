@@ -630,5 +630,30 @@
     "loadFailed": "Failed to load",
     "emptyCollection": "No posts in this collection",
     "noMore": "No more saved posts"
+  },
+  "feedData": {
+    "forYou": "For You",
+    "latest": "Latest",
+    "emptyFeed": "No new posts to show right now. Pull down to refresh in a bit.",
+    "promptTitle": "Choose topics you like",
+    "promptSub": "Tell us what you want to see and your feed will fit you better. You can change this anytime.",
+    "promptAction": "Choose topics",
+    "promptLater": "Not now",
+    "myInterests": "My interests",
+    "myInterestsSub": "Which topics you see more in your feed",
+    "pickTitle": "Your interests",
+    "pickHint": "Pick the topics you enjoy (up to {{max}})",
+    "selectedCount": "{{count}}/{{max}} selected",
+    "maxReached": "You can pick up to {{max}} topics",
+    "save": "Save",
+    "learnedTitle": "What we learned from your activity",
+    "learnedEmpty": "Nothing yet. Topics will appear here as you view, like or comment on posts.",
+    "reset": "Reset interests",
+    "resetConfirmTitle": "Reset interests?",
+    "resetConfirmMessage": "Your chosen topics and everything learned from your activity will be cleared. Your feed will start fresh.",
+    "cancel": "Cancel",
+    "error": "Something went wrong",
+    "loadFailed": "Couldn't load topics",
+    "retry": "Try again"
   }
 }

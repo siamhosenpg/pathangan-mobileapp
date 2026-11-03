@@ -1,11 +1,13 @@
 import Heart from "@/assets/icons/heart.svg";
 import HeartBold from "@/assets/icons/heartBold.svg";
 import { useIconColor } from "@/hooks/useIconColor";
+import { patchForYouPost } from "@/redux/api/feedApi";
 import { useToggleReactionMutation } from "@/redux/api/reactionApi";
 import * as Haptics from "expo-haptics";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Animated, Text, TouchableOpacity } from "react-native";
+import { useDispatch } from "react-redux";
 
 const LikeButton = ({
   postId,
@@ -14,6 +16,7 @@ const LikeButton = ({
   postId: string;
   initialLiked: boolean;
 }) => {
+  const dispatch = useDispatch<any>();
   const [toggleReaction, { isLoading }] = useToggleReactionMutation();
   const { primary, accent } = useIconColor();
 
@@ -42,11 +45,25 @@ const LikeButton = ({
       }),
     ]).start();
 
+    // "আপনার জন্য" ফিডের cache-ও সঙ্গে সঙ্গে বদলানো (reactionApi শুধু বাকি cache বদলায়)
+    // post ফিডে না থাকলে এটা কিছুই করে না
+    const feedPatch = dispatch(
+      patchForYouPost(postId, (post) => {
+        const nextLiked = !post.isReacted;
+        post.isReacted = nextLiked;
+        post.likesCount = Math.max(
+          0,
+          (post.likesCount ?? 0) + (nextLiked ? 1 : -1),
+        );
+      }),
+    );
+
     try {
       await toggleReaction(postId).unwrap();
-      // ✅ setIsLiked নেই — RTK Query optimistic update cache ঠিক করবে
-      // cache update → parent re-render → নতুন initialLiked prop আসবে
-    } catch {}
+      // ✅ বাকি cache-এর optimistic update আগের মতো reactionApi করবে
+    } catch {
+      feedPatch.undo();
+    }
   };
 
   return (

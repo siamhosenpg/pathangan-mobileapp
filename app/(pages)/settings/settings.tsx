@@ -164,6 +164,7 @@ export default function SettingsScreen() {
                 />
               }
             />
+
             <SettingsRow
               icon="shield-outline"
               iconBg={isDark ? "#09330946" : "#e8f5ee"}
@@ -171,6 +172,14 @@ export default function SettingsScreen() {
               title={t("privacy")}
               subtitle={t("privacySub")}
               onPress={() => router.push("/privacy")}
+            />
+            <SettingsRow
+              icon="sparkles-outline"
+              iconBg={isDark ? "#09330946" : "#e8f5ee"}
+              iconColor={accent}
+              title={t("feedData.myInterests")}
+              subtitle={t("feedData.myInterestsSub")}
+              onPress={() => router.push("/(pages)/interests/select" as any)}
             />
           </SettingsCard>
         </View>

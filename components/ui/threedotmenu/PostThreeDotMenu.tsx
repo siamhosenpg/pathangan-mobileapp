@@ -4,6 +4,7 @@ import EditIcon from "@/assets/icons/file-edit.svg";
 import FlagIcon from "@/assets/icons/finish-flag.svg";
 import DeleteIcon from "@/assets/icons/trash.svg";
 import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
+import { useNotInterestedMutation } from "@/redux/api/feedApi";
 import { useDeletePostMutation } from "@/redux/api/postApi";
 import { useAppSelector } from "@/redux/hooks";
 import { Ionicons } from "@expo/vector-icons";
@@ -111,9 +112,16 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
     !!postAuthorId && !!currentUserId && currentUserId === postAuthorId;
 
   const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
+  const [notInterested] = useNotInterestedMutation();
 
   const handleCopyLink = () => {
     close();
+  };
+
+  // post সঙ্গে সঙ্গে ফিড থেকে সরে যায় (optimistic), ব্যর্থ হলে ফিরে আসে
+  const handleNotInterested = () => {
+    close();
+    void notInterested(postId);
   };
 
   const handleEditPost = () => {
@@ -147,13 +155,16 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
           disabled={isDeleting}
         />
 
-        <MenuItem
-          Icon={NotInterestedIcon}
-          title={t("notInterested")}
-          subtitle={t("notInterestedSub")}
-          onPress={close}
-          disabled={isDeleting}
-        />
+        {/* নিজের পোস্টে "আগ্রহী নই" অর্থহীন */}
+        {!isOwnPost && (
+          <MenuItem
+            Icon={NotInterestedIcon}
+            title={t("notInterested")}
+            subtitle={t("notInterestedSub")}
+            onPress={handleNotInterested}
+            disabled={isDeleting}
+          />
+        )}
 
         {isOwnPost && (
           <MenuItem

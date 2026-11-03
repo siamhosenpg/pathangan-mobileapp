@@ -1,4 +1,5 @@
 import { baseApi } from "./baseApi";
+import { patchForYouPost } from "./feedApi";
 
 import type {
   CreateQuestionPostRequest,
@@ -202,6 +203,13 @@ const postApi = baseApi.injectEndpoints({
           }),
         );
 
+        // "আপনার জন্য" ফিডের cache patch
+        const patchFeedResult = dispatch(
+          patchForYouPost(postId, (post) => {
+            post.viewsCount = (post.viewsCount ?? 0) + 1;
+          }),
+        );
+
         try {
           const { data } = await queryFulfilled;
 
@@ -210,11 +218,13 @@ const postApi = baseApi.injectEndpoints({
           if (!data.counted) {
             patchResult.undo();
             patchByIdResult.undo();
+            patchFeedResult.undo();
           }
         } catch {
           // request fail হলে revert
           patchResult.undo();
           patchByIdResult.undo();
+          patchFeedResult.undo();
         }
       },
     }),
