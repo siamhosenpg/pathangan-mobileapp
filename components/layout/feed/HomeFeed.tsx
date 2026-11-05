@@ -9,12 +9,18 @@ interface HomeFeedProps {
   onScroll?: (scrollY: number) => void;
   // "সর্বশেষ" tab লুকানো থাকলে false
   isActive?: boolean;
+  // Header + Tabs bar-এর উচ্চতা, list-এর উপরে এই পরিমাণ ফাঁকা থাকবে
+  topInset?: number;
 }
 
-// hook r updateQueryData duitai same arg use korbe
+// hook আর updateQueryData দুটোই একই arg ব্যবহার করবে
 const QUERY_ARGS = { limit: 10 };
 
-export default function HomeFeed({ onScroll, isActive = true }: HomeFeedProps) {
+export default function HomeFeed({
+  onScroll,
+  isActive = true,
+  topInset = 0,
+}: HomeFeedProps) {
   const dispatch = useDispatch<any>();
 
   const {
@@ -35,12 +41,12 @@ export default function HomeFeed({ onScroll, isActive = true }: HomeFeedProps) {
   );
 
   const refresh = useCallback(async (): Promise<FeedRefreshResult> => {
-    // refetch fail korle ferot dewar jonno age theke snapshot rakhi
+    // refetch fail করলে ফেরত দেওয়ার জন্য আগে থেকে snapshot রাখি
     const snapshot = data
       ? { pages: data.pages, pageParams: data.pageParams }
       : null;
 
-    // cache e shudhu prothom page rakho, tahole refetch e 1ta request jabe
+    // cache-এ শুধু প্রথম page রাখো, তাহলে refetch-এ ১টা request যাবে
     dispatch(
       postApi.util.updateQueryData("getPosts", QUERY_ARGS, (draft) => {
         draft.pages = draft.pages.slice(0, 1);
@@ -52,7 +58,7 @@ export default function HomeFeed({ onScroll, isActive = true }: HomeFeedProps) {
 
     if (result.isError) {
       if (snapshot) {
-        // refetch fail -> agey je post gulo chilo segulo ferot dei
+        // refetch fail -> আগে যে post গুলো ছিল সেগুলো ফেরত দিই
         dispatch(
           postApi.util.updateQueryData("getPosts", QUERY_ARGS, (draft) => {
             draft.pages = snapshot.pages;
@@ -80,6 +86,7 @@ export default function HomeFeed({ onScroll, isActive = true }: HomeFeedProps) {
       refresh={refresh}
       onScroll={onScroll}
       isActive={isActive}
+      topInset={topInset}
     />
   );
 }

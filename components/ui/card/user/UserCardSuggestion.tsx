@@ -1,6 +1,7 @@
 import { SuggestedUser } from "@/types/userTypes";
 import { useRouter } from "expo-router";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
+import ProfileImage from "../../avatar/ProfileImage";
 import GreenMark from "../../badges/GreenMark";
 import FollowButton from "../../buttons/FollowButton";
 
@@ -10,6 +11,7 @@ interface Props {
 
 export default function UserCardSuggestion({ user }: Props) {
   const router = useRouter();
+  const isDeletedUser = !user;
 
   return (
     <TouchableOpacity
@@ -17,22 +19,13 @@ export default function UserCardSuggestion({ user }: Props) {
       onPress={() => router.push(`/${user.username}`)}
       className="flex-row bg-background dark:bg-dark-background items-center gap-3 px-4 py-4 border-b border-border/50 dark:border-dark-border/50"
     >
-      {/* Avatar */}
-      <View className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
-        {user.profileImage ? (
-          <Image
-            source={{ uri: user.profileImage }}
-            className="w-full h-full"
-            resizeMode="cover"
-          />
-        ) : (
-          <View className="w-full h-full items-center justify-center bg-accent/10">
-            <Text className="text-accent  font-semibold text-lg">
-              {user.name?.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-        )}
-      </View>
+      <ProfileImage
+        uri={user?.profileImage}
+        name={user?.name}
+        size={44}
+        isDeleted={isDeletedUser}
+        recyclingKey={user?._id}
+      />
 
       {/* Info */}
       <View className="flex-1">

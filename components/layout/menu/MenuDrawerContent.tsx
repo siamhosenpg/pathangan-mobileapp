@@ -4,6 +4,7 @@ import PrivateMessageicon from "@/assets/icons/privatemessage.svg";
 import SettingsIcon from "@/assets/icons/settings.svg";
 import LogoutIcon from "@/assets/icons/sign-out-alt.svg";
 import BlockIcon from "@/assets/icons/user-lock.svg";
+import ProfileImage from "@/components/ui/avatar/ProfileImage";
 import GreenMark from "@/components/ui/badges/GreenMark";
 import { useLogoutMutation } from "@/redux/api/authApi";
 import { clearUser } from "@/redux/features/auth/authSlice";
@@ -11,7 +12,7 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useTranslation } from "react-i18next";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { SvgProps } from "react-native-svg";
 import { useDrawer } from "./DrawerContext";
@@ -28,6 +29,7 @@ export function MenuDrawerContent() {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
+  const isDeletedUser = !user;
   const [logout] = useLogoutMutation();
   const { closeDrawer } = useDrawer();
   const insets = useSafeAreaInsets();
@@ -103,18 +105,14 @@ export function MenuDrawerContent() {
           onPress={goToMyProfile}
           activeOpacity={0.7}
         >
-          {user?.profileImage ? (
-            <Image
-              source={{ uri: user.profileImage }}
-              className="w-12 h-12 rounded-full"
-            />
-          ) : (
-            <View className="w-12 h-12 rounded-full bg-accent items-center justify-center">
-              <Text className="text-white font-bold text-lg">
-                {user?.name?.charAt(0)?.toUpperCase() ?? "?"}
-              </Text>
-            </View>
-          )}
+          <ProfileImage
+            uri={user?.profileImage}
+            name={user?.name}
+            size={44}
+            isDeleted={isDeletedUser}
+            recyclingKey={user?.id}
+          />
+
           <View className="flex-1">
             <View className="flex-row items-center gap-1">
               <Text

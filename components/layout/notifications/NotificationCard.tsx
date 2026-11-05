@@ -1,3 +1,4 @@
+import ProfileImage from "@/components/ui/avatar/ProfileImage";
 import GreenMark from "@/components/ui/badges/GreenMark";
 import { Notification } from "@/types/notification/notificationTypes";
 import { Ionicons } from "@expo/vector-icons";
@@ -6,7 +7,6 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Animated,
-  Image,
   Platform,
   Text,
   TouchableOpacity,
@@ -138,6 +138,7 @@ const NotificationCard = ({ item, onRead, onDelete, onNavigate }: Props) => {
     router.push(path as any);
   };
 
+  const isDeletedUser = !item.actorId;
   const handleDelete = () => {
     if (deleting.current) return;
     deleting.current = true;
@@ -207,19 +208,15 @@ const NotificationCard = ({ item, onRead, onDelete, onNavigate }: Props) => {
 
         {/* avatar + type badge */}
         <View className="w-12 h-12">
-          <View className="w-12 h-12 rounded-full bg-accent/30 items-center justify-center overflow-hidden">
-            {item.actorId?.profileImage ? (
-              <Image
-                source={{ uri: item.actorId.profileImage }}
-                className="w-full h-full"
-                resizeMode="cover"
-              />
-            ) : (
-              <Text className="font-bold text-accent">
-                {item.actorId?.name?.[0]?.toUpperCase() ?? "?"}
-              </Text>
-            )}
-          </View>
+          <ProfileImage
+            uri={
+              item.actorId?.profileImage ? item.actorId.profileImage : undefined
+            }
+            name={item.actorId?.name}
+            size={44}
+            isDeleted={isDeletedUser}
+            recyclingKey={item.actorId?._id}
+          />
 
           {badge && (
             <View
@@ -250,7 +247,7 @@ const NotificationCard = ({ item, onRead, onDelete, onNavigate }: Props) => {
               </Text>
               <GreenMark
                 mark={item.actorId?.greenmarkVerified || false}
-                size={16}
+                size={14}
               />
             </View>
             <Text

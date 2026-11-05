@@ -5,6 +5,7 @@ export const useIconColor = () => {
   const isDark = colorScheme === "dark";
 
   return {
+    isDark,
     primary: isDark ? "#f1f1f1" : "#1b1b1b",
     secondary: isDark ? "#c4c4c4" : "#3a3a3a",
     muted: isDark ? "#8a8a8a" : "#6d6d6d",

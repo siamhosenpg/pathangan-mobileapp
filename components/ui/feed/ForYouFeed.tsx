@@ -17,11 +17,14 @@ interface ForYouFeedProps {
   onScroll?: (scrollY: number) => void;
   // "আপনার জন্য" tab লুকানো থাকলে false
   isActive?: boolean;
+  // Header + Tabs bar-এর উচ্চতা, list-এর উপরে এই পরিমাণ ফাঁকা থাকবে
+  topInset?: number;
 }
 
 export default function ForYouFeed({
   onScroll,
   isActive = true,
+  topInset = 0,
 }: ForYouFeedProps) {
   const { t } = useTranslation();
   const dispatch = useDispatch<any>();
@@ -111,6 +114,7 @@ export default function ForYouFeed({
       headerExtra={<InterestPromptCard />}
       emptyText={t("feedData.emptyFeed")}
       isActive={isActive}
+      topInset={topInset}
     />
   );
 }

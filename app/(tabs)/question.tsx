@@ -1,12 +1,13 @@
 import ErrorState from "@/components/error/ErrorState";
 import QuestionCard from "@/components/ui/card/questioncard/QuestionCard";
 import QuestionCardSkeleton from "@/components/ui/card/questioncard/QuestionCardSkeleton";
+import CollapsibleLayout from "@/components/ui/headers/CollapsibleLayout";
 import { Header } from "@/components/ui/headers/Header";
 
-// ✅ পরিবর্তন ১: loader import
 import PullRefreshLoader from "@/components/ui/Loader/PullRefreshLoader";
+import { useCollapsibleHeader } from "@/hooks/header/useCollapsibleHeader";
 import { useGetAllQuestionsInfiniteQuery } from "@/redux/api/post/questionApi";
-import { getErrorMessage } from "@/utils/getErrorMessage"; // path ঠিক করে নিও
+import { getErrorMessage } from "@/utils/getErrorMessage";
 import { Ionicons } from "@expo/vector-icons";
 import NetInfo from "@react-native-community/netinfo";
 import { useCallback } from "react";
@@ -14,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import {
   Alert,
   FlatList,
-  Platform, // ✅ পরিবর্তন ২: Platform import
+  Platform,
   RefreshControl,
   Text,
   TouchableOpacity,
@@ -28,6 +29,10 @@ import {
 export default function QuestionScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+
+  const collapsible = useCollapsibleHeader();
+  const onScroll = collapsible.getScrollHandler("questions");
+  const { barH } = collapsible;
 
   const {
     data,
@@ -45,8 +50,8 @@ export default function QuestionScreen() {
   const allQuestions = data?.pages.flatMap((page) => page.questions) ?? [];
 
   const handleEndReached = useCallback(() => {
-    // next page er error thakle nije nije abar chalabo na,
-    // user "আবার চেষ্টা করো" chaple tokhon chalbe
+    // next page-এর error থাকলে নিজে নিজে আবার চালাবে না,
+    // user "আবার চেষ্টা করো" চাপলে তখন চলবে
     if (isFetchNextPageError) return;
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
@@ -54,7 +59,7 @@ export default function QuestionScreen() {
   }, [hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
 
   const handleRefresh = useCallback(async () => {
-    // net na thakle refetch chalabo na (upore NetworkBanner already dekhacche)
+    // নেট না থাকলে refetch চালাবে না (উপরে NetworkBanner আগে থেকেই দেখাচ্ছে)
     const net = await NetInfo.fetch();
     if (net.isConnected === false || net.isInternetReachable === false) {
       return;
@@ -62,19 +67,19 @@ export default function QuestionScreen() {
 
     const result = await refetch();
 
-    // refresh fail holeo purono proshno gulo thakbe, shudhu user ke jani
+    // refresh fail হলেও পুরনো প্রশ্নগুলো থাকবে, শুধু user কে জানাই
     if (result.isError && allQuestions.length > 0) {
       Alert.alert("রিফ্রেশ হয়নি", getErrorMessage(result.error));
     }
   }, [refetch, allQuestions.length]);
 
   const renderFooter = useCallback(() => {
-    // 1) next page ashchhe -> skeleton
+    // 1) next page আসছে -> skeleton
     if (isFetchingNextPage) {
       return <QuestionCardSkeleton />;
     }
 
-    // 2) next page fail -> purono proshno thakbe, niche shudhu chhoto retry
+    // 2) next page fail -> পুরনো প্রশ্ন থাকবে, নিচে শুধু ছোট retry
     if (isFetchNextPageError) {
       return (
         <View className="py-6 px-8 items-center gap-3">
@@ -100,80 +105,89 @@ export default function QuestionScreen() {
   // প্রথম load বাদে, refetch চলাকালীন refreshing true থাকবে
   const isRefreshing = !isLoading && isFetching && !isFetchingNextPage;
 
-  // ✅ পরিবর্তন ৩: Refresh loader — list-এর header-এর ভেতরে, তাই প্রশ্নের সাথে scroll করবে
+  // Refresh loader — list-এর header-এর ভেতরে, তাই প্রশ্নের সাথে scroll করবে
+  // null না দিয়ে undefined, নইলে type error আসে
   const refreshLoader = isRefreshing ? (
     Platform.OS === "ios" ? (
-      // iOS: pull করলে ওপরে যে ফাঁকা জায়গা তৈরি হয়, loader সেই জায়গায় বসে
       <View style={{ height: 0 }} pointerEvents="none">
         <View style={{ position: "absolute", top: -64, left: 0, right: 0 }}>
           <PullRefreshLoader />
         </View>
       </View>
     ) : (
-      // Android: list-এর ওপরে নিজের জায়গা নিয়ে বসে
       <PullRefreshLoader />
     )
-  ) : null;
+  ) : undefined;
 
   return (
     <SafeAreaView
       edges={["top"]}
       className="flex-1 bg-background dark:bg-dark-background"
     >
-      <Header title={t("questions")} />
+      <CollapsibleLayout
+        collapsible={collapsible}
+        header={<Header title={t("questions")} />}
+      >
+        {/* Loading */}
+        {isLoading && (
+          <View style={{ rowGap: 4, paddingTop: barH }}>
+            <QuestionCardSkeleton />
+            <QuestionCardSkeleton />
+            <QuestionCardSkeleton />
+          </View>
+        )}
 
-      {/* Loading */}
-      {isLoading && (
-        <View style={{ rowGap: 4 }}>
-          <QuestionCardSkeleton />
-          <QuestionCardSkeleton />
-          <QuestionCardSkeleton />
-        </View>
-      )}
+        {/* Error — শুধু তখনই full-screen, যখন দেখানোর মতো একটা প্রশ্নও নেই */}
+        {!isLoading && isError && allQuestions.length === 0 && (
+          <View style={{ flex: 1, paddingTop: barH }}>
+            <ErrorState message={getErrorMessage(error)} onRetry={refetch} />
+          </View>
+        )}
 
-      {/* Error — শুধু তখনই full-screen, যখন দেখানোর মতো একটা প্রশ্নও নেই */}
-      {!isLoading && isError && allQuestions.length === 0 && (
-        <ErrorState message={getErrorMessage(error)} onRetry={refetch} />
-      )}
+        {/* Empty */}
+        {!isLoading && !isError && allQuestions.length === 0 && (
+          <View
+            className="flex-1 items-center justify-center gap-y-2"
+            style={{ paddingTop: barH }}
+          >
+            <Ionicons name="help-circle-outline" size={48} color="#D1D5DB" />
+            <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
+              {t("noQuestions")}
+            </Text>
+          </View>
+        )}
 
-      {/* Empty */}
-      {!isLoading && !isError && allQuestions.length === 0 && (
-        <View className="flex-1 items-center justify-center gap-y-2">
-          <Ionicons name="help-circle-outline" size={48} color="#D1D5DB" />
-          <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
-            {t("noQuestions")}
-          </Text>
-        </View>
-      )}
-
-      {/* List — next page error হলেও পুরনো প্রশ্ন গুলো থাকবে */}
-      {!isLoading && allQuestions.length > 0 && (
-        <FlatList
-          data={allQuestions}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => <QuestionCard post={item} />}
-          contentContainerStyle={{
-            paddingBottom: insets.bottom + 10,
-            rowGap: 0,
-          }}
-          showsVerticalScrollIndicator={false}
-          onEndReached={handleEndReached}
-          onEndReachedThreshold={0.5}
-          // ✅ পরিবর্তন ৪: header-এ loader বসানো হয়েছে
-          ListHeaderComponent={refreshLoader}
-          ListFooterComponent={renderFooter}
-          refreshControl={
-            // ✅ পরিবর্তন ৫: default spinner লুকানো, gesture আগের মতোই কাজ করবে
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={handleRefresh}
-              colors={["transparent"]} // Android spinner লুকানো
-              progressBackgroundColor="transparent" // Android spinner-এর গোল background লুকানো
-              tintColor="transparent" // iOS spinner লুকানো
-            />
-          }
-        />
-      )}
+        {/* List — next page error হলেও পুরনো প্রশ্নগুলো থাকবে */}
+        {!isLoading && allQuestions.length > 0 && (
+          <FlatList
+            data={allQuestions}
+            keyExtractor={(item) => item._id}
+            renderItem={({ item }) => <QuestionCard post={item} />}
+            contentContainerStyle={{
+              paddingTop: barH,
+              paddingBottom: insets.bottom + 10,
+              rowGap: 0,
+            }}
+            showsVerticalScrollIndicator={false}
+            onScroll={(e) => onScroll(e.nativeEvent.contentOffset.y)}
+            scrollEventThrottle={16}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.5}
+            ListHeaderComponent={refreshLoader}
+            ListFooterComponent={renderFooter}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={handleRefresh}
+                colors={["transparent"]}
+                progressBackgroundColor="transparent"
+                tintColor="transparent"
+                progressViewOffset={barH}
+              />
+            }
+          />
+        )}
+      </CollapsibleLayout>
     </SafeAreaView>
   );
 }

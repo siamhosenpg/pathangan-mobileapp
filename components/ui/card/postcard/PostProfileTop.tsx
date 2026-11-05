@@ -1,10 +1,12 @@
 // PostProfileTop.tsx
+import ProfileImage from "@/components/ui/avatar/ProfileImage";
 import { useProfileShake } from "@/contexts/ProfileShakeContext";
+import { useIconColor } from "@/hooks/useIconColor";
 import type { PostUser } from "@/types/postTypes";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import GreenMark from "../../badges/GreenMark";
 import { useBottomSheet } from "../../bottom-sheet/BottomSheetProvider";
 
@@ -22,6 +24,7 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
   const router = useRouter();
   const { open } = useBottomSheet();
   const { t } = useTranslation();
+  const { secondary } = useIconColor();
 
   // যে profile এ আছি তার username + shake trigger
   const { currentUsername, triggerShake } = useProfileShake();
@@ -48,58 +51,23 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
     <View className="px-4 pb-1 flex-row items-center justify-between gap-2">
       <View className="flex-row items-center justify-start gap-2 flex-1">
         <TouchableOpacity
-          className="border border-border dark:border-dark-border"
           disabled={isDeletedUser}
-          activeOpacity={isDeletedUser ? 1 : 1}
+          activeOpacity={1}
           onPress={handleProfilePress}
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: 99,
-            overflow: "hidden",
-            backgroundColor: "rgba(0,145,77,0.15)",
-            flexShrink: 0,
-          }}
         >
-          {user?.profileImage ? (
-            <Image
-              source={{ uri: user.profileImage }}
-              style={{ width: "100%", height: "100%" }}
-              resizeMode="cover"
-            />
-          ) : (
-            <View
-              style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {isDeletedUser ? (
-                <Ionicons name="person" size={18} color="#9CA3AF" />
-              ) : (
-                <Text
-                  style={{
-                    color: "#00914d",
-                    fontWeight: "700",
-                    fontSize: 18,
-                  }}
-                >
-                  {user?.name?.charAt(0).toUpperCase()}
-                </Text>
-              )}
-            </View>
-          )}
+          <ProfileImage
+            uri={user?.profileImage}
+            name={user?.name}
+            size={38}
+            isDeleted={isDeletedUser}
+            recyclingKey={user?._id}
+          />
         </TouchableOpacity>
 
         <View style={{ flex: 1, minWidth: 0 }}>
           <View className="flex-row items-center gap-1">
             <Text
-              className={
-                isDeletedUser
-                  ? "text-text dark:text-dark-text"
-                  : "text-text dark:text-dark-text"
-              }
+              className="text-text dark:text-dark-text"
               style={{ fontWeight: "600", fontSize: 14, flexShrink: 1 }}
               numberOfLines={1}
               ellipsizeMode="tail"
@@ -131,7 +99,7 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
           )
         }
       >
-        <Ionicons name="ellipsis-horizontal" size={22} color="#6B7280" />
+        <Ionicons name="ellipsis-horizontal" size={22} color={secondary} />
       </TouchableOpacity>
     </View>
   );

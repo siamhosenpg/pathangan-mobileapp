@@ -153,7 +153,7 @@ const CommentItem = ({
         </View>
 
         {/* Text */}
-        <Text className="text-base text-text py-0.5 dark:text-dark-text leading-relaxed">
+        <Text className="text-base  font-medium text-text pb-1 dark:text-dark-text leading-relaxed">
           {mentionName && (
             <Text className="text-accent font-semibold">@{mentionName} </Text>
           )}

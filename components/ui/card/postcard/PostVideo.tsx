@@ -3,10 +3,14 @@ import { toggleMute } from "@/redux/features/video/videoSlice";
 import type { RootState } from "@/redux/store";
 import { Ionicons } from "@expo/vector-icons";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
+  Animated,
   AppState,
   Dimensions,
+  Pressable,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -27,7 +31,130 @@ const MAX_HEIGHT = 500;
 const MIN_HEIGHT = SCREEN_WIDTH * 0.5;
 const DEFAULT_HEIGHT = SCREEN_WIDTH * (9 / 16);
 
+// কতক্ষণ চেপে ধরলে ২x শুরু হবে (ms)
+const LONG_PRESS_DELAY = 250;
+
+// লোড এতক্ষণের বেশি লাগলে তবেই loader দেখাবে (ঝলকানি আটকাতে)
+const LOADER_SHOW_DELAY = 250;
+
 const sessionViewedVideoPosts = new Set<string>();
+
+// ───────────────────────── Loading overlay ─────────────────────────
+// cover = true  -> প্রথম frame আসেনি, পুরো ভিডিও ঢেকে দেখাবে
+// cover = false -> চলার মাঝে buffering, শুধু ছোট spinner
+const VideoLoader = ({
+  visible,
+  cover,
+}: {
+  visible: boolean;
+  cover: boolean;
+}) => {
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(opacity, {
+      toValue: visible ? 1 : 0,
+      duration: visible ? 200 : 180,
+      delay: visible ? LOADER_SHOW_DELAY : 0,
+      useNativeDriver: true,
+    }).start();
+  }, [visible, opacity]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        StyleSheet.absoluteFill,
+        {
+          opacity,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: cover ? "#0b0b0b" : "transparent",
+        },
+      ]}
+    >
+      <View
+        style={{
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+        }}
+      >
+        <View
+          style={{
+            width: cover ? 56 : 44,
+            height: cover ? 56 : 44,
+            borderRadius: 28,
+            backgroundColor: "rgba(255,255,255,0.12)",
+            borderWidth: 1,
+            borderColor: "rgba(255,255,255,0.15)",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ActivityIndicator size={cover ? "large" : "small"} color="#ffffff" />
+        </View>
+        {cover && (
+          <Text
+            style={{
+              color: "rgba(255,255,255,0.75)",
+              fontSize: 12,
+              fontWeight: "600",
+            }}
+          >
+            ভিডিও লোড হচ্ছে
+          </Text>
+        )}
+      </View>
+    </Animated.View>
+  );
+};
+
+// ───────────────────────── Error overlay ─────────────────────────
+const VideoError = ({ onRetry }: { onRetry: () => void }) => (
+  <View
+    style={[
+      StyleSheet.absoluteFill,
+      {
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#0b0b0b",
+        gap: 10,
+      },
+    ]}
+  >
+    <Ionicons name="alert-circle-outline" size={34} color="#ffffff99" />
+    <Text
+      style={{
+        color: "rgba(255,255,255,0.8)",
+        fontSize: 13,
+        fontWeight: "600",
+      }}
+    >
+      ভিডিও লোড হয়নি
+    </Text>
+    <TouchableOpacity
+      onPress={onRetry}
+      activeOpacity={0.8}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 999,
+        backgroundColor: "rgba(255,255,255,0.15)",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.2)",
+      }}
+    >
+      <Ionicons name="refresh" size={15} color="#fff" />
+      <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600" }}>
+        আবার চেষ্টা
+      </Text>
+    </TouchableOpacity>
+  </View>
+);
 
 const PostVideo = ({
   uri,
@@ -44,16 +171,23 @@ const PostVideo = ({
   const [is2x, setIs2x] = useState(false);
   const [fullScreenVisible, setFullScreenVisible] = useState(false);
 
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // loading UI-এর জন্য state
+  const [status, setStatus] = useState<string>("idle");
+  const [firstFrame, setFirstFrame] = useState(false);
+
   const playerRef = useRef<any>(null);
   const is2xActiveRef = useRef(false);
-  const currentTimeRef = useRef(0);
+  const startTimeRef = useRef(0);
 
-  // warm-up এর জন্য সর্বশেষ মান রাখি
+  // listener / timer এর ভেতর থেকে সবসময় সর্বশেষ মান পড়ার জন্য
   const isVisibleRef = useRef(isVisible);
   isVisibleRef.current = isVisible;
   const isMutedRef = useRef(isMuted);
   isMutedRef.current = isMuted;
+  const isAutoPlayRef = useRef(isAutoPlay);
+  isAutoPlayRef.current = isAutoPlay;
+  const fullScreenRef = useRef(fullScreenVisible);
+  fullScreenRef.current = fullScreenVisible;
 
   const [recordView] = useRecordViewMutation();
   const viewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -80,152 +214,180 @@ const PostVideo = ({
     };
   }, [isVisible, postId, recordView]);
 
+  // স্ক্রিনে আসার আগেই (near) লোড শুরু হবে
   const shouldLoad = isVisible || isNearVisible;
 
-  const videoHeight = (() => {
+  const videoHeight = useMemo(() => {
     if (videoMeta?.width && videoMeta?.height) {
       const aspectRatio = videoMeta.height / videoMeta.width;
       const calculated = SCREEN_WIDTH * aspectRatio;
       return Math.min(Math.max(calculated, MIN_HEIGHT), MAX_HEIGHT);
     }
     return DEFAULT_HEIGHT;
-  })();
+  }, [videoMeta?.width, videoMeta?.height]);
 
   const player = useVideoPlayer(shouldLoad ? uri : null, (p) => {
     p.loop = true;
     p.muted = isMuted;
   });
+  playerRef.current = player;
 
+  // uri বদলালে (বা cell recycle হলে) loading অবস্থা নতুন করে শুরু
   useEffect(() => {
-    playerRef.current = player;
-  }, [player]);
+    setFirstFrame(false);
+    setStatus("loading");
+  }, [uri]);
 
-  // ── Warm-up: কাছাকাছি থাকা ভিডিও লোড হলে মিউট করে একটু চালিয়ে থামিয়ে রাখি ──
-  // এতে প্রথম frame আর buffer তৈরি থাকে, স্ক্রিনে আসতেই সাথে সাথে চলে
+  // ── Status ট্র্যাক + Warm-up + error retry ──
   useEffect(() => {
-    if (!player) return;
+    if (!shouldLoad) return;
 
-    let warmedUp = false;
+    let warmed = false;
+    let retried = false;
     let warmTimer: ReturnType<typeof setTimeout> | null = null;
+    let frameFallback: ReturnType<typeof setTimeout> | null = null;
 
-    const sub = player.addListener("statusChange", ({ status }) => {
-      if (status !== "readyToPlay" || warmedUp) return;
-      warmedUp = true;
+    const handleStatus = (next: string) => {
+      setStatus(next);
 
-      // ইতিমধ্যে স্ক্রিনে এসে গেলে warm-up লাগবে না, নিচের effect নিজেই play করবে
-      if (isVisibleRef.current) return;
+      if (next === "readyToPlay") {
+        // onFirstFrameRender না এলে (পুরনো expo-video) এই fallback loader সরাবে
+        if (!frameFallback) {
+          frameFallback = setTimeout(() => setFirstFrame(true), 400);
+        }
 
-      try {
-        player.muted = true;
-        player.play();
-        warmTimer = setTimeout(() => {
-          try {
-            if (!isVisibleRef.current) {
-              player.pause();
-              player.currentTime = 0;
-            }
-            player.muted = isMutedRef.current;
-          } catch {}
-        }, 120);
-      } catch {}
-    });
+        if (warmed) return;
+        warmed = true;
+
+        // ইতিমধ্যে স্ক্রিনে এসে গেলে warm-up লাগবে না, নিচের play effect-ই চালাবে
+        if (isVisibleRef.current) return;
+
+        try {
+          player.muted = true;
+          player.play();
+          warmTimer = setTimeout(() => {
+            try {
+              if (!isVisibleRef.current) player.pause();
+              player.muted = isMutedRef.current;
+            } catch {}
+          }, 100);
+        } catch {}
+        return;
+      }
+
+      // নেটওয়ার্কের ঝামেলায় লোড fail করলে একবার নিজে থেকে আবার চেষ্টা
+      if (next === "error" && !retried) {
+        retried = true;
+        try {
+          const p: any = player;
+          if (p.replaceAsync) p.replaceAsync(uri).catch(() => {});
+          else p.replace(uri);
+          if (
+            isVisibleRef.current &&
+            isAutoPlayRef.current &&
+            !fullScreenRef.current
+          ) {
+            player.play();
+          }
+        } catch {}
+      }
+    };
+
+    const sub = player.addListener("statusChange", ({ status: s }) =>
+      handleStatus(s),
+    );
+    // listener বসার আগেই ready হয়ে গেলে সেটাও ধরো
+    handleStatus(player.status);
 
     return () => {
       sub.remove();
       if (warmTimer) clearTimeout(warmTimer);
+      if (frameFallback) clearTimeout(frameFallback);
     };
-  }, [player]);
-
-  // current time track — full screen এ startTime পাঠানোর জন্য
-  useEffect(() => {
-    if (!player) return;
-    const sub = player.addListener("timeUpdate", (payload) => {
-      currentTimeRef.current = payload.currentTime;
-    });
-    return () => sub.remove();
-  }, [player]);
+  }, [player, shouldLoad, uri]);
 
   useEffect(() => {
-    if (!player) return;
     player.muted = isMuted;
   }, [isMuted, player]);
 
+  // ── Play / pause ──
+  // স্ক্রিনে এলে চলবে, বাইরে গেলে বা full screen খুললে থামবে
   useEffect(() => {
-    if (!player) return;
-    if (!isVisible) {
-      player.pause();
-      return;
-    }
-    if (isAutoPlay) {
-      player.play();
-    } else {
-      player.pause();
-    }
-  }, [isVisible, isAutoPlay, player]);
-
-  // full screen খুললে inline pause, বন্ধ হলে resume
-  useEffect(() => {
-    const p = playerRef.current;
-    if (!p) return;
-    if (fullScreenVisible) {
-      p.pause();
-    } else {
-      if (isVisible && isAutoPlay) p.play();
-    }
-  }, [fullScreenVisible, isVisible, isAutoPlay]);
+    try {
+      if (!isVisible || fullScreenVisible || !isAutoPlay) {
+        player.pause();
+      } else {
+        player.play();
+      }
+    } catch {}
+  }, [isVisible, isAutoPlay, fullScreenVisible, player]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextState) => {
+      const prev = appStateRef.current;
+      appStateRef.current = nextState;
+
       const p = playerRef.current;
       if (!p) return;
-      if (
-        appStateRef.current === "active" &&
-        (nextState === "background" || nextState === "inactive")
-      ) {
-        p.pause();
-      }
-      if (
-        appStateRef.current !== "active" &&
-        nextState === "active" &&
-        isVisible &&
-        !fullScreenVisible
-      ) {
-        if (isAutoPlay) p.play();
-      }
-      appStateRef.current = nextState;
+
+      try {
+        if (prev === "active" && nextState !== "active") {
+          p.pause();
+        } else if (
+          prev !== "active" &&
+          nextState === "active" &&
+          isVisibleRef.current &&
+          isAutoPlayRef.current &&
+          !fullScreenRef.current
+        ) {
+          p.play();
+        }
+      } catch {}
     });
     return () => subscription.remove();
-  }, [isVisible, isAutoPlay, fullScreenVisible]);
+  }, []);
 
-  const handleVideoTap = () => {
-    if (is2xActiveRef.current) return;
+  // ── Tap → full screen ──
+  const openFullscreen = useCallback(() => {
+    try {
+      startTimeRef.current = playerRef.current?.currentTime ?? 0;
+    } catch {
+      startTimeRef.current = 0;
+    }
     setFullScreenVisible(true);
-  };
+  }, []);
 
-  const handlePressIn = () => {
-    longPressTimer.current = setTimeout(() => {
-      const p = playerRef.current;
-      if (!p) return;
-      p.playbackRate = 2;
-      setIs2x(true);
-      is2xActiveRef.current = true;
-    }, 400);
-  };
-
-  const handlePressOut = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
+  // ── চেপে ধরলে ২x ──
+  const start2x = useCallback(() => {
     const p = playerRef.current;
-    if (is2xActiveRef.current && p) {
-      p.playbackRate = 1;
-      setIs2x(false);
-      setTimeout(() => {
-        is2xActiveRef.current = false;
-      }, 50);
-    }
-  };
+    if (!p) return;
+    is2xActiveRef.current = true;
+    try {
+      p.playbackRate = 2;
+    } catch {}
+    setIs2x(true);
+  }, []);
+
+  const stop2x = useCallback(() => {
+    if (!is2xActiveRef.current) return;
+    is2xActiveRef.current = false;
+    try {
+      playerRef.current.playbackRate = 1;
+    } catch {}
+    setIs2x(false);
+  }, []);
+
+  // ── "আবার চেষ্টা" বাটন ──
+  const handleRetry = useCallback(() => {
+    setFirstFrame(false);
+    setStatus("loading");
+    try {
+      const p: any = playerRef.current;
+      if (p?.replaceAsync) p.replaceAsync(uri).catch(() => {});
+      else p?.replace(uri);
+      if (isVisibleRef.current && isAutoPlayRef.current) p?.play();
+    } catch {}
+  }, [uri]);
 
   if (!shouldLoad) {
     return (
@@ -238,6 +400,11 @@ const PostVideo = ({
     );
   }
 
+  const hasError = status === "error";
+  // প্রথম frame আসার আগে পুরো ঢাকা loader, তারপর শুধু buffering হলে ছোট spinner
+  const showCoverLoader = !firstFrame && !hasError;
+  const showBufferLoader = firstFrame && status === "loading";
+
   return (
     <>
       <View
@@ -249,18 +416,19 @@ const PostVideo = ({
           style={{ width: SCREEN_WIDTH, height: videoHeight }}
           contentFit="cover"
           nativeControls={false}
+          onFirstFrameRender={() => setFirstFrame(true)}
         />
 
         {/* tap + long press overlay */}
-        <TouchableOpacity
-          onPress={handleVideoTap}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          activeOpacity={1}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+        <Pressable
+          onPress={openFullscreen}
+          onLongPress={start2x}
+          delayLongPress={LONG_PRESS_DELAY}
+          onPressOut={stop2x}
+          style={StyleSheet.absoluteFill}
         >
           {/* autoplay off হলে play icon দেখাও */}
-          {!isAutoPlay && (
+          {!isAutoPlay && firstFrame && (
             <View className="flex-1 items-center justify-center">
               <View className="bg-black/50 rounded-full w-16 h-16 items-center justify-center">
                 <Ionicons name="play" size={32} color="#fff" />
@@ -283,7 +451,16 @@ const PostVideo = ({
               </View>
             </View>
           )}
-        </TouchableOpacity>
+        </Pressable>
+
+        {/* Loading UI (tap আটকায় না) */}
+        <VideoLoader
+          visible={showCoverLoader || showBufferLoader}
+          cover={showCoverLoader}
+        />
+
+        {/* লোড ব্যর্থ হলে */}
+        {hasError && <VideoError onRetry={handleRetry} />}
 
         {/* inline mute button */}
         <TouchableOpacity
@@ -306,10 +483,10 @@ const PostVideo = ({
         visible={fullScreenVisible}
         onClose={() => setFullScreenVisible(false)}
         videoMeta={videoMeta}
-        startTime={currentTimeRef.current}
+        startTime={startTimeRef.current}
       />
     </>
   );
 };
 
-export default PostVideo;
+export default memo(PostVideo);

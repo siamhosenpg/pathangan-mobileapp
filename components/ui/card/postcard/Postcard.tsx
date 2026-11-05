@@ -181,7 +181,7 @@ const Postcard = ({
 
             {expanded && isLongText && (
               <TouchableOpacity onPress={() => setExpanded(false)}>
-                <Text className="text-sm text-text-tertiary dark:text-dark-text-tertiary font-medium py-1 mt-1">
+                <Text className="text-text-tertiary dark:text-dark-text-tertiary font-semibold  py-1 mt-1">
                   {t("showLess")}
                 </Text>
               </TouchableOpacity>
