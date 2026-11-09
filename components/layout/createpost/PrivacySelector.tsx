@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-type Privacy = "public" | "friends" | "private";
+type Privacy = "public" | "private";
 
 interface Props {
   value: Privacy;
@@ -33,12 +33,6 @@ const options: {
     labelKey: "privacyPublic",
     descKey: "privacyPublicDesc",
     icon: "earth-outline",
-  },
-  {
-    value: "friends",
-    labelKey: "privacyFriends",
-    descKey: "privacyFriendsDesc",
-    icon: "people-outline",
   },
   {
     value: "private",

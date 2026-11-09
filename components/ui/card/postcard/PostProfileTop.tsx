@@ -11,6 +11,7 @@ import GreenMark from "../../badges/GreenMark";
 import { useBottomSheet } from "../../bottom-sheet/BottomSheetProvider";
 
 import TimeAgo from "../../datetime/TimeAgo";
+import TextFont from "../../font/TextFont";
 import PostThreeDotMenu from "../../threedotmenu/PostThreeDotMenu";
 
 interface Props {
@@ -66,14 +67,14 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
 
         <View style={{ flex: 1, minWidth: 0 }}>
           <View className="flex-row items-center gap-1">
-            <Text
+            <TextFont
               className="text-text dark:text-dark-text"
               style={{ fontWeight: "600", fontSize: 14, flexShrink: 1 }}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
               {isDeletedUser ? t("postData.deletedUser") : user?.name}
-            </Text>
+            </TextFont>
             {user?.greenmarkVerified && (
               <GreenMark mark={!!user.greenmarkVerified} size={14} />
             )}

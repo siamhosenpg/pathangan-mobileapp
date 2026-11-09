@@ -2,6 +2,7 @@ import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider
 import ContentMenuSheet, {
   SHARE_BASE_URL,
 } from "@/components/ui/bottom-sheet/report/ContentMenuSheet"; // তোমার আসল path দাও
+import TextFont from "@/components/ui/font/TextFont";
 import { ChapterRating } from "@/components/ui/rating/ChapterRating"; // তোমার আসল path দাও
 import { useGetChaptersByHandoutQuery } from "@/redux/api/handout/chapterApi";
 import { useGetHandoutBySlugQuery } from "@/redux/api/handout/handoutApi";
@@ -116,12 +117,12 @@ export default function ChapterReaderScreen() {
         </TouchableOpacity>
 
         <View className="flex-1">
-          <Text
+          <TextFont
             numberOfLines={1}
             className="text-sm font-semibold text-text dark:text-dark-text"
           >
             {handoutData?.data?.title}
-          </Text>
+          </TextFont>
           <Text className="text-xs font-medium text-text-tertiary dark:text-dark-text-tertiary mt-0.5">
             {t("handoutData.chapterOf", {
               current: currentIndex + 1,
@@ -187,18 +188,18 @@ export default function ChapterReaderScreen() {
           paddingTop: 16,
         }}
       >
-        <Text className="text-lg font-bold text-text dark:text-dark-text mb-4 leading-9">
+        <TextFont className="text-lg font-semibold text-text dark:text-dark-text mb-4 leading-9">
           {currentChapter.title}
-        </Text>
+        </TextFont>
 
         {paragraphs.map((para, idx) => (
-          <Text
+          <TextFont
             key={idx}
             style={{ fontSize, lineHeight: fontSize * 1.75 }}
             className="text-text dark:text-dark-text mb-4"
           >
             {para}
-          </Text>
+          </TextFont>
         ))}
 
         {/* ✅ এই chapter এ rating */}

@@ -1,11 +1,11 @@
+import type { Post } from "@/types/postTypes";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Dimensions, Image, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, Image, TouchableOpacity, View } from "react-native";
+
 import ModerationNotice from "./ModerationNotice";
 import PostCountLeft from "./PostCountLeft";
 import PostProfileTop from "./PostProfileTop";
-
-import type { Post } from "@/types/postTypes";
 
 import { useTranslation } from "react-i18next";
 import { useBottomSheet } from "../../bottom-sheet/useBottomSheet";
@@ -14,6 +14,7 @@ import CommentsButton from "../../buttons/CommentsButton";
 import LikeButton from "../../buttons/LikeButton";
 import ShareButton from "../../buttons/ShareButton";
 import CommentSheet from "../../comments/CommentSheet";
+import TextFont from "../../font/TextFont";
 import ImageFullScreen from "./ImageFullScreen";
 import ImageSlider from "./ImageSlider";
 import PostVideo from "./PostVideo";
@@ -153,37 +154,37 @@ const Postcard = ({
 
       <View>
         {content?.title && (
-          <Text
-            className={`mt-2 px-4 text-text dark:text-dark-text  text-base ${content.text ? "font-semibold" : " font-medium"}`}
+          <TextFont
+            className={`mt-2 px-4 text-text dark:text-dark-text text-base ${content.text ? "font-semibold" : "font-medium"}`}
           >
             {content.title}
-          </Text>
+          </TextFont>
         )}
 
         {content?.text && (
           <View className="mt-1.5 px-4">
-            <Text className="text-text font-medium dark:text-dark-text text-base leading-6">
+            <TextFont className="text-text font-medium dark:text-dark-text text-base leading-6">
               {displayText}
               {!expanded && isLongText && (
                 <>
-                  <Text className="text-text dark:text-dark-text">
+                  <TextFont className="text-text dark:text-dark-text">
                     {"... "}
-                  </Text>
-                  <Text
+                  </TextFont>
+                  <TextFont
                     className="text-text-tertiary dark:text-dark-text-tertiary font-semibold"
                     onPress={() => setExpanded(true)}
                   >
                     {t("readMore")}
-                  </Text>
+                  </TextFont>
                 </>
               )}
-            </Text>
+            </TextFont>
 
             {expanded && isLongText && (
               <TouchableOpacity onPress={() => setExpanded(false)}>
-                <Text className="text-text-tertiary dark:text-dark-text-tertiary font-semibold  py-1 mt-1">
+                <TextFont className="text-text-tertiary dark:text-dark-text-tertiary font-semibold py-1 mt-1">
                   {t("showLess")}
-                </Text>
+                </TextFont>
               </TouchableOpacity>
             )}
           </View>

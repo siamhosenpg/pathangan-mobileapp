@@ -14,7 +14,7 @@ import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useNavigation, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { ComponentRef, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
@@ -36,9 +36,10 @@ import PrivacySelector from "./PrivacySelector";
 import QuestionPostForm from "./QuestionPostForm";
 
 type PostType = "post" | "question";
-type Privacy = "public" | "friends" | "private";
+type Privacy = "public" | "private";
 type ErrorKey =
   | "errMixedMedia"
+  | "errSingleVideo"
   | "errPickFailed"
   | "errEmptyPost"
   | "errEmptyQuestion"
@@ -138,7 +139,8 @@ const compressVideo = async (
 
 export default function CreatePostPage() {
   const router = useRouter();
-  const navigation = useNavigation();
+  // expo-router এর navigation type এ beforeRemove নেই, তাই any
+  const navigation: any = useNavigation();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { user } = useAppSelector((state) => state.auth);
@@ -173,7 +175,7 @@ export default function CreatePostPage() {
   const videoInfoRef = useRef<Record<string, VideoInfo>>({});
 
   /* ─────────── Keyboard scroll ─────────── */
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   // ফর্মের ভেতরের ফিল্ডের y, ফর্ম কন্টেইনারের সাপেক্ষে
   const fieldYRef = useRef<Record<PostFieldKey, number>>({
     title: 0,
@@ -262,7 +264,7 @@ export default function CreatePostPage() {
 
   /* ─────────── Back confirmation ─────────── */
   useEffect(() => {
-    const unsubscribe = navigation.addListener("beforeRemove", (e) => {
+    const unsubscribe = navigation.addListener("beforeRemove", (e: any) => {
       if (allowLeaveRef.current || !hasUnsavedChanges) return;
 
       e.preventDefault();
@@ -281,16 +283,31 @@ export default function CreatePostPage() {
   }, [navigation, hasUnsavedChanges, t]);
 
   /* ─────────── Media ─────────── */
+  /*
+   * নিয়ম:
+   * - ছবি: একসাথে একাধিক (সর্বোচ্চ MAX_MEDIA)
+   * - ভিডিও: শুধু ১টা
+   * - ছবি আর ভিডিও একসাথে দেওয়া যাবে না
+   */
   const pickMedia = async () => {
     try {
+      // ইতোমধ্যে ভিডিও থাকলে আর কিছু যোগ করা যাবে না
+      if (media.some((m) => m.type === "video")) {
+        setErrorKey("errSingleVideo");
+        return;
+      }
+
       const remaining = MAX_MEDIA - media.length;
       if (remaining <= 0) {
         setErrorKey("errMaxMedia");
         return;
       }
 
+      // আগে ছবি বাছা থাকলে শুধু ছবিই দেখাবে, খালি থাকলে দুটোই
+      const hasExistingImages = media.length > 0;
+
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images", "videos"],
+        mediaTypes: hasExistingImages ? ["images"] : ["images", "videos"],
         allowsMultipleSelection: true,
         selectionLimit: remaining,
         quality: 0.85,
@@ -303,17 +320,35 @@ export default function CreatePostPage() {
       });
       if (result.canceled) return;
 
-      // ভিডিওর duration আর size মনে রাখি (duration মিলিসেকেন্ডে)
-      result.assets.forEach((a) => {
-        if (a.type === "video") {
-          videoInfoRef.current[a.uri] = {
-            duration: a.duration ?? undefined,
-            fileSize: a.fileSize ?? undefined,
-          };
-        }
-      });
+      const assets = result.assets;
+      const pickedVideos = assets.filter((a) => a.type === "video");
 
-      const picked: MediaItem[] = result.assets
+      if (pickedVideos.length > 0) {
+        // ভিডিও + ছবি একসাথে
+        if (assets.length > pickedVideos.length) {
+          setErrorKey("errMixedMedia");
+          return;
+        }
+        // একাধিক ভিডিও
+        if (pickedVideos.length > 1) {
+          setErrorKey("errSingleVideo");
+          return;
+        }
+        // আগে ছবি থাকলে ভিডিও যোগ করা যাবে না
+        if (media.length > 0) {
+          setErrorKey("errMixedMedia");
+          return;
+        }
+
+        // ভিডিওর duration আর size মনে রাখি (duration মিলিসেকেন্ডে)
+        const v = pickedVideos[0];
+        videoInfoRef.current[v.uri] = {
+          duration: v.duration ?? undefined,
+          fileSize: v.fileSize ?? undefined,
+        };
+      }
+
+      const picked: MediaItem[] = assets
         .filter((a) => !media.some((m) => m.uri === a.uri)) // duplicate bad
         .map((a) => ({
           uri: a.uri,
@@ -327,13 +362,6 @@ export default function CreatePostPage() {
 
       // ager media'r sathe notun gulo jog hobe
       const merged = [...media, ...picked];
-
-      const hasVideo = merged.some((m) => m.type === "video");
-      const hasImage = merged.some((m) => m.type === "image");
-      if (hasVideo && hasImage) {
-        setErrorKey("errMixedMedia");
-        return;
-      }
 
       setErrorKey("");
       setMedia(merged.slice(0, MAX_MEDIA));

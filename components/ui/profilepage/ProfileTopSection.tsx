@@ -10,9 +10,11 @@ import { useColorScheme } from "nativewind";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, Text, TouchableOpacity, View } from "react-native";
+import ProfileImage from "../avatar/ProfileImage";
 import GreenMark from "../badges/GreenMark";
 import FollowButtonProfile from "../buttons/FollowButtonProfile";
 import AskQuestionModal from "../card/questioncard/AskQuestionModal";
+import TextFont from "../font/TextFont";
 import UserRating from "../rating/UserRating";
 import FollowStats from "./FollowStats";
 import ProfileMenuSheet from "./ProfileMenuSheet";
@@ -35,6 +37,7 @@ const ProfileTopSection = ({ data }: Props) => {
     skip: !isOwnProfile,
   });
   const unreadCount = unreadData?.unreadCount ?? 0;
+  const isDeletedUser = !data; // যদি user ডিলিট হয়ে যায়, তাহলে data null হবে
 
   return (
     <View className="bg-background dark:bg-dark-background">
@@ -55,36 +58,25 @@ const ProfileTopSection = ({ data }: Props) => {
       <View className="px-4 pb-4">
         <View className="flex-row items-center gap-2 justify-start ">
           {/* Avatar */}
-          <View
-            className="w-20 h-20 rounded-full border border-border dark:border-dark-border overflow-hidden bg-accent/20"
-            style={{ flexShrink: 0 }}
-          >
-            {data.profileImage ? (
-              <Image
-                source={{ uri: data.profileImage }}
-                className="w-full h-full"
-                resizeMode="cover"
-              />
-            ) : (
-              <View className="w-full h-full items-center justify-center bg-accent/20">
-                <Text className="text-4xl font-bold text-accent uppercase mt-1">
-                  {data.name?.charAt(0).toUpperCase()}
-                </Text>
-              </View>
-            )}
-          </View>
+          <ProfileImage
+            uri={data.profileImage}
+            name={data.name}
+            size={68}
+            isDeleted={isDeletedUser}
+            recyclingKey={data._id}
+          />
 
           {/* Name + Rating */}
           <View style={{ flex: 1, minWidth: 0 }}>
             <View className="flex-row items-center gap-1">
-              <Text
+              <TextFont
                 className="text-lg font-bold text-text dark:text-dark-text"
                 style={{ flexShrink: 1, flex: 0 }}
                 numberOfLines={2}
                 ellipsizeMode="tail"
               >
-                {data.name}
-              </Text>
+                {data?.name || "Deleted User"}
+              </TextFont>
               {data?.greenmarkVerified && (
                 <GreenMark mark={!!data.greenmarkVerified} size={16} />
               )}
@@ -194,14 +186,14 @@ const ProfileTopSection = ({ data }: Props) => {
 
         {/* Bio + About */}
         {data.bio && (
-          <Text className="mt-3 font-semibold text-base text-text dark:text-dark-text">
-            {data.bio}
-          </Text>
+          <TextFont className="mt-3 font-semibold text-base text-text dark:text-dark-text">
+            {data?.bio}
+          </TextFont>
         )}
         {data.aboutText && (
-          <Text className="mt-1 text-sm text-text-secondary dark:text-dark-text-secondary leading-5">
+          <TextFont className="mt-1 text-sm text-text-secondary dark:text-dark-text-secondary leading-5">
             {data.aboutText}
-          </Text>
+          </TextFont>
         )}
       </View>
     </View>

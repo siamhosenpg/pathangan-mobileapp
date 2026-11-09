@@ -1,6 +1,7 @@
 import ModerationNotice from "@/components/ui/card/postcard/ModerationNotice";
 import type { Answer } from "@/types/answerTypes";
 import { Text, View } from "react-native";
+import TextFont from "../../font/TextFont";
 import { AnswerRating } from "../../star/AnswerRating";
 import { AnswerUserCard } from "./AnswerUserCard";
 
@@ -18,14 +19,14 @@ export function AnswerDetail({
 
       {/* ✅ questionText পাঠানো হচ্ছে যাতে edit popup এ প্রশ্ন দেখা যায় */}
       <AnswerUserCard answer={answer} questionText={Question} />
-      <Text className="text-base font-semibold text-text dark:text-dark-text mb-2 mt-2 leading-relaxed">
+      <TextFont className="text-base font-semibold text-text dark:text-dark-text mb-2 mt-2 leading-relaxed">
         {Question}
-      </Text>
+      </TextFont>
 
       {/* উত্তরের মূল টেক্সট */}
-      <Text className=" text-text dark:text-dark-text leading-relaxed">
+      <TextFont className=" text-text dark:text-dark-text leading-relaxed">
         {answer.text}
-      </Text>
+      </TextFont>
 
       {/* রেটিং component */}
       <AnswerRating answerId={answer._id} />

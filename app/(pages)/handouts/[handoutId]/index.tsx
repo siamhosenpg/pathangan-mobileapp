@@ -4,6 +4,7 @@ import ContentMenuSheet, {
   SHARE_BASE_URL,
 } from "@/components/ui/bottom-sheet/report/ContentMenuSheet"; // তোমার আসল path দাও
 import TimeAgo from "@/components/ui/datetime/TimeAgo";
+import TextFont from "@/components/ui/font/TextFont";
 import StarRating from "@/components/ui/rating/StarRating"; // তোমার আসল path দাও
 import { useGetHandoutBySlugQuery } from "@/redux/api/handout/handoutApi";
 import { useGetHandoutRatingQuery } from "@/redux/api/rating/chapterRatingApi";
@@ -157,12 +158,12 @@ export default function HandoutDetailScreen() {
 
             <View className="flex-1 justify-center gap-3">
               {/* টাইটেল */}
-              <Text
+              <TextFont
                 numberOfLines={3}
                 className="text-lg font-bold text-text dark:text-dark-text leading-6"
               >
                 {handout.title}
-              </Text>
+              </TextFont>
               {/* ✅ handout এর rating (chapter rating গুলোর average) */}
               <View className="flex-row items-center gap-3">
                 <StarRating rating={averageRating} size={16} />
@@ -187,11 +188,11 @@ export default function HandoutDetailScreen() {
               {/* ক্যাটাগরি ব্যাজ */}
               <View className="flex-row items-center gap-2">
                 <View className="border-accent  border  px-3 py-1 rounded-full self-start">
-                  <Text className="text-accent text-xs font-semibold">
+                  <TextFont className="text-accent text-xs font-semibold">
                     {t(`handoutData.categories.${handout.category}`, {
                       defaultValue: handout.category,
                     })}
-                  </Text>
+                  </TextFont>
                 </View>
                 {handout.status === "draft" && (
                   <View className="border-yellow-500  border  px-3 py-1 rounded-full self-start">
@@ -216,12 +217,12 @@ export default function HandoutDetailScreen() {
                 )}
                 <View className="flex-1">
                   <View className="flex-row items-center gap-1">
-                    <Text
+                    <TextFont
                       numberOfLines={1}
                       className="text-xs font-semibold text-text dark:text-dark-text flex-shrink"
                     >
                       {handout.user?.name ?? handout.user?.username}
-                    </Text>
+                    </TextFont>
                     <GreenMark
                       mark={handout.user?.greenmarkVerified}
                       size={13}
@@ -240,9 +241,9 @@ export default function HandoutDetailScreen() {
 
           <View className="pt-6 ">
             {/* বর্ণনা */}
-            <Text className="text-sm pb-2 font-medium text-text-secondary dark:text-dark-text-secondary leading-6  px-5">
+            <TextFont className="text-sm pb-2 font-medium text-text-secondary dark:text-dark-text-secondary leading-6  px-5">
               {handout.description}
-            </Text>
+            </TextFont>
 
             {/* ট্যাগ */}
             {handout.tags?.length > 0 && (
@@ -252,9 +253,9 @@ export default function HandoutDetailScreen() {
                     key={tag}
                     className="px-3 py-1 rounded-full  bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border"
                   >
-                    <Text className="text-xs font-semibold text-text-tertiary dark:text-dark-text-tertiary">
+                    <TextFont className="text-xs font-semibold text-text-tertiary dark:text-dark-text-tertiary">
                       #{tag}
-                    </Text>
+                    </TextFont>
                   </View>
                 ))}
               </View>
@@ -306,12 +307,12 @@ export default function HandoutDetailScreen() {
                     </Text>
                   </View>
                   <View className="flex-1">
-                    <Text
+                    <TextFont
                       numberOfLines={1}
                       className="text-sm font-semibold text-text dark:text-dark-text"
                     >
                       {chapter.title}
-                    </Text>
+                    </TextFont>
                     <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary mt-0.5">
                       {t("handoutData.words", { value: chapter.wordCount })}
                     </Text>

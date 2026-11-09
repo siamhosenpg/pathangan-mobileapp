@@ -1,4 +1,5 @@
 import GreenMark from "@/components/ui/badges/GreenMark";
+import FontSetting from "@/components/ui/setting/FontSetting";
 import LanguageSwitcher from "@/components/ui/setting/LanguageSwitcher";
 import SettingsCard from "@/components/ui/setting/SettingsCard";
 import SettingsRow from "@/components/ui/setting/SettingsRow";
@@ -185,6 +186,7 @@ export default function SettingsScreen() {
         </View>
         <View className="px-5 pb-4">
           <VideoAutoplay />
+          <FontSetting />
         </View>
 
         {/* ── More Section ── */}

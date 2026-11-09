@@ -8,6 +8,8 @@ import { useNotInterestedMutation } from "@/redux/api/feedApi";
 import { useDeletePostMutation } from "@/redux/api/postApi";
 import { useAppSelector } from "@/redux/hooks";
 import { Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
+import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import React from "react";
@@ -35,6 +37,9 @@ interface MenuItemProps {
 const ICON_SIZE = 18;
 const DANGER_COLOR = "#EF4444";
 
+/* তোমার ওয়েবসাইটের আসল ডোমেইন এখানে বসাও (শেষে / দিও না) */
+const WEB_BASE_URL = "https://pathangan.com";
+
 /* ───────────── Single row ───────────── */
 const MenuItem = ({
   Icon,
@@ -55,10 +60,6 @@ const MenuItem = ({
     : "bg-gray-500/10 dark:bg-gray-400/10";
 
   const titleColor = danger ? "text-red-500" : "text-text dark:text-dark-text";
-
-  const subtitleColor = danger
-    ? "text-red-500/70"
-    : "text-text-tertiary dark:text-dark-text-tertiary";
 
   return (
     <TouchableOpacity
@@ -107,15 +108,28 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
   const { t } = useTranslation();
 
   // author না থাকলে (ডিলিট করা user) কখনোই নিজের পোস্ট না
+  // দুই দিকেই String করে তুলনা করি, যাতে ObjectId/string মিসম্যাচ না হয়
   const currentUserId = currentUser?.id ?? (currentUser as any)?._id;
   const isOwnPost =
-    !!postAuthorId && !!currentUserId && currentUserId === postAuthorId;
+    !!postAuthorId &&
+    !!currentUserId &&
+    String(currentUserId) === String(postAuthorId);
 
   const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
   const [notInterested] = useNotInterestedMutation();
 
-  const handleCopyLink = () => {
-    close();
+  /* লিংক কপি করে, সফল হলে হ্যাপটিক দেয় */
+  const handleCopyLink = async () => {
+    try {
+      await Clipboard.setStringAsync(`${WEB_BASE_URL}/post/${postId}`);
+      // কপি হওয়ার সঙ্গে সঙ্গে হালকা কম্পন (সফল)
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch {
+      // কপি ব্যর্থ হলে error হ্যাপটিক
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      close();
+    }
   };
 
   // post সঙ্গে সঙ্গে ফিড থেকে সরে যায় (optimistic), ব্যর্থ হলে ফিরে আসে
@@ -130,6 +144,9 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
   };
 
   const handleReport = () => {
+    // নিজের পোস্ট রিপোর্ট করা যাবে না (UI তে লুকানো, এখানেও গার্ড)
+    if (isOwnPost) return;
+
     // Replace the menu content with the report sheet
     // (close + reopen causes flicker, so replace directly)
     open(<ReportSheet targetType="post" targetId={postId} />, {
@@ -176,26 +193,35 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
           />
         )}
 
-        <View className="h-px bg-border dark:bg-dark-border my-1 mx-3" />
+        {/* নিজের পোস্টে রিপোর্ট নেই, তাই divider আর রিপোর্ট শুধু অন্যের পোস্টে */}
+        {!isOwnPost && (
+          <>
+            <View className="h-px bg-border dark:bg-dark-border my-1 mx-3" />
 
-        <MenuItem
-          Icon={FlagIcon}
-          title={t("reportPost")}
-          subtitle={t("reportPostSub")}
-          onPress={handleReport}
-          disabled={isDeleting}
-          danger
-        />
+            <MenuItem
+              Icon={FlagIcon}
+              title={t("reportPost")}
+              subtitle={t("reportPostSub")}
+              onPress={handleReport}
+              disabled={isDeleting}
+              danger
+            />
+          </>
+        )}
 
         {isOwnPost && (
-          <MenuItem
-            Icon={DeleteIcon}
-            title={isDeleting ? t("deleteing") : t("deletePost")}
-            subtitle={t("deletePostSub")}
-            onPress={handleDeletePost}
-            loading={isDeleting}
-            danger
-          />
+          <>
+            <View className="h-px bg-border dark:bg-dark-border my-1 mx-3" />
+
+            <MenuItem
+              Icon={DeleteIcon}
+              title={isDeleting ? t("deleteing") : t("deletePost")}
+              subtitle={t("deletePostSub")}
+              onPress={handleDeletePost}
+              loading={isDeleting}
+              danger
+            />
+          </>
         )}
       </View>
     </View>

@@ -1,8 +1,9 @@
 import { useRouter } from "expo-router";
-import { Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 
 import ModerationNotice from "@/components/ui/card/postcard/ModerationNotice";
 import type { Answer } from "@/types/answerTypes";
+import TextFont from "../../font/TextFont";
 
 interface Props {
   answer: Answer;
@@ -23,18 +24,18 @@ const AnswerCard = ({ answer }: Props) => {
 
       {/* Content */}
       <View className="">
-        <Text
+        <TextFont
           className="text-text dark:text-dark-text text-base leading-6"
           numberOfLines={4}
         >
           {answer?.text}
-        </Text>
+        </TextFont>
       </View>
       {/* Avatar */}
       <View className=" mt-0.5">
-        <Text className="font-semibold  text-text-tertiary dark:text-dark-text-tertiary text-sm">
+        <TextFont className="font-semibold  text-text-tertiary dark:text-dark-text-tertiary text-sm">
           {answer?.userId?.name || "Unknown User"}
-        </Text>
+        </TextFont>
       </View>
     </TouchableOpacity>
   );

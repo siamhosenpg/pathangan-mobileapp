@@ -5,6 +5,7 @@ import { useColorScheme } from "nativewind";
 import { useTranslation } from "react-i18next";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import GreenMark from "../../badges/GreenMark";
+import TextFont from "../../font/TextFont";
 
 interface Props {
   handout: Handout;
@@ -65,25 +66,25 @@ const HandoutCard = ({ handout }: Props) => {
       {/* কনটেন্ট (ডানে) */}
       <View className="flex-1 justify-center gap-1.5 py-0.5">
         <View className="gap-1.5">
-          <Text
+          <TextFont
             numberOfLines={1}
             className="text-base font-bold text-text dark:text-dark-text leading-6"
           >
             {handout.title}
-          </Text>
+          </TextFont>
 
-          <Text
+          <TextFont
             numberOfLines={2}
-            className="text-sm text-text-secondary dark:text-dark-text-secondary leading-5"
+            className="text-sm text-text dark:text-dark-text leading-5"
           >
             {handout.description}
-          </Text>
+          </TextFont>
 
-          <Text className="text-[10px] font-bold text-text-tertiary dark:text-dark-text-tertiary">
+          <TextFont className="text-[10px] font-bold text-text-tertiary dark:text-dark-text-tertiary">
             {t(`handoutData.categories.${handout.category}`, {
               defaultValue: handout.category,
             })}
-          </Text>
+          </TextFont>
 
           {/* লেখক তথ্য */}
           <View className="flex-row items-center gap-2 mt-1">
@@ -98,12 +99,12 @@ const HandoutCard = ({ handout }: Props) => {
               </View>
             )}
             <View className="items-center flex-row gap-1 flex-1">
-              <Text
+              <TextFont
                 numberOfLines={1}
                 className="text-xs text-text-secondary dark:text-dark-text-secondary font-bold flex-shrink"
               >
                 {handout.user?.name ?? handout.user?.username}
-              </Text>
+              </TextFont>
               <GreenMark mark={handout.user?.greenmarkVerified} size={11} />
             </View>
           </View>

@@ -12,6 +12,7 @@ import AnswerButton from "../../buttons/AnswerButton";
 import BookmarkButton from "../../buttons/BookmarkButton";
 import LikeButton from "../../buttons/LikeButton";
 import ShareButton from "../../buttons/ShareButton";
+import TextFont from "../../font/TextFont";
 import AnswerCard from "./AnswerCard";
 import AnswerPopupContent from "./AnswerPopupContent";
 
@@ -89,9 +90,9 @@ const QuestionCard = ({ post }: Props) => {
 
       <PostProfileTop user={userid} createdAt={createdAt} postId={_id} />
 
-      <Text className="mt-2 px-4 text-text dark:text-dark-text font-semibold text-base leading-6">
+      <TextFont className="mt-2 px-4 text-text dark:text-dark-text font-semibold text-base leading-6">
         {question?.questionText}
-      </Text>
+      </TextFont>
 
       {/* feed থেকে আসা preview answers (সবসময় দেখা যাবে) */}
       {previewAnswers && previewAnswers.length > 0 && (
