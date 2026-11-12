@@ -4,13 +4,13 @@ import type {
   GetHandoutsResponse,
   Handout,
   HandoutResponse,
+  HandoutStatus,
   SimpleSuccessResponse,
 } from "@/types/handoutTypes";
 import { baseApi } from "../baseApi";
 
 const handoutApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // ===================== ফিড (Infinite Query) =====================
     // ===================== ফিড (Infinite Query) =====================
     getAllHandoutsInfinite: builder.infiniteQuery<
       GetHandoutsResponse,
@@ -46,11 +46,11 @@ const handoutApi = baseApi.injectEndpoints({
             ]
           : [{ type: "Handout" as const, id: "LIST" }],
     }),
-    // ===================== নিজের হ্যান্ডআউট লিস্ট =====================
+
     // ===================== নিজের হ্যান্ডআউট লিস্ট =====================
     getMyHandouts: builder.query<
       GetHandoutsResponse,
-      { status?: "draft" | "published"; cursor?: string | null }
+      { status?: HandoutStatus; cursor?: string | null }
     >({
       query: ({ status, cursor }) => ({
         url: "/handouts/mine",
@@ -96,6 +96,7 @@ const handoutApi = baseApi.injectEndpoints({
         { type: "Handout", id: "MY_LIST" },
       ],
     }),
+
     // ===================== আপডেট =====================
     updateHandout: builder.mutation<
       HandoutResponse,
@@ -106,8 +107,10 @@ const handoutApi = baseApi.injectEndpoints({
         method: "PUT",
         body: formData,
       }),
+      // update-এ status বদলাতে পারে (published <-> auto_hidden), তাই LIST-ও refresh
       invalidatesTags: (result, error, { id }) => [
         { type: "Handout", id },
+        { type: "Handout", id: "LIST" },
         { type: "Handout", id: "MY_LIST" },
       ],
     }),

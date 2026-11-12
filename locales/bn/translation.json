@@ -334,17 +334,19 @@
     "manageChapters": "অধ্যায় পরিচালনা",
     "all": "সব",
     "categories": {
-      "golpo": "গল্প",
-      "itihash": "ইতিহাস",
-      "dharmiyo": "ধর্মীয়",
-      "kobita": "কবিতা",
-      "ovizoggota": "অভিজ্ঞতা",
-      "onnanno": "অন্যান্য"
+      "story": "গল্প",
+      "history": "ইতিহাস",
+      "religious": "ধর্মীয়",
+      "experience": "অভিজ্ঞতা",
+      "educational": "শিক্ষামূলক",
+      "science": "বিজ্ঞান",
+      "technology": "প্রযুক্তি",
+      "self_development": "আত্মউন্নয়ন",
+      "biography": "জীবনী",
+      "travel": "ভ্রমণ",
+      "other": "অন্যান্য"
     },
-    "status": {
-      "draft": "ড্রাফট",
-      "published": "প্রকাশিত"
-    },
+
     "draftsTitle": "আপনার অপ্রকাশিত লেখা",
     "seeAll": "সব দেখুন",
     "chapters": "{{value}} অধ্যায়",
@@ -367,7 +369,7 @@
     "chapterNotFound": "অধ্যায়টি পাওয়া যায়নি",
     "errorTitle": "সমস্যা হয়েছে",
     "success": "সফল!",
-    "ok": "ঠিক আছে",
+
     "cancel": "বাতিল",
     "stay": "থাকুন",
     "discard": "বাদ দিন",
@@ -418,7 +420,23 @@
     "chapterContentPlaceholder": "এখানে আপনার লেখা শুরু করুন...",
     "addChapterBtn": "অধ্যায় যোগ করুন",
     "updateChapter": "আপডেট করুন",
-    "chapterSaveFailed": "অধ্যায় সেভ করা যায়নি"
+    "chapterSaveFailed": "অধ্যায় সেভ করা যায়নি",
+    "status": {
+      "draft": "ড্রাফট",
+      "published": "প্রকাশিত",
+      "auto_hidden": "লুকানো",
+      "under_review": "পর্যালোচনায়"
+    },
+    "ok": "ঠিক আছে",
+    "badTextTitle": "অশালীন বা ক্ষতিকর লেখা পাওয়া গেছে",
+    "badTextCreateHint": "handout সেভ হয়েছে, কিন্তু লেখা ঠিক না করা পর্যন্ত এটি publish করা যাবে না।",
+    "badTextChapterHint": "chapter সেভ হয়েছে। handout প্রকাশিত থাকলে লেখা ঠিক না করা পর্যন্ত এটি অন্যদের কাছ থেকে লুকানো থাকবে।",
+    "autoHiddenShort": "অশালীন লেখা পাওয়া গেছে, তাই লুকানো আছে",
+    "underReviewShort": "পর্যালোচনা চলছে",
+    "autoHiddenNotice": "আপনার handout-এ অশালীন বা ক্ষতিকর লেখা পাওয়া গেছে, তাই এটি অন্যদের কাছ থেকে লুকানো আছে। handout বা chapter-এর লেখা ঠিক করলে এটি আবার দেখানো হবে।",
+    "underReviewNotice": "আপনার handout পর্যালোচনা করা হচ্ছে। এই সময়ে এটি অন্যদের কাছ থেকে লুকানো থাকবে এবং আপনি নিজে publish করতে পারবেন না।",
+    "badTextEditHiddenHint": "handout সেভ হয়েছে, কিন্তু অশালীন বা ক্ষতিকর লেখার কারণে এটি আপাতত অন্যদের কাছ থেকে লুকানো হয়েছে। লেখা ঠিক করলে আবার দেখানো হবে।",
+    "flaggedChapter": "এই chapter-এ অশালীন বা ক্ষতিকর লেখা পাওয়া গেছে"
   },
   "contentMenu": {
     "copyLink": "লিংক কপি করুন",

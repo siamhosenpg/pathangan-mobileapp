@@ -2,6 +2,7 @@ import ErrorState from "@/components/error/ErrorState";
 import HandoutCard from "@/components/ui/card/handout/HandoutCard";
 import HandoutCardSkeleton from "@/components/ui/card/handout/HandoutCardSkeleton";
 
+import { HANDOUT_CATEGORIES } from "@/constants/handoutCategories";
 import {
   useGetAllHandoutsInfiniteInfiniteQuery,
   useGetMyHandoutsQuery,
@@ -25,16 +26,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const CATEGORY_KEYS: (HandoutCategory | null)[] = [
-  null,
-  "golpo",
-  "itihash",
-  "dharmiyo",
-  "kobita",
-  "ovizoggota",
-  "onnanno",
-];
 
 const CATEGORY_BAR_HEIGHT = 56;
 const HIDE_SHOW_THRESHOLD = 6;
@@ -303,7 +294,7 @@ export default function HandoutsFeedScreen() {
           height: CATEGORY_BAR_HEIGHT,
         }}
       >
-        {CATEGORY_KEYS.map((key) => {
+        {HANDOUT_CATEGORIES.map((key) => {
           const isActive = activeCategory === key;
           return (
             <TouchableOpacity

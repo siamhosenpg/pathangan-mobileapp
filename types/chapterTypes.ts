@@ -1,3 +1,5 @@
+import type { ModerationInfo } from "@/types/handoutTypes";
+
 export interface Chapter {
   _id: string;
   handout: string;
@@ -8,6 +10,8 @@ export interface Chapter {
   wordCount: number;
   createdAt: string;
   updatedAt: string;
+  // শুধু owner এর response এ আসে (খারাপ লেখা আছে কিনা)
+  hasBadText?: boolean;
 }
 
 export interface GetChaptersResponse {
@@ -18,6 +22,8 @@ export interface GetChaptersResponse {
 export interface ChapterResponse {
   success: boolean;
   data: Chapter;
+  // chapter save এর পর খারাপ লেখা পাওয়া গেলে backend এটা পাঠায়
+  moderation?: ModerationInfo;
 }
 
 export interface AddChapterRequest {

@@ -1,12 +1,34 @@
 export type HandoutCategory =
-  | "golpo"
-  | "itihash"
-  | "dharmiyo"
-  | "kobita"
-  | "ovizoggota"
-  | "onnanno";
+  | "story"
+  | "history"
+  | "religious"
+  | "experience"
+  | "educational"
+  | "science"
+  | "technology"
+  | "self_development"
+  | "biography"
+  | "travel"
+  | "other";
+export type HandoutStatus =
+  | "draft"
+  | "published"
+  | "auto_hidden"
+  | "under_review";
 
-export type HandoutStatus = "draft" | "published";
+export type ModerationFlagType =
+  | "none"
+  | "obscene"
+  | "harmful"
+  | "obscene_and_harmful";
+
+// create / update / chapter save / publish-এর response-এ আসে
+export interface ModerationInfo {
+  flagged: boolean;
+  flagType: ModerationFlagType;
+  message: string | null;
+  chapterId?: string | null;
+}
 
 export interface HandoutAuthor {
   _id: string;
@@ -25,6 +47,7 @@ export interface Handout {
   coverImage: string | null;
   category: HandoutCategory;
   tags: string[];
+  price?: number;
   status: HandoutStatus;
   publishedAt: string | null;
   chaptersCount: number;
@@ -85,6 +108,7 @@ export interface GetHandoutsResponse {
 export interface HandoutResponse {
   success: boolean;
   data: Handout;
+  moderation?: ModerationInfo;
 }
 
 export interface GetHandoutBySlugResponse {

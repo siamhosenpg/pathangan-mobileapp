@@ -1,9 +1,11 @@
+import { HANDOUT_CATEGORIES } from "@/constants/handoutCategories";
 import {
   useGetHandoutBySlugQuery,
   useUpdateHandoutMutation,
 } from "@/redux/api/handout/handoutApi";
 import { HandoutCategory } from "@/types/handoutTypes";
 import { Ionicons } from "@expo/vector-icons";
+import type { NavigationProp, ParamListBase } from "@react-navigation/native";
 import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
@@ -24,15 +26,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const CATEGORY_KEYS: HandoutCategory[] = [
-  "golpo",
-  "itihash",
-  "dharmiyo",
-  "kobita",
-  "ovizoggota",
-  "onnanno",
-];
-
 const SAFE_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
 
 /**
@@ -52,7 +45,8 @@ export default function EditHandoutScreen() {
   const { handoutId } = useLocalSearchParams<{ handoutId: string }>();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const navigation = useNavigation();
+  // টাইপ দেওয়া হয়েছে, তাই "beforeRemove" event আর e.data.action ঠিকভাবে চেনা যাবে
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
 
   const { data, isLoading } = useGetHandoutBySlugQuery(handoutId ?? "", {
     skip: !handoutId,
@@ -61,7 +55,7 @@ export default function EditHandoutScreen() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<HandoutCategory>("onnanno");
+  const [category, setCategory] = useState<HandoutCategory>("other");
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [newCoverPicked, setNewCoverPicked] = useState(false);
 
@@ -177,13 +171,31 @@ export default function EditHandoutScreen() {
         formData.append("coverImage", file, fileName);
       }
 
-      await updateHandout({ id: handoutId!, formData }).unwrap();
+      const res = await updateHandout({ id: handoutId!, formData }).unwrap();
 
       // popup na dekhiye back jete dao
       allowLeaveRef.current = true;
-      Alert.alert(t("handoutData.success"), t("handoutData.updateSuccess"), [
-        { text: t("handoutData.ok"), onPress: () => router.back() },
-      ]);
+      const goBack = () => router.back();
+
+      if (res.moderation?.flagged) {
+        // handout save hoyeche, kintu kharap lekha pawa gechhe.
+        // published thakle ekhon auto_hidden, draft hole publish kora jabe na
+        const hint =
+          res.data.status === "auto_hidden"
+            ? t("handoutData.badTextEditHiddenHint")
+            : t("handoutData.badTextCreateHint");
+
+        Alert.alert(
+          t("handoutData.badTextTitle"),
+          `${res.moderation.message ?? ""}\n\n${hint}`,
+          [{ text: t("handoutData.ok"), onPress: goBack }],
+          { cancelable: false },
+        );
+      } else {
+        Alert.alert(t("handoutData.success"), t("handoutData.updateSuccess"), [
+          { text: t("handoutData.ok"), onPress: goBack },
+        ]);
+      }
     } catch (error) {
       console.log("HANDOUT UPDATE ERROR:", JSON.stringify(error, null, 2));
       Alert.alert(t("handoutData.errorTitle"), t("handoutData.updateFailed"));
@@ -295,7 +307,7 @@ export default function EditHandoutScreen() {
               {t("handoutData.fieldCategory")}
             </Text>
             <View className="flex-row flex-wrap gap-2">
-              {CATEGORY_KEYS.map((key) => {
+              {HANDOUT_CATEGORIES.map((key) => {
                 const isActive = category === key;
                 return (
                   <TouchableOpacity

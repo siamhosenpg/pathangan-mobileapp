@@ -1,10 +1,13 @@
+import { HANDOUT_CATEGORIES } from "@/constants/handoutCategories";
 import { useCreateHandoutMutation } from "@/redux/api/handout/handoutApi";
 import type { HandoutCategory } from "@/types/handoutTypes";
 import { Ionicons } from "@expo/vector-icons";
+import type { NavigationProp, ParamListBase } from "@react-navigation/native";
 import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { router, useNavigation } from "expo-router";
 import { useColorScheme } from "nativewind";
+import type { ComponentRef } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -21,15 +24,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const CATEGORY_KEYS: HandoutCategory[] = [
-  "golpo",
-  "itihash",
-  "dharmiyo",
-  "kobita",
-  "ovizoggota",
-  "onnanno",
-];
 
 const SAFE_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
 
@@ -67,7 +61,8 @@ export default function CreateHandoutScreen() {
   const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const navigation = useNavigation();
+  // টাইপ দেওয়া হয়েছে, তাই "beforeRemove" event আর e.data.action ঠিকভাবে চেনা যাবে
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -81,7 +76,8 @@ export default function CreateHandoutScreen() {
   const allowLeaveRef = useRef(false);
 
   /* ─────────── Keyboard scroll ─────────── */
-  const scrollRef = useRef<ScrollView>(null);
+  // নতুন React Native এ ScrollView এর instance type আলাদা, তাই ComponentRef দিয়ে বের করা হয়েছে
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const fieldYRef = useRef<Record<FieldKey, number>>({
     title: 0,
     description: 0,
@@ -215,7 +211,20 @@ export default function CreateHandoutScreen() {
 
       // popup na dekhiye niche jete dao
       allowLeaveRef.current = true;
-      router.replace(`/handouts/manage/${res.data._id}`);
+      const goNext = () => router.replace(`/handouts/manage/${res.data._id}`);
+
+      // খারাপ লেখা পেলে handout draft হিসেবে save হয়েছে, কিন্তু publish করা যাবে না।
+      // আগে জানাই, তারপর manage পেজে নিয়ে যাই
+      if (res.moderation?.flagged) {
+        Alert.alert(
+          t("handoutData.badTextTitle"),
+          `${res.moderation.message ?? ""}\n\n${t("handoutData.badTextCreateHint")}`,
+          [{ text: t("handoutData.ok"), onPress: goNext }],
+          { cancelable: false },
+        );
+      } else {
+        goNext();
+      }
     } catch (error) {
       console.log("HANDOUT CREATE ERROR:", JSON.stringify(error, null, 2));
       Alert.alert(t("handoutData.errorTitle"), t("handoutData.createFailed"));
@@ -340,7 +349,7 @@ export default function CreateHandoutScreen() {
               {t("handoutData.fieldCategory")}
             </Text>
             <View className="flex-row flex-wrap gap-2">
-              {CATEGORY_KEYS.map((key) => {
+              {HANDOUT_CATEGORIES.map((key) => {
                 const isActive = category === key;
                 return (
                   <TouchableOpacity

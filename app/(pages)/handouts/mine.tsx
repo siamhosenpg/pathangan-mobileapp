@@ -4,6 +4,8 @@ import {
   usePublishHandoutMutation,
 } from "@/redux/api/handout/handoutApi";
 import type { Handout } from "@/types/handoutTypes";
+import { getErrorMessage } from "@/utils/getErrorMessage";
+import { HANDOUT_STATUS_STYLE } from "@/utils/handout/handoutStatus";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useColorScheme } from "nativewind";
@@ -52,11 +54,9 @@ export default function MyHandoutsScreen() {
           onPress: async () => {
             try {
               await publishHandout(id).unwrap();
-            } catch {
-              Alert.alert(
-                t("handoutData.errorTitle"),
-                t("handoutData.publishFailed"),
-              );
+            } catch (error) {
+              // সার্ভারের আসল বার্তা দেখাই (যেমন: খারাপ লেখা পাওয়া গেছে, under_review ইত্যাদি)
+              Alert.alert(t("handoutData.errorTitle"), getErrorMessage(error));
             }
           },
         },
@@ -192,120 +192,135 @@ export default function MyHandoutsScreen() {
             paddingBottom: 40,
             paddingTop: 4,
           }}
-          renderItem={({ item }) => (
-            <View className="rounded-3xl overflow-hidden bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border">
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={() => router.push(`/handouts/manage/${item._id}`)}
-                className="flex-row"
-              >
-                <View className="w-24 h-28 bg-background-tertiary dark:bg-dark-background-tertiary">
-                  {item.coverImage ? (
-                    <Image
-                      source={{ uri: item.coverImage }}
-                      className="w-full h-full"
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <View className="w-full h-full items-center justify-center">
-                      <Ionicons
-                        name="book-outline"
-                        size={24}
-                        color={isDark ? "#4b5563" : "#9ca3af"}
-                      />
-                    </View>
-                  )}
-                </View>
+          renderItem={({ item }) => {
+            const statusStyle = HANDOUT_STATUS_STYLE[item.status];
+            const canPublish =
+              item.status === "draft" || item.status === "auto_hidden";
 
-                <View className="flex-1 p-3.5 justify-center gap-1.5">
-                  <View className="flex-row items-center gap-2">
-                    <View
-                      className={`px-2.5 py-0.5 rounded-full ${
-                        item.status === "published"
-                          ? "bg-accent-transparent"
-                          : "bg-yellow-500/15"
-                      }`}
-                    >
-                      <Text
-                        className={`text-[10px] font-bold ${
-                          item.status === "published"
-                            ? "text-accent"
-                            : "text-yellow-600 dark:text-yellow-400"
-                        }`}
-                      >
-                        {item.status === "published"
-                          ? t("handoutData.status.published")
-                          : t("handoutData.status.draft")}
-                      </Text>
-                    </View>
-                    <Text className="text-[11px] text-text-tertiary dark:text-dark-text-tertiary">
-                      {t(`handoutData.categories.${item.category}`, {
-                        defaultValue: item.category,
-                      })}
-                    </Text>
+            return (
+              <View className="rounded-3xl overflow-hidden bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border">
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => router.push(`/handouts/manage/${item._id}`)}
+                  className="flex-row"
+                >
+                  <View className="w-24 h-28 bg-background-tertiary dark:bg-dark-background-tertiary">
+                    {item.coverImage ? (
+                      <Image
+                        source={{ uri: item.coverImage }}
+                        className="w-full h-full"
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View className="w-full h-full items-center justify-center">
+                        <Ionicons
+                          name="book-outline"
+                          size={24}
+                          color={isDark ? "#4b5563" : "#9ca3af"}
+                        />
+                      </View>
+                    )}
                   </View>
 
-                  <Text
-                    numberOfLines={2}
-                    className="text-sm font-bold text-text dark:text-dark-text leading-5"
-                  >
-                    {item.title}
-                  </Text>
+                  <View className="flex-1 p-3.5 justify-center gap-1.5">
+                    <View className="flex-row items-center gap-2">
+                      <View
+                        className={`px-2.5 py-0.5 rounded-full ${statusStyle.badge}`}
+                      >
+                        <Text
+                          className={`text-[10px] font-bold ${statusStyle.text}`}
+                        >
+                          {t(`handoutData.status.${item.status}`)}
+                        </Text>
+                      </View>
+                      <Text className="text-[11px] text-text-tertiary dark:text-dark-text-tertiary">
+                        {t(`handoutData.categories.${item.category}`, {
+                          defaultValue: item.category,
+                        })}
+                      </Text>
+                    </View>
 
-                  <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
-                    {t("handoutData.chaptersAndReads", {
-                      chapters: item.chaptersCount,
-                      reads: item.readCount,
-                    })}
-                  </Text>
-                </View>
-              </TouchableOpacity>
+                    <Text
+                      numberOfLines={2}
+                      className="text-sm font-bold text-text dark:text-dark-text leading-5"
+                    >
+                      {item.title}
+                    </Text>
 
-              {/* অ্যাকশন রো */}
-              <View className="flex-row border-t border-border dark:border-dark-border">
-                <TouchableOpacity
-                  onPress={() => router.push(`/handouts/manage/${item._id}`)}
-                  className="flex-1 flex-row items-center justify-center gap-1.5 py-3"
-                >
-                  <Ionicons
-                    name="create-outline"
-                    size={15}
-                    color={isDark ? "#c4c4c4" : "#3a3a3a"}
-                  />
-                  <Text className="text-xs font-semibold text-text-secondary dark:text-dark-text-secondary">
-                    {t("handoutData.edit")}
-                  </Text>
+                    <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">
+                      {t("handoutData.chaptersAndReads", {
+                        chapters: item.chaptersCount,
+                        reads: item.readCount,
+                      })}
+                    </Text>
+
+                    {/* কেন লুকানো আছে, সেই ছোট বার্তা */}
+                    {item.status === "auto_hidden" && (
+                      <Text
+                        numberOfLines={2}
+                        className={`text-[11px] font-medium ${statusStyle.text}`}
+                      >
+                        {t("handoutData.autoHiddenShort")}
+                      </Text>
+                    )}
+                    {item.status === "under_review" && (
+                      <Text
+                        numberOfLines={2}
+                        className={`text-[11px] font-medium ${statusStyle.text}`}
+                      >
+                        {t("handoutData.underReviewShort")}
+                      </Text>
+                    )}
+                  </View>
                 </TouchableOpacity>
 
-                {item.status === "draft" && (
+                {/* অ্যাকশন রো */}
+                <View className="flex-row border-t border-border dark:border-dark-border">
                   <TouchableOpacity
-                    onPress={() => handlePublish(item._id)}
-                    disabled={isPublishing}
-                    className="flex-1 flex-row items-center justify-center gap-1.5 py-3 border-l border-border dark:border-dark-border"
+                    onPress={() => router.push(`/handouts/manage/${item._id}`)}
+                    className="flex-1 flex-row items-center justify-center gap-1.5 py-3"
                   >
                     <Ionicons
-                      name="cloud-upload-outline"
+                      name="create-outline"
                       size={15}
-                      color="#00914d"
+                      color={isDark ? "#c4c4c4" : "#3a3a3a"}
                     />
-                    <Text className="text-xs font-semibold text-accent">
-                      {t("handoutData.publishShort")}
+                    <Text className="text-xs font-semibold text-text-secondary dark:text-dark-text-secondary">
+                      {t("handoutData.edit")}
                     </Text>
                   </TouchableOpacity>
-                )}
 
-                <TouchableOpacity
-                  onPress={() => handleDelete(item._id)}
-                  className="flex-1 flex-row items-center justify-center gap-1.5 py-3 border-l border-border dark:border-dark-border"
-                >
-                  <Ionicons name="trash-outline" size={15} color="#ef4444" />
-                  <Text className="text-xs font-semibold text-red-500">
-                    {t("handoutData.delete")}
-                  </Text>
-                </TouchableOpacity>
+                  {/* draft ও auto_hidden এ publish। under_review এ owner publish করতে পারবে না */}
+                  {canPublish && (
+                    <TouchableOpacity
+                      onPress={() => handlePublish(item._id)}
+                      disabled={isPublishing}
+                      className="flex-1 flex-row items-center justify-center gap-1.5 py-3 border-l border-border dark:border-dark-border"
+                    >
+                      <Ionicons
+                        name="cloud-upload-outline"
+                        size={15}
+                        color="#00914d"
+                      />
+                      <Text className="text-xs font-semibold text-accent">
+                        {t("handoutData.publishShort")}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+
+                  <TouchableOpacity
+                    onPress={() => handleDelete(item._id)}
+                    className="flex-1 flex-row items-center justify-center gap-1.5 py-3 border-l border-border dark:border-dark-border"
+                  >
+                    <Ionicons name="trash-outline" size={15} color="#ef4444" />
+                    <Text className="text-xs font-semibold text-red-500">
+                      {t("handoutData.delete")}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          )}
+            );
+          }}
         />
       )}
     </SafeAreaView>

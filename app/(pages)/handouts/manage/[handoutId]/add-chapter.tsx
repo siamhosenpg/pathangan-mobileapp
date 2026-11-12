@@ -4,6 +4,7 @@ import {
   useUpdateChapterMutation,
 } from "@/redux/api/handout/chapterApi";
 import { Ionicons } from "@expo/vector-icons";
+import type { NavigationProp, ParamListBase } from "@react-navigation/native";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -30,7 +31,8 @@ export default function AddEditChapterScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const isEditing = Boolean(chapterId);
-  const navigation = useNavigation();
+  // টাইপ দেওয়া হয়েছে, তাই "beforeRemove" event আর e.data.action ঠিকভাবে চেনা যাবে
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -113,24 +115,35 @@ export default function AddEditChapterScreen() {
     }
 
     try {
-      if (isEditing && chapterId) {
-        await updateChapter({
-          id: chapterId,
-          handoutId: handoutId!,
-          title: title.trim(),
-          content: content.trim(),
-        }).unwrap();
-      } else {
-        await addChapter({
-          handoutId: handoutId!,
-          title: title.trim(),
-          content: content.trim(),
-        }).unwrap();
-      }
+      const res =
+        isEditing && chapterId
+          ? await updateChapter({
+              id: chapterId,
+              handoutId: handoutId!,
+              title: title.trim(),
+              content: content.trim(),
+            }).unwrap()
+          : await addChapter({
+              handoutId: handoutId!,
+              title: title.trim(),
+              content: content.trim(),
+            }).unwrap();
 
       // popup na dekhiye back jete dao
       allowLeaveRef.current = true;
-      router.back();
+      const goBack = () => router.back();
+
+      // chapter save হয়েছে, কিন্তু খারাপ লেখা পেলে published handout লুকিয়ে গেছে। জানিয়ে দিই
+      if (res.moderation?.flagged) {
+        Alert.alert(
+          t("handoutData.badTextTitle"),
+          `${res.moderation.message ?? ""}\n\n${t("handoutData.badTextChapterHint")}`,
+          [{ text: t("handoutData.ok"), onPress: goBack }],
+          { cancelable: false },
+        );
+      } else {
+        goBack();
+      }
     } catch {
       Alert.alert(
         t("handoutData.errorTitle"),

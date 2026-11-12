@@ -345,12 +345,17 @@
     "manageChapters": "Manage chapters",
     "all": "All",
     "categories": {
-      "golpo": "Story",
-      "itihash": "History",
-      "dharmiyo": "Religious",
-      "kobita": "Poetry",
-      "ovizoggota": "Experience",
-      "onnanno": "Other"
+      "story": "Story",
+      "history": "History",
+      "religious": "Religious",
+      "experience": "Experience",
+      "educational": "Educational",
+      "science": "Science",
+      "technology": "Technology",
+      "self_development": "Self Development",
+      "biography": "Biography",
+      "travel": "Travel",
+      "other": "Other"
     },
     "status": {
       "draft": "Draft",

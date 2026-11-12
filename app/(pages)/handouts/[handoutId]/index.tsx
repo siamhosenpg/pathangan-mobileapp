@@ -8,6 +8,7 @@ import TextFont from "@/components/ui/font/TextFont";
 import StarRating from "@/components/ui/rating/StarRating"; // তোমার আসল path দাও
 import { useGetHandoutBySlugQuery } from "@/redux/api/handout/handoutApi";
 import { useGetHandoutRatingQuery } from "@/redux/api/rating/chapterRatingApi";
+import { HANDOUT_STATUS_STYLE } from "@/utils/handout/handoutStatus";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useColorScheme } from "nativewind";
@@ -95,6 +96,12 @@ export default function HandoutDetailScreen() {
     );
   }
 
+  // published ছাড়া অন্য status শুধু owner দেখতে পায় (সার্ভার অন্যদের 404 দেয়)
+  const isNotPublished = handout.status !== "published";
+  const statusStyle = HANDOUT_STATUS_STYLE[handout.status];
+  const showHiddenNotice =
+    handout.status === "auto_hidden" || handout.status === "under_review";
+
   // ৩ ডট চাপলে menu sheet খুলবে (copy link + report)
   const openMenu = () => {
     open(
@@ -136,6 +143,30 @@ export default function HandoutDetailScreen() {
         contentContainerStyle={{ paddingBottom: 40, paddingTop: 4 }}
       >
         <View className="">
+          {/* auto_hidden / under_review হলে owner কে কারণ জানাই */}
+          {showHiddenNotice && (
+            <View
+              className={`mx-5 mb-4 flex-row items-start gap-2.5 p-3.5 rounded-2xl border ${statusStyle.border} ${statusStyle.badge}`}
+            >
+              <Ionicons
+                name={
+                  handout.status === "auto_hidden"
+                    ? "warning-outline"
+                    : "time-outline"
+                }
+                size={18}
+                color={handout.status === "auto_hidden" ? "#ef4444" : "#f97316"}
+              />
+              <Text
+                className={`flex-1 text-xs font-medium leading-5 ${statusStyle.text}`}
+              >
+                {handout.status === "auto_hidden"
+                  ? t("handoutData.autoHiddenNotice")
+                  : t("handoutData.underReviewNotice")}
+              </Text>
+            </View>
+          )}
+
           {/* কভার (বামে) + টাইটেল/ক্যাটাগরি/ইউজার (ডানে) */}
           <View className="flex-row gap-4 px-5">
             <View className="w-28 aspect-[2/3] rounded-2xl overflow-hidden bg-background-tertiary dark:bg-dark-background-tertiary">
@@ -185,8 +216,8 @@ export default function HandoutDetailScreen() {
                 )}
               </View>
 
-              {/* ক্যাটাগরি ব্যাজ */}
-              <View className="flex-row items-center gap-2">
+              {/* ক্যাটাগরি ব্যাজ + status ব্যাজ (published না হলে) */}
+              <View className="flex-row items-center gap-2 flex-wrap">
                 <View className="border-accent  border  px-3 py-1 rounded-full self-start">
                   <TextFont className="text-accent text-xs font-semibold">
                     {t(`handoutData.categories.${handout.category}`, {
@@ -194,10 +225,14 @@ export default function HandoutDetailScreen() {
                     })}
                   </TextFont>
                 </View>
-                {handout.status === "draft" && (
-                  <View className="border-yellow-500  border  px-3 py-1 rounded-full self-start">
-                    <Text className="text-yellow-600 dark:text-yellow-400 text-xs font-semibold">
-                      {t("handoutData.status.draft")}
+                {isNotPublished && (
+                  <View
+                    className={`border px-3 py-1 rounded-full self-start ${statusStyle.border}`}
+                  >
+                    <Text
+                      className={`text-xs font-semibold ${statusStyle.text}`}
+                    >
+                      {t(`handoutData.status.${handout.status}`)}
                     </Text>
                   </View>
                 )}
