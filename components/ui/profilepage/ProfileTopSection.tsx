@@ -9,7 +9,8 @@ import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
+import OptimizedImage from "../avatar/OptimizedImage";
 import ProfileImage from "../avatar/ProfileImage";
 import GreenMark from "../badges/GreenMark";
 import FollowButtonProfile from "../buttons/FollowButtonProfile";
@@ -43,15 +44,14 @@ const ProfileTopSection = ({ data }: Props) => {
     <View className="bg-background dark:bg-dark-background">
       {/* Cover Image */}
       <View className="w-full  p-4 ">
-        {data.coverImage ? (
-          <Image
-            source={{ uri: data.coverImage }}
-            className="w-full aspect-[6/2] rounded-xl border border-border/20 dark:border-dark-border/20"
-            resizeMode="cover"
-          />
-        ) : (
-          <View className="w-full aspect-[6/2] bg-accent/20 rounded-xl" />
-        )}
+        <OptimizedImage
+          uri={data.coverImage}
+          aspectRatio={6 / 2}
+          radius={14}
+          fallbackIcon="book-outline"
+          recyclingKey={data._id}
+          className="border border-border/20 dark:border-dark-border/20"
+        />
       </View>
 
       {/* Profile Row */}

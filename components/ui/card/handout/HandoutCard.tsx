@@ -3,7 +3,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useTranslation } from "react-i18next";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
+import OptimizedImage from "../../avatar/OptimizedImage";
 import GreenMark from "../../badges/GreenMark";
 import TextFont from "../../font/TextFont";
 
@@ -44,24 +45,14 @@ const HandoutCard = ({ handout }: Props) => {
       onPress={handlePress}
       className="flex-row gap-3.5 mx-4    "
     >
-      {/* কভার ইমেজ (বামে) */}
-      <View className="w-24 aspect-[2/3] rounded-2xl overflow-hidden bg-background-tertiary dark:bg-dark-background-tertiary">
-        {handout.coverImage ? (
-          <Image
-            source={{ uri: handout.coverImage }}
-            className="w-full h-full"
-            resizeMode="cover"
-          />
-        ) : (
-          <View className="w-full h-full items-center justify-center">
-            <Ionicons
-              name="book-outline"
-              size={28}
-              color={isDark ? "#4b5563" : "#9ca3af"}
-            />
-          </View>
-        )}
-      </View>
+      <OptimizedImage
+        uri={handout.coverImage}
+        width={96}
+        radius={16}
+        aspectRatio={2 / 3}
+        fallbackIcon="book-outline"
+        recyclingKey={handout.slug}
+      />
 
       {/* কনটেন্ট (ডানে) */}
       <View className="flex-1 justify-center gap-1.5 py-0.5">
@@ -88,16 +79,14 @@ const HandoutCard = ({ handout }: Props) => {
 
           {/* লেখক তথ্য */}
           <View className="flex-row items-center gap-2 mt-1">
-            {handout.user?.profileImage ? (
-              <Image
-                source={{ uri: handout.user.profileImage }}
-                className="w-5 h-5 rounded-full"
-              />
-            ) : (
-              <View className="w-5 h-5 rounded-full bg-accent-transparent items-center justify-center">
-                <Ionicons name="person" size={10} color="#00914d" />
-              </View>
-            )}
+            <OptimizedImage
+              uri={handout.user?.profileImage}
+              width={20}
+              circle
+              gravity="face"
+              fallbackIcon="person"
+            />
+
             <View className="items-center flex-row gap-1 flex-1">
               <TextFont
                 numberOfLines={1}

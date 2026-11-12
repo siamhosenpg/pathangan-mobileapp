@@ -1,3 +1,5 @@
+import OptimizedImage from "@/components/ui/avatar/OptimizedImage";
+import ProfileImage from "@/components/ui/avatar/ProfileImage";
 import GreenMark from "@/components/ui/badges/GreenMark";
 import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
 import ContentMenuSheet, {
@@ -15,7 +17,6 @@ import { useColorScheme } from "nativewind";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  Image,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -169,23 +170,14 @@ export default function HandoutDetailScreen() {
 
           {/* কভার (বামে) + টাইটেল/ক্যাটাগরি/ইউজার (ডানে) */}
           <View className="flex-row gap-4 px-5">
-            <View className="w-28 aspect-[2/3] rounded-2xl overflow-hidden bg-background-tertiary dark:bg-dark-background-tertiary">
-              {handout.coverImage ? (
-                <Image
-                  source={{ uri: handout.coverImage }}
-                  className="w-full h-full"
-                  resizeMode="cover"
-                />
-              ) : (
-                <View className="w-full h-full items-center justify-center">
-                  <Ionicons
-                    name="book-outline"
-                    size={32}
-                    color={isDark ? "#4b5563" : "#9ca3af"}
-                  />
-                </View>
-              )}
-            </View>
+            <OptimizedImage
+              uri={handout.coverImage}
+              width={96}
+              aspectRatio={2 / 3}
+              radius={16}
+              fallbackIcon="book-outline"
+              recyclingKey={handout.slug}
+            />
 
             <View className="flex-1 justify-center gap-3">
               {/* টাইটেল */}
@@ -240,16 +232,13 @@ export default function HandoutDetailScreen() {
 
               {/* লেখক + সময় */}
               <View className="flex-row items-center gap-2">
-                {handout.user?.profileImage ? (
-                  <Image
-                    source={{ uri: handout.user.profileImage }}
-                    className="w-7 h-7 rounded-full"
-                  />
-                ) : (
-                  <View className="w-7 h-7 rounded-full border border-border dark:border-dark-border items-center justify-center">
-                    <Ionicons name="person" size={13} color="#00914d" />
-                  </View>
-                )}
+                <ProfileImage
+                  uri={handout.user?.profileImage}
+                  name={handout.user?.name ?? handout.user?.username}
+                  size={28}
+                  bordered={false}
+                />
+
                 <View className="flex-1">
                   <View className="flex-row items-center gap-1">
                     <TextFont

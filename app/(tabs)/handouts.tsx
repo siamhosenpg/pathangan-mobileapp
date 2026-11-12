@@ -1,8 +1,11 @@
 import ErrorState from "@/components/error/ErrorState";
+import OptimizedImage from "@/components/ui/avatar/OptimizedImage";
 import HandoutCard from "@/components/ui/card/handout/HandoutCard";
 import HandoutCardSkeleton from "@/components/ui/card/handout/HandoutCardSkeleton";
+import TextFont from "@/components/ui/font/TextFont";
 
 import { HANDOUT_CATEGORIES } from "@/constants/handoutCategories";
+import { useIconColor } from "@/hooks/useIconColor";
 import {
   useGetAllHandoutsInfiniteInfiniteQuery,
   useGetMyHandoutsQuery,
@@ -18,7 +21,6 @@ import { useTranslation } from "react-i18next";
 import {
   Alert,
   Animated,
-  Image,
   RefreshControl,
   ScrollView,
   Text,
@@ -40,6 +42,9 @@ const isOnline = async () => {
 function DraftStrip({ isDark }: { isDark: boolean }) {
   const { t } = useTranslation();
 
+  // ...তোমার component-এর ভেতরে
+
+  const { secondary } = useIconColor();
   const { data, refetch } = useGetMyHandoutsQuery({ status: "draft" });
   const drafts = data?.data ?? [];
 
@@ -84,40 +89,58 @@ function DraftStrip({ isDark }: { isDark: boolean }) {
             key={item._id}
             activeOpacity={0.85}
             onPress={() => router.push(`/handouts/manage/${item._id}`)}
-            className="w-44 rounded-2xl overflow-hidden bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border"
+            className="w-72 flex-row gap-3 p-2.5 rounded-2xl bg-background-secondary dark:bg-dark-background-secondary border border-border dark:border-dark-border"
           >
-            <View className="w-full h-28 bg-background-tertiary dark:bg-dark-background-tertiary">
-              {item.coverImage ? (
-                <Image
-                  source={{ uri: item.coverImage }}
-                  className="w-full h-full"
-                  resizeMode="cover"
-                />
-              ) : (
-                <View className="w-full h-full items-center justify-center">
-                  <Ionicons
-                    name="document-text-outline"
-                    size={24}
-                    color={isDark ? "#4b5563" : "#9ca3af"}
-                  />
+            {/* কভার (বামে) */}
+            <OptimizedImage
+              uri={item.coverImage}
+              width={80}
+              aspectRatio={2 / 3}
+              radius={12}
+              fallbackIcon="book-outline"
+              recyclingKey={item.slug}
+            />
+
+            {/* কনটেন্ট (ডানে) */}
+            <View className="flex-1 justify-between py-0.5">
+              <View className="gap-1.5">
+                {/* Draft ব্যাজ */}
+                <View className="self-start flex-row items-center gap-1 bg-yellow-500/15 px-2 py-0.5 rounded-full">
+                  <View className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
+                  <Text className="text-[10px] font-bold text-yellow-600 dark:text-yellow-500">
+                    {t("handoutData.status.draft")}
+                  </Text>
                 </View>
-              )}
-              <View className="absolute top-2 left-2 bg-yellow-500 px-2.5 py-0.5 rounded-full">
-                <Text className="text-[10px] font-bold text-white">
-                  {t("handoutData.status.draft")}
-                </Text>
+
+                {/* শিরোনাম */}
+                <TextFont
+                  numberOfLines={1}
+                  className=" font-bold leading-5 text-text dark:text-dark-text"
+                >
+                  {item.title}
+                </TextFont>
+                <TextFont
+                  numberOfLines={2}
+                  className="text-sm font-medium leading-5 text-text dark:text-dark-text"
+                >
+                  {item.description}
+                </TextFont>
               </View>
-            </View>
-            <View className="p-3 gap-1">
-              <Text
-                numberOfLines={1}
-                className="text-sm font-bold text-text dark:text-dark-text"
-              >
-                {item.title}
-              </Text>
-              <Text className="text-[11px] text-text-tertiary dark:text-dark-text-tertiary">
-                {t("handoutData.chapters", { value: item.chaptersCount })}
-              </Text>
+
+              {/* নিচে: অধ্যায় সংখ্যা + তীর */}
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-1">
+                  <Ionicons
+                    name="documents-outline"
+                    size={13}
+                    color={secondary}
+                  />
+                  <Text className="text-[11px] font-medium text-text-tertiary dark:text-dark-text-tertiary">
+                    {t("handoutData.chapters", { value: item.chaptersCount })}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={secondary} />
+              </View>
             </View>
           </TouchableOpacity>
         ))}

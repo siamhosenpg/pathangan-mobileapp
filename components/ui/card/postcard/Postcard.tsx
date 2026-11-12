@@ -1,7 +1,6 @@
 import type { Post } from "@/types/postTypes";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Dimensions, Image, TouchableOpacity, View } from "react-native";
+import { useState } from "react";
+import { TouchableOpacity, View } from "react-native";
 
 import ModerationNotice from "./ModerationNotice";
 import PostCountLeft from "./PostCountLeft";
@@ -15,8 +14,7 @@ import LikeButton from "../../buttons/LikeButton";
 import ShareButton from "../../buttons/ShareButton";
 import CommentSheet from "../../comments/CommentSheet";
 import TextFont from "../../font/TextFont";
-import ImageFullScreen from "./ImageFullScreen";
-import ImageSlider from "./ImageSlider";
+import PostImage from "./PostImage";
 import PostVideo from "./PostVideo";
 
 interface Props {
@@ -25,83 +23,20 @@ interface Props {
   isVideoNearVisible?: boolean; // নতুন
 }
 
-const screenWidth = Dimensions.get("window").width;
-const maxImageSize = screenWidth - 0;
-
 // মিডিয়া (ছবি/ভিডিও) থাকলে টেক্সট কত character এর পর truncate হবে
 const TEXT_TRUNCATE_LENGTH_WITH_MEDIA = 120;
 
 // মিডিয়া না থাকলে টেক্সট কত character এর পর truncate হবে
 const TEXT_TRUNCATE_LENGTH_NO_MEDIA = 300;
 
-const DynamicImage = ({
-  uri,
-  onPress,
-}: {
-  uri: string;
-  onPress: () => void;
-}) => {
-  const [imageHeight, setImageHeight] = useState<number>(screenWidth);
-  const [fullScreenVisible, setFullScreenVisible] = useState(false); // নতুন
-
-  useEffect(() => {
-    Image.getSize(
-      uri,
-      (width, height) => {
-        const aspectRatio = height / width;
-        const calculatedHeight = screenWidth * aspectRatio;
-        const clampedHeight = Math.min(
-          Math.max(calculatedHeight, screenWidth * 0.5),
-          500,
-        );
-        setImageHeight(clampedHeight);
-      },
-      () => {},
-    );
-  }, [uri]);
-
-  return (
-    <>
-      <TouchableOpacity
-        onPress={() => setFullScreenVisible(true)} // onPress এর বদলে full screen open
-        activeOpacity={0.9}
-      >
-        <Image
-          source={{ uri }}
-          style={{
-            width: screenWidth,
-            height: imageHeight,
-            borderRadius: 0,
-          }}
-          resizeMode="cover"
-          className="border-t border-b border-border/60 dark:border-dark-border/70"
-        />
-      </TouchableOpacity>
-
-      {/* Full screen modal */}
-      <ImageFullScreen
-        images={[uri]}
-        initialIndex={0}
-        visible={fullScreenVisible}
-        onClose={() => setFullScreenVisible(false)}
-      />
-    </>
-  );
-};
-
 const Postcard = ({
   post,
   isVideoVisible = false,
   isVideoNearVisible = false,
 }: Props) => {
-  const router = useRouter();
   const { userid, content, createdAt } = post;
   const [expanded, setExpanded] = useState(false);
   const { open } = useBottomSheet();
-
-  const handleGoToPost = () => {
-    router.push(`/post/${post._id}` as any);
-  };
 
   const mediaList: string[] = Array.isArray(content?.media)
     ? (content.media as string[])
@@ -138,11 +73,7 @@ const Postcard = ({
       );
     }
 
-    if (mediaList.length === 1) {
-      return <DynamicImage uri={mediaList[0]} onPress={handleGoToPost} />;
-    }
-
-    return <ImageSlider images={mediaList} />;
+    return <PostImage images={mediaList} postId={post._id} />;
   };
 
   return (
