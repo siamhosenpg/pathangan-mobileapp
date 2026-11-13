@@ -1,7 +1,8 @@
 import type { RootState } from "@/redux/store";
+import { getVideoSource } from "@/utils/videoSource";
 import { Ionicons } from "@expo/vector-icons";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Dimensions,
   GestureResponderEvent,
@@ -26,6 +27,14 @@ interface Props {
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 const PADDING = 20;
 
+// ── Streaming buffer সেটিং ──
+// অল্প buffer জমলেই play শুরু হবে, বাকিটা চলতে চলতে নামবে
+const BUFFER_OPTIONS = {
+  preferredForwardBufferDuration: 4,
+  waitsToMinimizeStalling: false,
+  minBufferForPlayback: 0.5,
+};
+
 const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
   const isMuted = useSelector((state: RootState) => state.video.isMuted);
 
@@ -48,11 +57,8 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
 
   // ── Landscape হলে container size swap ──
   // Portrait:  container = SCREEN_W x SCREEN_H
-  // Landscape: wrapper কে 90deg rotate করলে
-  //            visually SCREEN_H wide, SCREEN_W tall হয়
-  //            কিন্তু layout এ এখনো SCREEN_W x SCREEN_H
-  //            তাই container কে SCREEN_H x SCREEN_W দিলে
-  //            rotate এর পর ঠিকঠাক fit হবে
+  // Landscape: wrapper কে 90deg rotate করলে visually SCREEN_H wide,
+  //            SCREEN_W tall হয়, তাই container কে SCREEN_H x SCREEN_W দিই
   const containerW = isLandscape ? SCREEN_H : SCREEN_W;
   const containerH = isLandscape ? SCREEN_W : SCREEN_H;
 
@@ -63,9 +69,20 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
     trackWidthRef.current = trackWidth;
   }, [trackWidth]);
 
-  const player = useVideoPlayer(visible ? uri : null, (p) => {
+  // source memo করা: প্রতি render-এ player নতুন করে বানাবে না
+  // HLS (.m3u8) হলে contentType: "hls", পুরনো MP4 হলে useCaching
+  const source = useMemo(
+    () => (visible ? getVideoSource(uri) : null),
+    [visible, uri],
+  );
+
+  const player = useVideoPlayer(source, (p) => {
     p.loop = true;
     p.muted = isMuted;
+    // streaming: অল্প buffer জমলেই play শুরু
+    try {
+      (p as any).bufferOptions = BUFFER_OPTIONS;
+    } catch {}
   });
 
   useEffect(() => {
@@ -113,6 +130,14 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
     }, 250);
     return () => clearInterval(interval);
   }, [player, visible]);
+
+  // unmount হলে সব timer পরিষ্কার
+  useEffect(() => {
+    return () => {
+      if (controlsTimer.current) clearTimeout(controlsTimer.current);
+      if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    };
+  }, []);
 
   const resetControlsTimer = () => {
     if (controlsTimer.current) clearTimeout(controlsTimer.current);
@@ -198,18 +223,9 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
   };
 
   // ── PanResponder ──
-  // Wrapper টা rotate হয় কিন্তু touch coordinate সবসময়
-  // screen এর portrait coordinate এ আসে।
-  // তাই landscape এ locationX আর locationY swap করতে হবে।
-  // Landscape এ progress bar portrait এ vertically আছে —
-  // আঙুল উপর-নিচ সরালে = progress বাড়া-কমা
-  // portrait এ bottom এ bar থাকে, landscape এ rotate হয়ে
-  // right side এ চলে যায় visually।
-  // locationX সবসময় screen এর X (landscape এ = portrait Y)
-  // কিন্তু rotated container এ bar টা portrait এর মতোই
-  // horizontally আছে (container নিজে rotated)
-  // তাই শুধু locationX ই যথেষ্ট — container rotate হওয়ায়
-  // touch coordinate আপনা-আপনি সঠিক হয়
+  // wrapper rotate হলেও container নিজেই rotated, তাই progress bar
+  // container-এর ভেতরে আগের মতোই horizontal থাকে।
+  // ফলে শুধু locationX দিয়েই সঠিক ratio পাওয়া যায়।
   const progressPanResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -241,15 +257,8 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
     }),
   ).current;
 
-  // ── Key insight ──
-  // Video আর Controls দুটোকে একটা wrapper এ রাখো
-  // wrapper টাকে rotate করো — দুটোই একসাথে ঘোরে
-  // container size: landscape হলে SCREEN_H x SCREEN_W
-  // rotate করার পর visually SCREEN_W x SCREEN_H screen fill করে
-  //
-  // Wrapper position: screen center এ রাখো
-  // top = (SCREEN_H - containerH) / 2
-  // left = (SCREEN_W - containerW) / 2
+  // ── Video আর Controls একটা wrapper-এ, wrapper-টাই rotate হয় ──
+  // wrapper position: screen center-এ
   const wrapperTop = (SCREEN_H - containerH) / 2;
   const wrapperLeft = (SCREEN_W - containerW) / 2;
 

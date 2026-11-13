@@ -1,6 +1,7 @@
 import { useRecordViewMutation } from "@/redux/api/postApi";
 import { toggleMute } from "@/redux/features/video/videoSlice";
 import type { RootState } from "@/redux/store";
+import { getVideoSource } from "@/utils/videoSource";
 import { Ionicons } from "@expo/vector-icons";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -39,9 +40,18 @@ const LOADER_SHOW_DELAY = 250;
 
 const sessionViewedVideoPosts = new Set<string>();
 
+// ── Streaming buffer সেটিং ──
+// অল্প buffer জমলেই play শুরু হবে, বাকিটা চলতে চলতে নামবে
+const BUFFER_OPTIONS = {
+  // iOS + Android: সামনে কত সেকেন্ড আগে থেকে buffer রাখবে
+  preferredForwardBufferDuration: 4,
+  // iOS: বেশি buffer জমার অপেক্ষা না করে সাথে সাথে চালু
+  waitsToMinimizeStalling: false,
+  // Android: play শুরুর জন্য ন্যূনতম buffer (সেকেন্ড)
+  minBufferForPlayback: 0.5,
+};
+
 // ───────────────────────── Loading overlay ─────────────────────────
-// cover = true  -> প্রথম frame আসেনি, পুরো ভিডিও ঢেকে দেখাবে
-// cover = false -> চলার মাঝে buffering, শুধু ছোট spinner
 const VideoLoader = ({
   visible,
   cover,
@@ -171,7 +181,6 @@ const PostVideo = ({
   const [is2x, setIs2x] = useState(false);
   const [fullScreenVisible, setFullScreenVisible] = useState(false);
 
-  // loading UI-এর জন্য state
   const [status, setStatus] = useState<string>("idle");
   const [firstFrame, setFirstFrame] = useState(false);
 
@@ -179,7 +188,6 @@ const PostVideo = ({
   const is2xActiveRef = useRef(false);
   const startTimeRef = useRef(0);
 
-  // listener / timer এর ভেতর থেকে সবসময় সর্বশেষ মান পড়ার জন্য
   const isVisibleRef = useRef(isVisible);
   isVisibleRef.current = isVisible;
   const isMutedRef = useRef(isMuted);
@@ -226,13 +234,23 @@ const PostVideo = ({
     return DEFAULT_HEIGHT;
   }, [videoMeta?.width, videoMeta?.height]);
 
-  const player = useVideoPlayer(shouldLoad ? uri : null, (p) => {
+  // source memo করা, যাতে প্রতি render-এ player নতুন করে না বানায়
+  // HLS (.m3u8) হলে contentType: "hls", পুরনো MP4 হলে useCaching
+  const source = useMemo(
+    () => (shouldLoad ? getVideoSource(uri) : null),
+    [shouldLoad, uri],
+  );
+
+  const player = useVideoPlayer(source, (p) => {
     p.loop = true;
     p.muted = isMuted;
+    // streaming: অল্প buffer জমলেই play শুরু
+    try {
+      (p as any).bufferOptions = BUFFER_OPTIONS;
+    } catch {}
   });
   playerRef.current = player;
 
-  // uri বদলালে (বা cell recycle হলে) loading অবস্থা নতুন করে শুরু
   useEffect(() => {
     setFirstFrame(false);
     setStatus("loading");
@@ -251,7 +269,6 @@ const PostVideo = ({
       setStatus(next);
 
       if (next === "readyToPlay") {
-        // onFirstFrameRender না এলে (পুরনো expo-video) এই fallback loader সরাবে
         if (!frameFallback) {
           frameFallback = setTimeout(() => setFirstFrame(true), 400);
         }
@@ -259,7 +276,6 @@ const PostVideo = ({
         if (warmed) return;
         warmed = true;
 
-        // ইতিমধ্যে স্ক্রিনে এসে গেলে warm-up লাগবে না, নিচের play effect-ই চালাবে
         if (isVisibleRef.current) return;
 
         try {
@@ -275,13 +291,14 @@ const PostVideo = ({
         return;
       }
 
-      // নেটওয়ার্কের ঝামেলায় লোড fail করলে একবার নিজে থেকে আবার চেষ্টা
       if (next === "error" && !retried) {
         retried = true;
         try {
           const p: any = player;
-          if (p.replaceAsync) p.replaceAsync(uri).catch(() => {});
-          else p.replace(uri);
+          const retrySource = getVideoSource(uri);
+
+          if (p.replaceAsync) p.replaceAsync(retrySource).catch(() => {});
+          else p.replace(retrySource);
           if (
             isVisibleRef.current &&
             isAutoPlayRef.current &&
@@ -296,7 +313,6 @@ const PostVideo = ({
     const sub = player.addListener("statusChange", ({ status: s }) =>
       handleStatus(s),
     );
-    // listener বসার আগেই ready হয়ে গেলে সেটাও ধরো
     handleStatus(player.status);
 
     return () => {
@@ -311,7 +327,6 @@ const PostVideo = ({
   }, [isMuted, player]);
 
   // ── Play / pause ──
-  // স্ক্রিনে এলে চলবে, বাইরে গেলে বা full screen খুললে থামবে
   useEffect(() => {
     try {
       if (!isVisible || fullScreenVisible || !isAutoPlay) {
@@ -383,8 +398,10 @@ const PostVideo = ({
     setStatus("loading");
     try {
       const p: any = playerRef.current;
-      if (p?.replaceAsync) p.replaceAsync(uri).catch(() => {});
-      else p?.replace(uri);
+      const retrySource = getVideoSource(uri);
+
+      if (p?.replaceAsync) p.replaceAsync(retrySource).catch(() => {});
+      else p?.replace(retrySource);
       if (isVisibleRef.current && isAutoPlayRef.current) p?.play();
     } catch {}
   }, [uri]);
@@ -401,7 +418,6 @@ const PostVideo = ({
   }
 
   const hasError = status === "error";
-  // প্রথম frame আসার আগে পুরো ঢাকা loader, তারপর শুধু buffering হলে ছোট spinner
   const showCoverLoader = !firstFrame && !hasError;
   const showBufferLoader = firstFrame && status === "loading";
 
@@ -419,7 +435,6 @@ const PostVideo = ({
           onFirstFrameRender={() => setFirstFrame(true)}
         />
 
-        {/* tap + long press overlay */}
         <Pressable
           onPress={openFullscreen}
           onLongPress={start2x}
@@ -427,7 +442,6 @@ const PostVideo = ({
           onPressOut={stop2x}
           style={StyleSheet.absoluteFill}
         >
-          {/* autoplay off হলে play icon দেখাও */}
           {!isAutoPlay && firstFrame && (
             <View className="flex-1 items-center justify-center">
               <View className="bg-black/50 rounded-full w-16 h-16 items-center justify-center">
@@ -453,16 +467,13 @@ const PostVideo = ({
           )}
         </Pressable>
 
-        {/* Loading UI (tap আটকায় না) */}
         <VideoLoader
           visible={showCoverLoader || showBufferLoader}
           cover={showCoverLoader}
         />
 
-        {/* লোড ব্যর্থ হলে */}
         {hasError && <VideoError onRetry={handleRetry} />}
 
-        {/* inline mute button */}
         <TouchableOpacity
           onPress={() => dispatch(toggleMute())}
           className="absolute bottom-3 right-1 rounded-full p-2.5"
