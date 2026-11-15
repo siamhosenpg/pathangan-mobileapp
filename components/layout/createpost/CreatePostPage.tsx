@@ -21,7 +21,14 @@ import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useNavigation, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
-import { ComponentRef, useCallback, useEffect, useRef, useState } from "react";
+import {
+  ComponentRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
@@ -41,6 +48,7 @@ import NormalPostForm, { PostFieldKey } from "./NormalPostForm";
 import PostTypeSelector from "./PostTypeSelector";
 import PrivacySelector from "./PrivacySelector";
 import QuestionPostForm from "./QuestionPostForm";
+import SubmitPostButton from "./SubmitPostButton";
 
 type PostType = "post" | "question";
 type Privacy = "public" | "private";
@@ -51,7 +59,6 @@ type ErrorKey =
   | "errMaxMedia"
   | PostValidationError;
 
-const ACCENT = "#00914d";
 const MAX_MEDIA = 10;
 
 /* কিবোর্ড খোলা অবস্থায় স্ক্রলের জন্য বাড়তি জায়গা */
@@ -239,12 +246,32 @@ export default function CreatePostPage() {
     questionText.trim().length > 0 ||
     questionTags.trim().length > 0;
 
-  // Shudhu visual er jonno. Button disable korar jonno na.
-  // মিডিয়া এখানে ধরা হয় না, কারণ শুধু মিডিয়া দিয়ে পোস্ট হবে না
-  const hasContent =
+  /* ─────────── Live validation (বাটন চালু/বন্ধ) ─────────── */
+  // নিয়ম পুরো পূরণ হলে null, নইলে কোন নিয়ম ভাঙছে তার key
+  const validationError = useMemo<PostValidationError | null>(
+    () =>
+      activeType === "post"
+        ? validateNormalPost({ title, text })
+        : validateQuestion(questionText),
+    [activeType, title, text, questionText],
+  );
+
+  // নিয়ম পূরণ হলেই বাটন চালু
+  const canSubmit = validationError === null;
+
+  // কিছু লেখা শুরু হয়েছে কিনা (শুরুতেই লাল/ধূসর হিন্ট দেখাব না)
+  const hasTyped =
     activeType === "post"
-      ? text.trim().length > 0 || title.trim().length > 0
+      ? title.trim().length > 0 || text.trim().length > 0
       : questionText.trim().length > 0;
+
+  // বাটন বন্ধ থাকলে কারণটা ছোট করে দেখাই
+  const liveHint =
+    hasTyped && validationError
+      ? t(`postData.${validationError}`, {
+          defaultValue: POST_ERROR_FALLBACK[validationError],
+        })
+      : "";
 
   /* ─────────── Form reset ─────────── */
   const resetForm = useCallback(() => {
@@ -392,14 +419,14 @@ export default function CreatePostPage() {
     if (submitLockRef.current) return;
     setErrorKey("");
 
-    // ── যাচাই (শিরোনাম/বিবরণ/প্রশ্নের নিয়ম) ──
-    const validationError =
+    // বাটন বন্ধ থাকলে এখানে আসার কথা না, তবু নিরাপত্তার জন্য আবার যাচাই
+    const guardError =
       activeType === "post"
         ? validateNormalPost({ title, text })
         : validateQuestion(questionText);
 
-    if (validationError) {
-      setErrorKey(validationError);
+    if (guardError) {
+      setErrorKey(guardError);
       // error বার্তা উপরে থাকে, তাই উপরে স্ক্রল করে দেখাই
       scrollRef.current?.scrollTo({ y: 0, animated: true });
       return;
@@ -590,24 +617,15 @@ export default function CreatePostPage() {
             : t("postData.newQuestion")}
         </Text>
 
-        <TouchableOpacity
-          onPress={handleSubmit}
-          activeOpacity={0.85}
-          accessibilityRole="button"
-          style={{
-            backgroundColor: ACCENT,
-            opacity: hasContent ? 1 : 0.45,
-            paddingHorizontal: 20,
-            paddingVertical: 8,
-            borderRadius: 999,
-          }}
-        >
-          <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700" }}>
-            {activeType === "post"
+        <SubmitPostButton
+          label={
+            activeType === "post"
               ? t("postData.submitPost")
-              : t("postData.submitQuestion")}
-          </Text>
-        </TouchableOpacity>
+              : t("postData.submitQuestion")
+          }
+          disabled={!canSubmit}
+          onPress={handleSubmit}
+        />
       </View>
 
       {/* ───────── Type selector (full width) ───────── */}
@@ -667,7 +685,7 @@ export default function CreatePostPage() {
             </View>
           </View>
 
-          {/* ───────── Error ───────── */}
+          {/* ───────── Error (মিডিয়া ইত্যাদির ভুল) ───────── */}
           {errorKey ? (
             <View className="flex-row items-center gap-2 bg-red-500/10 border border-red-500/30 px-4 py-3 rounded-2xl">
               <Ionicons name="alert-circle-outline" size={18} color="#f87171" />
@@ -677,6 +695,20 @@ export default function CreatePostPage() {
               <TouchableOpacity onPress={() => setErrorKey("")} hitSlop={10}>
                 <Ionicons name="close" size={16} color="#f87171" />
               </TouchableOpacity>
+            </View>
+          ) : null}
+
+          {/* ───────── Live hint (কেন বাটন বন্ধ) ───────── */}
+          {!errorKey && liveHint ? (
+            <View className="flex-row items-center gap-2 px-1">
+              <Ionicons
+                name="information-circle-outline"
+                size={16}
+                color={isDark ? "#888" : "#999"}
+              />
+              <Text className="text-text-tertiary dark:text-dark-text-tertiary text-xs flex-1">
+                {liveHint}
+              </Text>
             </View>
           ) : null}
 
