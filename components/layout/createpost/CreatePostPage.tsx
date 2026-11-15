@@ -10,6 +10,12 @@ import {
   startUpload,
 } from "@/redux/features/upload/uploadSlice";
 import { useAppSelector } from "@/redux/hooks";
+import {
+  POST_ERROR_FALLBACK,
+  validateNormalPost,
+  validateQuestion,
+  type PostValidationError,
+} from "@/utils/postValidation";
 import { Ionicons } from "@expo/vector-icons";
 import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
@@ -42,9 +48,8 @@ type ErrorKey =
   | "errMixedMedia"
   | "errSingleVideo"
   | "errPickFailed"
-  | "errEmptyPost"
-  | "errEmptyQuestion"
-  | "errMaxMedia";
+  | "errMaxMedia"
+  | PostValidationError;
 
 const ACCENT = "#00914d";
 const MAX_MEDIA = 10;
@@ -235,9 +240,10 @@ export default function CreatePostPage() {
     questionTags.trim().length > 0;
 
   // Shudhu visual er jonno. Button disable korar jonno na.
+  // মিডিয়া এখানে ধরা হয় না, কারণ শুধু মিডিয়া দিয়ে পোস্ট হবে না
   const hasContent =
     activeType === "post"
-      ? text.trim().length > 0 || media.length > 0
+      ? text.trim().length > 0 || title.trim().length > 0
       : questionText.trim().length > 0;
 
   /* ─────────── Form reset ─────────── */
@@ -386,12 +392,16 @@ export default function CreatePostPage() {
     if (submitLockRef.current) return;
     setErrorKey("");
 
-    if (activeType === "post" && !text.trim() && media.length === 0) {
-      setErrorKey("errEmptyPost");
-      return;
-    }
-    if (activeType === "question" && !questionText.trim()) {
-      setErrorKey("errEmptyQuestion");
+    // ── যাচাই (শিরোনাম/বিবরণ/প্রশ্নের নিয়ম) ──
+    const validationError =
+      activeType === "post"
+        ? validateNormalPost({ title, text })
+        : validateQuestion(questionText);
+
+    if (validationError) {
+      setErrorKey(validationError);
+      // error বার্তা উপরে থাকে, তাই উপরে স্ক্রল করে দেখাই
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
       return;
     }
 
@@ -401,7 +411,7 @@ export default function CreatePostPage() {
     const payload = {
       type: activeType,
       title: title.trim(),
-      text,
+      text: text.trim(),
       media,
       questionText: questionText.trim(),
       tags: questionTags
@@ -545,6 +555,14 @@ export default function CreatePostPage() {
     }
   };
 
+  // error বার্তা: i18n-এ key থাকলে সেটা, না থাকলে বাংলা fallback
+  const errorMessage = errorKey
+    ? t(`postData.${errorKey}`, {
+        defaultValue:
+          POST_ERROR_FALLBACK[errorKey as PostValidationError] ?? errorKey,
+      })
+    : "";
+
   return (
     <View
       className="flex-1 bg-background dark:bg-dark-background"
@@ -654,7 +672,7 @@ export default function CreatePostPage() {
             <View className="flex-row items-center gap-2 bg-red-500/10 border border-red-500/30 px-4 py-3 rounded-2xl">
               <Ionicons name="alert-circle-outline" size={18} color="#f87171" />
               <Text className="text-red-400 text-sm flex-1">
-                {t(`postData.${errorKey}`)}
+                {errorMessage}
               </Text>
               <TouchableOpacity onPress={() => setErrorKey("")} hitSlop={10}>
                 <Ionicons name="close" size={16} color="#f87171" />

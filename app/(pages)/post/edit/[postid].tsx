@@ -4,6 +4,14 @@ import {
   useUpdatePostMutation,
 } from "@/redux/api/postApi";
 import { useAppSelector } from "@/redux/hooks";
+import {
+  POST_ERROR_FALLBACK,
+  QUESTION_MIN,
+  TEXT_MIN,
+  TITLE_MAX,
+  validateNormalPost,
+  validateQuestion,
+} from "@/utils/postValidation";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
@@ -42,6 +50,7 @@ export default function EditPostPage() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const ph = isDark ? "#4a4a4a" : "#a0a0a0";
+  const hintColor = isDark ? "#777" : "#999";
 
   // লগইন করা ইউজার
   const { user } = useAppSelector((state) => state.auth);
@@ -52,14 +61,18 @@ export default function EditPostPage() {
 
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
+  const [questionText, setQuestionText] = useState("");
   const [privacy, setPrivacy] = useState<Privacy>("public");
   const [error, setError] = useState("");
+
+  const isQuestion = post?.postType === "question";
 
   // post data লোড হওয়ার পরে form fields fill করা
   useEffect(() => {
     if (post) {
       setTitle(post.content?.title ?? "");
       setText(post.content?.text ?? "");
+      setQuestionText((post as any).question?.questionText ?? "");
       // আগের "friends" পোস্ট থাকলে সেটা "public" হিসেবে দেখাবে
       setPrivacy((post as any).privacy === "private" ? "private" : "public");
     }
@@ -72,29 +85,38 @@ export default function EditPostPage() {
     !!postOwnerUsername &&
     user.username === postOwnerUsername;
 
+  const titleLen = title.trim().length;
+  const textLen = text.trim().length;
+  const questionLen = questionText.trim().length;
+
   // শুধু visual এর জন্য
-  const hasContent = text.trim().length > 0 || title.trim().length > 0;
+  const hasContent = isQuestion ? questionLen > 0 : textLen > 0 || titleLen > 0;
 
   const handleUpdate = async () => {
     if (isUpdating) return;
 
-    if (!text.trim() && !title.trim()) {
-      setError("কিছু একটা লিখুন");
+    const validationError = isQuestion
+      ? validateQuestion(questionText)
+      : validateNormalPost({ title, text });
+
+    if (validationError) {
+      setError(POST_ERROR_FALLBACK[validationError]);
       return;
     }
     setError("");
 
     try {
-      await updatePost({
-        id: postid,
-        body: {
-          content: {
-            title: title.trim(),
-            text: text.trim(),
-          },
-          privacy,
-        },
-      }).unwrap();
+      const body: any = isQuestion
+        ? { question: { questionText: questionText.trim() }, privacy }
+        : {
+            content: {
+              title: title.trim(),
+              text: text.trim(),
+            },
+            privacy,
+          };
+
+      await updatePost({ id: postid, body }).unwrap();
 
       router.back();
     } catch (err: any) {
@@ -198,7 +220,7 @@ export default function EditPostPage() {
         </TouchableOpacity>
 
         <Text className="flex-1 text-lg font-bold text-text dark:text-dark-text">
-          পোস্ট সম্পাদনা করুন
+          {isQuestion ? "প্রশ্ন সম্পাদনা করুন" : "পোস্ট সম্পাদনা করুন"}
         </Text>
 
         <TouchableOpacity
@@ -283,36 +305,87 @@ export default function EditPostPage() {
           ) : null}
 
           {/* ───────── Form ───────── */}
-          <View className="gap-2">
-            {/* Title */}
-            <View className="border-b border-border dark:border-dark-border">
+          {isQuestion ? (
+            <View className="py-1">
               <TextInput
-                value={title}
-                onChangeText={setTitle}
-                placeholder="শিরোনাম লিখুন (ঐচ্ছিক)"
-                placeholderTextColor={ph}
-                className="text-text dark:text-dark-text font-medium py-3"
-              />
-            </View>
-
-            {/* Body (auto-grow: 1 line theke max 10 line) */}
-            <View>
-              <TextInput
-                value={text}
-                onChangeText={setText}
-                placeholder="আপনার মনের কথা লিখুন..."
+                value={questionText}
+                onChangeText={setQuestionText}
+                placeholder="আপনার প্রশ্ন লিখুন..."
                 placeholderTextColor={ph}
                 multiline
-                scrollEnabled
+                numberOfLines={5}
                 textAlignVertical="top"
-                style={{
-                  minHeight: BODY_MIN_HEIGHT,
-                  maxHeight: BODY_MAX_HEIGHT,
-                }}
-                className="py-1 leading-6 text-text dark:text-dark-text"
+                className="text-text dark:text-dark-text"
+                style={{ minHeight: 100 }}
               />
+              {questionLen > 0 && questionLen < QUESTION_MIN && (
+                <Text
+                  style={{
+                    color: hintColor,
+                    fontSize: 11,
+                    textAlign: "right",
+                  }}
+                >
+                  {questionLen}/{QUESTION_MIN} (কমপক্ষে)
+                </Text>
+              )}
             </View>
-          </View>
+          ) : (
+            <View className="gap-2">
+              {/* Title */}
+              <View className="border-b border-border dark:border-dark-border">
+                <TextInput
+                  value={title}
+                  onChangeText={setTitle}
+                  placeholder="শিরোনাম লিখুন (ঐচ্ছিক)"
+                  placeholderTextColor={ph}
+                  maxLength={TITLE_MAX}
+                  className="text-text dark:text-dark-text font-medium py-3"
+                />
+                {title.length > 0 && (
+                  <Text
+                    style={{
+                      color: title.length >= TITLE_MAX ? "#f87171" : hintColor,
+                      fontSize: 11,
+                      textAlign: "right",
+                      paddingBottom: 6,
+                    }}
+                  >
+                    {title.length}/{TITLE_MAX}
+                  </Text>
+                )}
+              </View>
+
+              {/* Body (auto-grow: 1 line theke max 10 line) */}
+              <View>
+                <TextInput
+                  value={text}
+                  onChangeText={setText}
+                  placeholder="আপনার মনের কথা লিখুন..."
+                  placeholderTextColor={ph}
+                  multiline
+                  scrollEnabled
+                  textAlignVertical="top"
+                  style={{
+                    minHeight: BODY_MIN_HEIGHT,
+                    maxHeight: BODY_MAX_HEIGHT,
+                  }}
+                  className="py-1 leading-6 text-text dark:text-dark-text"
+                />
+                {textLen > 0 && textLen < TEXT_MIN && (
+                  <Text
+                    style={{
+                      color: hintColor,
+                      fontSize: 11,
+                      textAlign: "right",
+                    }}
+                  >
+                    {textLen}/{TEXT_MIN} (কমপক্ষে)
+                  </Text>
+                )}
+              </View>
+            </View>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

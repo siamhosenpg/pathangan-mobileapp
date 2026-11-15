@@ -1,3 +1,4 @@
+import { TEXT_MIN, TITLE_MAX } from "@/utils/postValidation";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import {
@@ -58,6 +59,10 @@ const NormalPostForm = ({
 }: Props) => {
   const { t } = useTranslation();
   const ph = isDark ? "#4a4a4a" : "#a0a0a0";
+  const hintColor = isDark ? "#777" : "#999";
+
+  const titleLen = title.trim().length;
+  const textLen = text.trim().length;
 
   const handleLayout = (key: PostFieldKey) => (e: LayoutChangeEvent) => {
     onFieldLayout?.(key, e.nativeEvent.layout.y);
@@ -77,8 +82,21 @@ const NormalPostForm = ({
           onBlur={() => onFieldBlur?.("title")}
           placeholder={t("postData.titlePlaceholder")}
           placeholderTextColor={ph}
+          maxLength={TITLE_MAX}
           className="text-text dark:text-dark-text font-medium py-3"
         />
+        {title.length > 0 && (
+          <Text
+            style={{
+              color: title.length >= TITLE_MAX ? "#f87171" : hintColor,
+              fontSize: 11,
+              textAlign: "right",
+              paddingBottom: 6,
+            }}
+          >
+            {title.length}/{TITLE_MAX}
+          </Text>
+        )}
       </View>
 
       {/* Body (auto-grow: 1 line theke max 10 line) */}
@@ -100,6 +118,11 @@ const NormalPostForm = ({
           }}
           className="py-1 leading-6 text-text dark:text-dark-text"
         />
+        {textLen > 0 && textLen < TEXT_MIN && (
+          <Text style={{ color: hintColor, fontSize: 11, textAlign: "right" }}>
+            {textLen}/{TEXT_MIN} (কমপক্ষে)
+          </Text>
+        )}
       </View>
 
       {/* Media preview */}

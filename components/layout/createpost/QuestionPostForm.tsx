@@ -1,3 +1,4 @@
+import { QUESTION_MIN } from "@/utils/postValidation";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,6 +21,9 @@ const QuestionPostForm = ({
 }: Props) => {
   const { t } = useTranslation();
   const ph = isDark ? "#4a4a4a" : "#a0a0a0";
+  const hintColor = isDark ? "#777" : "#999";
+
+  const questionLen = questionText.trim().length;
 
   // Tag preview chips
   const parsedTags = useMemo(
@@ -46,6 +50,11 @@ const QuestionPostForm = ({
           className="text-text dark:text-dark-text"
           style={{ minHeight: 100 }}
         />
+        {questionLen > 0 && questionLen < QUESTION_MIN && (
+          <Text style={{ color: hintColor, fontSize: 11, textAlign: "right" }}>
+            {questionLen}/{QUESTION_MIN} (কমপক্ষে)
+          </Text>
+        )}
       </View>
 
       {/* Tags */}
