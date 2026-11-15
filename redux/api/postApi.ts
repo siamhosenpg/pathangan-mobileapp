@@ -13,6 +13,10 @@ import type {
   UpdatePostRequest,
 } from "@/types/postTypes";
 
+// মিডিয়া আপলোডের জন্য আলাদা বড় timeout (ডিফল্ট ১৫ সেকেন্ড ভিডিওর জন্য যথেষ্ট না)
+// backend-এ Cloudinary timeout সর্বোচ্চ ৩০০ সেকেন্ড, তাই এটা তার চেয়ে বেশি রাখা হয়েছে
+const UPLOAD_TIMEOUT_MS = 6 * 60 * 1000;
+
 const postApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // ===================== GET ALL POSTS (INFINITE) =====================
@@ -110,6 +114,8 @@ const postApi = baseApi.injectEndpoints({
         url: "/posts",
         method: "POST" as const,
         body: formData,
+        // ভিডিও আপলোডে ১৫ সেকেন্ডে cancel হওয়া ঠেকাতে
+        timeout: UPLOAD_TIMEOUT_MS,
       }),
 
       invalidatesTags: ["Post"],
@@ -135,6 +141,7 @@ const postApi = baseApi.injectEndpoints({
         url: "/posts/create/course",
         method: "POST" as const,
         body: formData,
+        timeout: UPLOAD_TIMEOUT_MS,
       }),
 
       invalidatesTags: ["Post"],
@@ -242,5 +249,5 @@ export const {
   useCreateSharePostMutation,
   useUpdatePostMutation,
   useDeletePostMutation,
-  useRecordViewMutation, // ← এটা add করো
+  useRecordViewMutation,
 } = postApi;

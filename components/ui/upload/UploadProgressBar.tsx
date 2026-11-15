@@ -1,21 +1,32 @@
 import { resetUpload } from "@/redux/features/upload/uploadSlice";
 import type { RootState } from "@/redux/store";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useRef } from "react";
-import { Animated, Text, View } from "react-native";
+import { useCallback, useEffect, useRef } from "react";
+import { Animated, Text, TouchableOpacity, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
 const UploadProgressBar = () => {
   const dispatch = useDispatch();
-  const { isUploading, progress, status } = useSelector(
-    (state: RootState) => state.upload,
-  );
+  const { progress, status } = useSelector((state: RootState) => state.upload);
 
   const widthAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
+  // fade out করে তারপর state reset করে (done-এর timer আর close বাটন দুটোই এটা ব্যবহার করে)
+  const hide = useCallback(() => {
+    Animated.timing(opacityAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => dispatch(resetUpload()));
+  }, [dispatch, opacityAnim]);
+
   useEffect(() => {
-    if (status === "idle") return;
+    if (status === "idle") {
+      opacityAnim.setValue(0);
+      widthAnim.setValue(0);
+      return;
+    }
 
     // fade in
     Animated.timing(opacityAnim, {
@@ -31,18 +42,13 @@ const UploadProgressBar = () => {
       useNativeDriver: false,
     }).start();
 
-    // done হলে 2 sec পরে hide করো
+    // success হলে ২ সেকেন্ড পর নিজে নিজে hide
     if (status === "done") {
-      const timer = setTimeout(() => {
-        Animated.timing(opacityAnim, {
-          toValue: 0,
-          duration: 400,
-          useNativeDriver: true,
-        }).start(() => dispatch(resetUpload()));
-      }, 2000);
+      const timer = setTimeout(hide, 2000);
       return () => clearTimeout(timer);
     }
-  }, [progress, status]);
+    // error হলে auto hide হবে না, ইউজার close চাপলে হবে
+  }, [progress, status, hide, opacityAnim, widthAnim]);
 
   if (status === "idle") return null;
 
@@ -52,19 +58,27 @@ const UploadProgressBar = () => {
   return (
     <Animated.View
       style={{ opacity: opacityAnim }}
-      className="  overflow-hidden  bg-background dark:bg-dark-background border-b border-border dark:border-dark-border"
+      className="overflow-hidden bg-background dark:bg-dark-background border-b border-border dark:border-dark-border"
     >
       <View className="px-4 pt-3 pb-2">
         {/* Top row */}
         <View className="flex-row items-center justify-between mb-2">
-          <View className="flex-row items-center gap-2">
-            {isDone ? (
+          <View className="flex-row items-center gap-2 flex-1">
+            {isError ? (
+              // error হলে বাম পাশে close বাটন
+              <TouchableOpacity
+                onPress={hide}
+                hitSlop={10}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="বন্ধ করুন"
+                className="w-6 h-6 rounded-full bg-red-500/15 items-center justify-center"
+              >
+                <Ionicons name="close" size={14} color="#ef4444" />
+              </TouchableOpacity>
+            ) : isDone ? (
               <View className="w-6 h-6 rounded-full bg-green-500/15 items-center justify-center">
                 <Ionicons name="checkmark" size={14} color="#22c55e" />
-              </View>
-            ) : isError ? (
-              <View className="w-6 h-6 rounded-full bg-red-500/15 items-center justify-center">
-                <Ionicons name="close" size={14} color="#ef4444" />
               </View>
             ) : (
               <View className="w-6 h-6 rounded-full bg-accent/15 items-center justify-center">

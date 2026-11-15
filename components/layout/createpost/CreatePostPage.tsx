@@ -1,3 +1,4 @@
+import { baseApi } from "@/redux/api/baseApi";
 import {
   useCreatePostMutation,
   useCreateQuestionPostMutation,
@@ -519,6 +520,17 @@ export default function CreatePostPage() {
       if (interval) clearInterval(interval);
       console.log("UPLOAD ERROR:", JSON.stringify(err, null, 2), err?.message);
       dispatch(failUpload());
+
+      // timeout / নেটওয়ার্ক কাটা / 5xx হলে পোস্ট server-এ তৈরি হয়ে থাকতে পারে,
+      // তাই feed নতুন করে আনাই, যাতে রিফ্রেশ ছাড়াই দেখা যায়
+      const status = err?.status;
+      const uncertain =
+        status === "TIMEOUT_ERROR" ||
+        status === "FETCH_ERROR" ||
+        (typeof status === "number" && status >= 500);
+      if (uncertain) {
+        dispatch(baseApi.util.invalidateTags(["Post", "Feed"]));
+      }
     } finally {
       // compress করা ফাইল ক্যাশ থেকে মুছে ফেলি (সফল বা ব্যর্থ, দুই ক্ষেত্রেই)
       for (const u of tempUris) {

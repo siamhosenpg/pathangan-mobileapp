@@ -399,7 +399,7 @@ export default function FeedList({
       ListHeaderComponent={
         <View className="">
           {refreshLoader}
-          <UploadProgressBar />
+          {isActive && <UploadProgressBar />}
           {headerExtra}
         </View>
       }
