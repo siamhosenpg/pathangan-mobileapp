@@ -1,4 +1,4 @@
-import { TEXT_MIN, TITLE_MAX } from "@/utils/postValidation";
+import { TEXT_MAX, TEXT_MIN, TITLE_MAX } from "@/utils/postValidation";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import {
@@ -43,6 +43,9 @@ const BODY_MAX_LINES = 10;
 const BODY_MIN_HEIGHT = BODY_LINE_HEIGHT * BODY_MIN_LINES + BODY_PADDING_V * 2;
 const BODY_MAX_HEIGHT = BODY_LINE_HEIGHT * BODY_MAX_LINES + BODY_PADDING_V * 2;
 
+// সীমার কাছাকাছি গেলে কাউন্টার দেখাবে
+const TEXT_WARN_AT = TEXT_MAX - 500;
+
 const NormalPostForm = ({
   title,
   setTitle,
@@ -61,8 +64,9 @@ const NormalPostForm = ({
   const ph = isDark ? "#4a4a4a" : "#a0a0a0";
   const hintColor = isDark ? "#777" : "#999";
 
-  const titleLen = title.trim().length;
   const textLen = text.trim().length;
+  const showTextCounter =
+    (textLen > 0 && textLen < TEXT_MIN) || text.length >= TEXT_WARN_AT;
 
   const handleLayout = (key: PostFieldKey) => (e: LayoutChangeEvent) => {
     onFieldLayout?.(key, e.nativeEvent.layout.y);
@@ -111,6 +115,7 @@ const NormalPostForm = ({
           placeholderTextColor={ph}
           multiline
           scrollEnabled
+          maxLength={TEXT_MAX}
           textAlignVertical="top"
           style={{
             minHeight: BODY_MIN_HEIGHT,
@@ -118,9 +123,17 @@ const NormalPostForm = ({
           }}
           className="py-1 leading-6 text-text dark:text-dark-text"
         />
-        {textLen > 0 && textLen < TEXT_MIN && (
-          <Text style={{ color: hintColor, fontSize: 11, textAlign: "right" }}>
-            {textLen}/{TEXT_MIN} (কমপক্ষে)
+        {showTextCounter && (
+          <Text
+            style={{
+              color: text.length >= TEXT_MAX ? "#f87171" : hintColor,
+              fontSize: 11,
+              textAlign: "right",
+            }}
+          >
+            {text.length < TEXT_MIN
+              ? `${textLen}/${TEXT_MIN} (কমপক্ষে)`
+              : `${text.length}/${TEXT_MAX}`}
           </Text>
         )}
       </View>

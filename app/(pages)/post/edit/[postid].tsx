@@ -7,6 +7,7 @@ import { useAppSelector } from "@/redux/hooks";
 import {
   POST_ERROR_FALLBACK,
   QUESTION_MIN,
+  TEXT_MAX,
   TEXT_MIN,
   TITLE_MAX,
   validateNormalPost,
@@ -365,6 +366,7 @@ export default function EditPostPage() {
                   placeholderTextColor={ph}
                   multiline
                   scrollEnabled
+                  maxLength={TEXT_MAX}
                   textAlignVertical="top"
                   style={{
                     minHeight: BODY_MIN_HEIGHT,
@@ -372,15 +374,18 @@ export default function EditPostPage() {
                   }}
                   className="py-1 leading-6 text-text dark:text-dark-text"
                 />
-                {textLen > 0 && textLen < TEXT_MIN && (
+                {((textLen > 0 && textLen < TEXT_MIN) ||
+                  text.length >= TEXT_MAX - 500) && (
                   <Text
                     style={{
-                      color: hintColor,
+                      color: text.length >= TEXT_MAX ? "#f87171" : hintColor,
                       fontSize: 11,
                       textAlign: "right",
                     }}
                   >
-                    {textLen}/{TEXT_MIN} (কমপক্ষে)
+                    {text.length < TEXT_MIN
+                      ? `${textLen}/${TEXT_MIN} (কমপক্ষে)`
+                      : `${text.length}/${TEXT_MAX}`}
                   </Text>
                 )}
               </View>

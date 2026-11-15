@@ -2,6 +2,7 @@ export const TITLE_MIN = 10; // title + text দুটো থাকলে
 export const TITLE_MAX = 120;
 export const TITLE_ONLY_MIN = 50; // শুধু title থাকলে
 export const TEXT_MIN = 50;
+export const TEXT_MAX = 5000;
 export const QUESTION_MIN = 50;
 
 export type PostValidationError =
@@ -10,6 +11,7 @@ export type PostValidationError =
   | "errTitleTooShort"
   | "errTitleOnlyTooShort"
   | "errTextTooShort"
+  | "errTextTooLong"
   | "errEmptyQuestion"
   | "errQuestionTooShort";
 
@@ -21,6 +23,7 @@ export const POST_ERROR_FALLBACK: Record<PostValidationError, string> = {
   errTitleTooShort: `শিরোনাম কমপক্ষে ${TITLE_MIN} অক্ষরের হতে হবে`,
   errTitleOnlyTooShort: `শুধু শিরোনাম দিলে সেটা কমপক্ষে ${TITLE_ONLY_MIN} অক্ষরের হতে হবে, অথবা বিবরণও লিখুন`,
   errTextTooShort: `বিবরণ কমপক্ষে ${TEXT_MIN} অক্ষরের হতে হবে`,
+  errTextTooLong: `বিবরণ সর্বোচ্চ ${TEXT_MAX} অক্ষরের হতে পারবে`,
   errEmptyQuestion: "প্রশ্ন লিখুন",
   errQuestionTooShort: `প্রশ্ন কমপক্ষে ${QUESTION_MIN} অক্ষরের হতে হবে`,
 };
@@ -37,6 +40,7 @@ export const validateNormalPost = ({
   const x = text.trim();
 
   if (t.length > TITLE_MAX) return "errTitleTooLong";
+  if (x.length > TEXT_MAX) return "errTextTooLong";
 
   // দুটোর কোনোটাই নেই
   if (!t && !x) return "errEmptyPost";
