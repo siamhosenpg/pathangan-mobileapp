@@ -1,9 +1,11 @@
 import { useFontSetting } from "@/hooks/useFontSetting";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { Switch, View } from "react-native";
 import TextFont from "../font/TextFont";
 
 export default function FontSetting() {
+  const { t } = useTranslation();
   const { customFontEnabled, setCustomFontEnabled } = useFontSetting();
 
   return (
@@ -13,20 +15,20 @@ export default function FontSetting() {
           <Ionicons name="text-outline" size={17} color="#888" />
         </View>
         <TextFont className="text-sm font-medium text-text dark:text-dark-text">
-          ফন্ট সেটিংস
+          {t("settingData.fontSettings")}
         </TextFont>
       </View>
 
       <View className="flex-row items-center justify-between px-4 py-3.5 gap-4">
         <View className="flex-1">
           <TextFont className="text-sm font-medium text-text dark:text-dark-text">
-            কাস্টম ফন্ট
+            {t("settingData.customFont")}
           </TextFont>
           <TextFont
             className="text-xs text-text-tertiary dark:text-dark-text-tertiary mt-0.5"
             numberOfLines={2}
           >
-            বন্ধ করলে ডিভাইসের ডিফল্ট ফন্ট ব্যবহার হবে
+            {t("settingData.customFontSub")}
           </TextFont>
         </View>
 

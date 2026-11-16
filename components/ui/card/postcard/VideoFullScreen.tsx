@@ -53,7 +53,11 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startTimeAppliedRef = useRef(false);
+  const playStartedRef = useRef(false);
   const isLandscapeRef = useRef(false);
+
+  const isMutedRef = useRef(isMuted);
+  isMutedRef.current = isMuted;
 
   // ── Landscape হলে container size swap ──
   // Portrait:  container = SCREEN_W x SCREEN_H
@@ -89,28 +93,65 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
     playerRef.current = player;
   }, [player]);
 
+  // ── খোলার সাথে সাথে নিজে নিজে play ──
+  // নতুন player তৈরির মুহূর্তে করা play() হারিয়ে যায়, তাই readyToPlay এর জন্য অপেক্ষা করি।
+  // ready হলে: আগে startTime-এ seek, তারপর play।
   useEffect(() => {
     if (!player) return;
-    if (visible) {
-      if (!startTimeAppliedRef.current && startTime > 0) {
-        player.currentTime = startTime;
-        startTimeAppliedRef.current = true;
-      }
-      player.play();
-      setIsPlaying(true);
-      resetControlsTimer();
-    } else {
-      player.pause();
+
+    if (!visible) {
+      try {
+        player.pause();
+      } catch {}
       setIsPlaying(false);
       startTimeAppliedRef.current = false;
+      playStartedRef.current = false;
       setIsLandscape(false);
       isLandscapeRef.current = false;
+      return;
     }
-  }, [visible, player]);
 
-  useEffect(() => {
+    playStartedRef.current = false;
     startTimeAppliedRef.current = false;
-  }, [startTime]);
+
+    const startPlayback = () => {
+      if (playStartedRef.current) return;
+      playStartedRef.current = true;
+      try {
+        if (!startTimeAppliedRef.current && startTime > 0) {
+          player.currentTime = startTime;
+          startTimeAppliedRef.current = true;
+        }
+        player.muted = isMutedRef.current;
+        player.play();
+      } catch {}
+    };
+
+    const statusSub = player.addListener("statusChange", ({ status }) => {
+      if (status === "readyToPlay") startPlayback();
+    });
+
+    // আইকন সবসময় player-এর আসল অবস্থা দেখাবে
+    const playingSub = player.addListener("playingChange", (e: any) => {
+      setIsPlaying(!!e.isPlaying);
+    });
+
+    if (player.status === "readyToPlay") {
+      startPlayback();
+    } else {
+      // এখনই চেষ্টা, না হলে readyToPlay এলে আবার হবে
+      try {
+        player.play();
+      } catch {}
+    }
+
+    resetControlsTimer();
+
+    return () => {
+      statusSub.remove();
+      playingSub.remove();
+    };
+  }, [visible, player]);
 
   useEffect(() => {
     if (!player) return;
@@ -150,12 +191,10 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
     if (!p) return;
     if (p.playing) {
       p.pause();
-      setIsPlaying(false);
       if (controlsTimer.current) clearTimeout(controlsTimer.current);
       setShowControls(true);
     } else {
       p.play();
-      setIsPlaying(true);
       resetControlsTimer();
     }
   };

@@ -50,7 +50,7 @@ export default function SettingsScreen() {
           />
         </TouchableOpacity>
         <Text className="text-lg font-semibold text-text dark:text-dark-text">
-          {t("settings")}
+          {t("settingData.title")}
         </Text>
       </View>
 
@@ -92,38 +92,40 @@ export default function SettingsScreen() {
             </Text>
           </View>
           <View className="px-3 py-1 rounded-full border border-accent">
-            <Text className="text-xs text-accent font-medium">{t("edit")}</Text>
+            <Text className="text-xs text-accent font-medium">
+              {t("settingData.edit")}
+            </Text>
           </View>
         </TouchableOpacity>
 
         {/* ── Account Section ── */}
         <View className="px-5">
           <Text className="text-[11px] font-medium text-text-tertiary dark:text-dark-text-tertiary tracking-widest uppercase mb-2">
-            {t("account")}
+            {t("settingData.accountSection")}
           </Text>
           <SettingsCard>
             <SettingsRow
               icon="person-outline"
               iconBg={isDark ? "#09330946" : "#e8f5ee"}
               iconColor={accent}
-              title={t("profileInfo")}
-              subtitle={t("profileInfoSub")}
+              title={t("settingData.profileInfo")}
+              subtitle={t("settingData.profileInfoSub")}
               onPress={() => router.push("/edit-profile")}
             />
             <SettingsRow
               icon="lock-closed-outline"
               iconBg={isDark ? "#1a2a3a" : "#e8f0f8"}
               iconColor="#5b9fd4"
-              title={t("password")}
-              subtitle={t("passwordSub")}
+              title={t("settingData.password")}
+              subtitle={t("settingData.passwordSub")}
               onPress={() => router.push("/change-password")}
             />
             <SettingsRow
               icon="notifications-outline"
               iconBg={isDark ? "#2e2510" : "#fdf6e8"}
               iconColor="#e09c2a"
-              title={t("notifications")}
-              subtitle={t("notificationsSub")}
+              title={t("settingData.notifications")}
+              subtitle={t("settingData.notificationsSub")}
               right={
                 <Switch
                   value={notifEnabled}
@@ -139,23 +141,23 @@ export default function SettingsScreen() {
         {/* ── App Section ── */}
         <View className="px-5">
           <Text className="text-[11px] font-medium text-text-tertiary dark:text-dark-text-tertiary tracking-widest uppercase mb-2">
-            {t("appSettings")}
+            {t("settingData.appSection")}
           </Text>
           <SettingsCard>
             <SettingsRow
               icon="language-outline"
               iconBg={isDark ? "#1e1a2e" : "#f0eeff"}
               iconColor="#9b7fd4"
-              title={t("language")}
-              subtitle="Language"
+              title={t("settingData.language")}
+              subtitle={t("settingData.languageSub")}
               right={<LanguageSwitcher />}
             />
             <SettingsRow
               icon="moon-outline"
               iconBg={isDark ? "#1a1a2e" : "#f0eeff"}
               iconColor="#9b7fd4"
-              title={t("darkMode")}
-              subtitle={isDark ? t("on") : t("off")}
+              title={t("settingData.darkMode")}
+              subtitle={isDark ? t("settingData.on") : t("settingData.off")}
               right={
                 <Switch
                   value={isDark}
@@ -170,50 +172,52 @@ export default function SettingsScreen() {
               icon="shield-outline"
               iconBg={isDark ? "#09330946" : "#e8f5ee"}
               iconColor={accent}
-              title={t("privacy")}
-              subtitle={t("privacySub")}
+              title={t("settingData.privacy")}
+              subtitle={t("settingData.privacySub")}
               onPress={() => router.push("/privacy")}
             />
             <SettingsRow
               icon="sparkles-outline"
               iconBg={isDark ? "#09330946" : "#e8f5ee"}
               iconColor={accent}
-              title={t("feedData.myInterests")}
-              subtitle={t("feedData.myInterestsSub")}
+              title={t("settingData.myInterests")}
+              subtitle={t("settingData.myInterestsSub")}
               onPress={() => router.push("/(pages)/interests/select" as any)}
             />
           </SettingsCard>
         </View>
         <View className="px-5 pb-4">
           <VideoAutoplay />
+        </View>
+        <View className="px-5 pb-4">
           <FontSetting />
         </View>
 
         {/* ── More Section ── */}
         <View className="px-5">
           <Text className="text-[11px] font-medium text-text-tertiary dark:text-dark-text-tertiary tracking-widest uppercase mb-2">
-            {t("more")}
+            {t("settingData.moreSection")}
           </Text>
           <SettingsCard>
             <SettingsRow
               icon="help-circle-outline"
               iconBg={isDark ? "#1a2a1a" : "#eaf5ea"}
               iconColor="#5cb85c"
-              title={t("helpSupport")}
+              title={t("settingData.helpSupport")}
               onPress={() => router.push("/(pages)/others/support")}
             />
             <SettingsRow
               icon="document-text-outline"
               iconBg={isDark ? "#1a2a1a" : "#eaf5ea"}
               iconColor="#5cb85c"
-              title={t("privacyPolicy")}
+              title={t("settingData.privacyPolicy")}
               onPress={() => router.push("/(pages)/others/privacy-policy")}
             />
             <SettingsRow
               icon="document-outline"
               iconBg={isDark ? "#1a2a1a" : "#eaf5ea"}
               iconColor="#5cb85c"
-              title={t("termsAndConditions")}
+              title={t("settingData.termsAndConditions")}
               onPress={() =>
                 router.push("/(pages)/others/terms-and-conditions")
               }
@@ -222,14 +226,14 @@ export default function SettingsScreen() {
               icon="information-circle-outline"
               iconBg={isDark ? "#1a1a1a" : "#f5f5f5"}
               iconColor="#8a8a8a"
-              title={t("about")}
+              title={t("settingData.about")}
               onPress={() => router.push("/about")}
             />
             <SettingsRow
               icon="log-out-outline"
               iconBg={isDark ? "#2e1a1a" : "#fff0f0"}
               iconColor="#f87171"
-              title={t("logout")}
+              title={t("settingData.logout")}
               titleClass="text-red-400"
               onPress={() => {
                 /* logout logic */
@@ -238,20 +242,18 @@ export default function SettingsScreen() {
           </SettingsCard>
         </View>
 
-        {/* ── Danger Zone: অ্যাকাউন্ট ডিলিট ── */}
+        {/* ── Danger Zone ── */}
         <View className="px-5">
           <Text className="text-[11px] font-medium text-red-400 tracking-widest uppercase mb-2">
-            {t("dangerZone", { defaultValue: "ঝুঁকিপূর্ণ এলাকা" })}
+            {t("settingData.dangerZone")}
           </Text>
           <SettingsCard>
             <SettingsRow
               icon="trash-outline"
               iconBg={isDark ? "#2e1a1a" : "#fff0f0"}
               iconColor="#f87171"
-              title={t("deleteAccount", { defaultValue: "অ্যাকাউন্ট ডিলিট" })}
-              subtitle={t("deleteAccountSub", {
-                defaultValue: "পাসওয়ার্ড দিয়ে অ্যাকাউন্ট মুছে ফেলুন",
-              })}
+              title={t("settingData.deleteAccount")}
+              subtitle={t("settingData.deleteAccountSub")}
               titleClass="text-red-400"
               onPress={() => router.push("/delete-account")}
             />
@@ -260,7 +262,7 @@ export default function SettingsScreen() {
 
         {/* ── Version ── */}
         <Text className="text-center text-xs text-text-tertiary dark:text-dark-text-tertiary mt-2">
-          {t("version")} {version}
+          {t("settingData.version")} {version}
         </Text>
       </ScrollView>
     </SafeAreaView>

@@ -3,6 +3,7 @@ import OptimizedImage from "@/components/ui/avatar/OptimizedImage";
 import HandoutCard from "@/components/ui/card/handout/HandoutCard";
 import HandoutCardSkeleton from "@/components/ui/card/handout/HandoutCardSkeleton";
 import TextFont from "@/components/ui/font/TextFont";
+import PullRefreshLoader from "@/components/ui/Loader/PullRefreshLoader";
 
 import { HANDOUT_CATEGORIES } from "@/constants/handoutCategories";
 import { useIconColor } from "@/hooks/useIconColor";
@@ -21,6 +22,7 @@ import { useTranslation } from "react-i18next";
 import {
   Alert,
   Animated,
+  Platform,
   RefreshControl,
   ScrollView,
   Text,
@@ -32,6 +34,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const CATEGORY_BAR_HEIGHT = 56;
 const HIDE_SHOW_THRESHOLD = 6;
 
+// Android-এর ডিফল্ট spinner স্ক্রিনের উপরে বাইরে পাঠিয়ে লুকানোর জন্য
+// (বড় negative মান দিলে বৃত্তটা কখনোই দেখা যায় না, কিন্তু টানার gesture ঠিকই কাজ করে)
+const ANDROID_HIDDEN_SPINNER_OFFSET = -300;
+
 // net ache kina check kori. null (ekhono jani na) hole online dhori,
 // shudhu shpostho vabe offline hole false dei
 const isOnline = async () => {
@@ -41,8 +47,6 @@ const isOnline = async () => {
 
 function DraftStrip({ isDark }: { isDark: boolean }) {
   const { t } = useTranslation();
-
-  // ...তোমার component-এর ভেতরে
 
   const { secondary } = useIconColor();
   const { data, refetch } = useGetMyHandoutsQuery({ status: "draft" });
@@ -156,7 +160,12 @@ export default function HandoutsFeedScreen() {
   const [activeCategory, setActiveCategory] = useState<HandoutCategory | null>(
     null,
   );
+
+  // pull-to-refresh এর নিজস্ব state: user ছাড়লেই true, কাজ শেষে false
   const [manualRefreshing, setManualRefreshing] = useState(false);
+
+  // দুবার refresh চালু হওয়া আটকাতে (state-এর চেয়ে ref তাৎক্ষণিক)
+  const isRefreshingRef = useRef(false);
 
   const {
     data,
@@ -183,10 +192,17 @@ export default function HandoutsFeedScreen() {
   );
 
   const onManualRefresh = useCallback(async () => {
-    if (!(await isOnline())) return;
+    if (isRefreshingRef.current) return;
 
+    // ছাড়ার সাথে সাথেই আমাদের loader চালু, যাতে ডিফল্ট spinner-এর
+    // জন্য কোনো ফাঁকা সময় না থাকে
+    isRefreshingRef.current = true;
     setManualRefreshing(true);
+
     try {
+      // net na thakle refetch chalabo na (finally-te loader bondho hobe)
+      if (!(await isOnline())) return;
+
       const result = await refetch();
 
       // refresh fail holeo purono handout gulo thakbe, shudhu user ke jani
@@ -197,6 +213,7 @@ export default function HandoutsFeedScreen() {
         );
       }
     } finally {
+      isRefreshingRef.current = false;
       setManualRefreshing(false);
     }
   }, [refetch, handouts.length, t]);
@@ -246,6 +263,8 @@ export default function HandoutsFeedScreen() {
   const handleEndReached = useCallback(() => {
     // next page er error thakle nije nije abar chalabo na
     if (isFetchNextPageError) return;
+    // refresh cholar somoy notun page anbo na
+    if (isRefreshingRef.current) return;
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
@@ -287,13 +306,45 @@ export default function HandoutsFeedScreen() {
     [animateCategoryBar],
   );
 
-  const renderListHeader = useCallback(
-    () => (
-      <View style={{ paddingTop: 12 }}>
-        <DraftStrip isDark={isDark} />
+  // Refresh loader — list-এর header-এর ভেতরে, তাই handout-এর সাথে scroll করবে
+  const refreshLoader = manualRefreshing ? (
+    Platform.OS === "ios" ? (
+      // iOS: pull করলে ওপরে যে ফাঁকা জায়গা তৈরি হয়, loader সেই জায়গায় বসে
+      <View style={{ height: 0 }} pointerEvents="none">
+        <View style={{ position: "absolute", top: -64, left: 0, right: 0 }}>
+          <PullRefreshLoader />
+        </View>
       </View>
-    ),
-    [isDark],
+    ) : (
+      // Android: list-এর ওপরে নিজের জায়গা নিয়ে বসে, handout একটু নিচে নামে
+      <PullRefreshLoader />
+    )
+  ) : null;
+
+  // ফাংশন না, element হিসেবে দেওয়া হয়েছে: তাহলে loader চালু/বন্ধ হলে
+  // DraftStrip আবার mount হয় না (আর অকারণে refetch-ও হয় না)
+  const listHeader = (
+    <View style={{ paddingTop: 12 }}>
+      {refreshLoader}
+      <DraftStrip isDark={isDark} />
+    </View>
+  );
+
+  // list আর empty state, দুই জায়গায় একই refreshControl
+  const refreshControl = (
+    <RefreshControl
+      refreshing={manualRefreshing}
+      onRefresh={onManualRefresh}
+      colors={["transparent"]} // Android spinner-এর রঙ লুকানো
+      progressBackgroundColor="transparent" // Android বৃত্তের পটভূমি লুকানো
+      tintColor="transparent" // iOS spinner লুকানো
+      // Android: বৃত্ত + shadow স্ক্রিনের বাইরে পাঠানো (শুধু transparent যথেষ্ট না)
+      progressViewOffset={
+        Platform.OS === "android"
+          ? ANDROID_HIDDEN_SPINNER_OFFSET
+          : CATEGORY_BAR_HEIGHT
+      }
+    />
   );
 
   const CategoryBar = (
@@ -412,21 +463,13 @@ export default function HandoutsFeedScreen() {
           <ScrollView
             onScroll={handleScroll}
             scrollEventThrottle={16}
-            refreshControl={
-              <RefreshControl
-                refreshing={manualRefreshing}
-                onRefresh={onManualRefresh}
-                tintColor="#00914d"
-                colors={["#00914d"]}
-                progressViewOffset={CATEGORY_BAR_HEIGHT}
-              />
-            }
+            refreshControl={refreshControl}
             contentContainerStyle={{
               flexGrow: 1,
               paddingTop: CATEGORY_BAR_HEIGHT,
             }}
           >
-            {renderListHeader()}
+            {listHeader}
             <View className="flex-1 items-center justify-center gap-3 px-6 pb-20">
               <View className="w-20 h-20 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary">
                 <Ionicons
@@ -452,22 +495,14 @@ export default function HandoutsFeedScreen() {
             renderItem={renderItem}
             keyExtractor={keyExtractor}
             ItemSeparatorComponent={renderSeparator}
-            ListHeaderComponent={renderListHeader}
+            ListHeaderComponent={listHeader}
             ListFooterComponent={renderFooter}
             onEndReached={handleEndReached}
             onEndReachedThreshold={0.4}
             onScroll={handleScroll}
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={manualRefreshing}
-                onRefresh={onManualRefresh}
-                tintColor="#00914d"
-                colors={["#00914d"]}
-                progressViewOffset={CATEGORY_BAR_HEIGHT}
-              />
-            }
+            refreshControl={refreshControl}
             contentContainerStyle={{
               paddingTop: CATEGORY_BAR_HEIGHT,
               paddingBottom: 100,

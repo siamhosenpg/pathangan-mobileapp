@@ -13,11 +13,13 @@ import { FlashList } from "@shopify/flash-list";
 import { useFocusEffect } from "expo-router";
 import {
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
   type ReactElement,
 } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   Dimensions,
@@ -72,6 +74,10 @@ const PRELOAD_BEHIND_VIDEOS = 1;
 // শেষ থেকে কতগুলো post বাকি থাকতে নতুন page আনা শুরু হবে
 const LOAD_MORE_REMAINING = 5;
 
+// Android-এর ডিফল্ট spinner স্ক্রিনের উপরে বাইরে পাঠিয়ে লুকানোর জন্য
+// (বড় negative মান দিলে বৃত্তটা কখনোই দেখা যায় না, কিন্তু টানার gesture ঠিকই কাজ করে)
+const ANDROID_HIDDEN_SPINNER_OFFSET = -300;
+
 // minimumViewTime: 0 দিলে post স্ক্রিনে আসার সাথে সাথে callback আসে, ভিডিও দ্রুত চলে
 const VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 60,
@@ -115,12 +121,17 @@ export default function FeedList({
   refresh,
   onScroll,
   headerExtra,
-  emptyText = "কোনো পোস্ট নেই",
+  emptyText,
   isActive = true,
   topInset = 0,
 }: FeedListProps) {
+  const { t } = useTranslation();
+
   const [view, setView] = useState<ViewState>(EMPTY_VIEW);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // দুবার refresh চালু হওয়া আটকাতে (state-এর চেয়ে ref তাৎক্ষণিক)
+  const isRefreshingRef = useRef(false);
 
   // tab/screen ফিরে এলে আগের অবস্থা ফেরানোর জন্য
   const lastViewRef = useRef<ViewState>(EMPTY_VIEW);
@@ -152,6 +163,21 @@ export default function FeedList({
       };
     }, [isActive, clearAllTimers]),
   );
+
+  // ── প্রথম অবস্থা (initial view) ──
+  // FlashList প্রথমবার list দেখানোর পর (বা refresh-এর পর) viewability callback
+  // সবসময় ফায়ার করে না, স্ক্রল করলে তবেই করে। তাই কোনো অবস্থা set না থাকলে
+  // প্রথম post-কেই ডিফল্ট ধরা হয়: ভিডিও হলে সেটাই চলবে।
+  // পরে আসল callback এলে সেটাই অগ্রাধিকার পাবে।
+  const firstPostId = posts[0]?._id;
+
+  useEffect(() => {
+    if (!isActive || isLoading || isRefreshing || !firstPostId) return;
+    if (lastViewRef.current.base !== null) return;
+
+    const first = postsRef.current[0];
+    applyView({ base: 0, playing: isVideoPost(first) ? 0 : null });
+  }, [isActive, isLoading, isRefreshing, firstPostId, applyView]);
 
   // ── কোন কোন ভিডিও আগে থেকে লোড থাকবে ──
   const videoIndices = useMemo(() => {
@@ -185,18 +211,21 @@ export default function FeedList({
 
   // ── Pull to refresh ──
   const handleRefresh = useCallback(async () => {
-    if (isRefreshing) return;
+    if (isRefreshingRef.current) return;
 
-    // নেট না থাকলে cache কেটে ফেলব না, পুরনো post গুলো থাকবে
-    // (উপরে NetworkBanner আগে থেকেই offline দেখাচ্ছে)
-    const net = await NetInfo.fetch();
-    if (net.isConnected === false || net.isInternetReachable === false) {
-      return;
-    }
-
+    // ছাড়ার সাথে সাথেই আমাদের loader চালু, যাতে ডিফল্ট spinner-এর
+    // জন্য কোনো ফাঁকা সময় না থাকে
+    isRefreshingRef.current = true;
     setIsRefreshing(true);
 
     try {
+      // নেট না থাকলে cache কেটে ফেলব না, পুরনো post গুলো থাকবে
+      // (উপরে NetworkBanner আগে থেকেই offline দেখাচ্ছে)
+      const net = await NetInfo.fetch();
+      if (net.isConnected === false || net.isInternetReachable === false) {
+        return; // finally-তে loader বন্ধ হবে
+      }
+
       clearAllTimers();
       lastViewRef.current = EMPTY_VIEW;
       setView(EMPTY_VIEW);
@@ -204,27 +233,22 @@ export default function FeedList({
       const result = await refresh();
 
       if (result.failed) {
-        Alert.alert("রিফ্রেশ হয়নি", getErrorMessage(result.error));
+        Alert.alert(t("feedData.refreshFailed"), getErrorMessage(result.error));
       }
     } finally {
+      isRefreshingRef.current = false;
       setIsRefreshing(false);
     }
-  }, [isRefreshing, clearAllTimers, refresh]);
+  }, [clearAllTimers, refresh, t]);
 
   // ── পরের page আনার একটাই জায়গা (দুই ট্রিগারই এটা ব্যবহার করে) ──
   const loadMoreIfNeeded = useCallback(() => {
     // next page-এর error থাকলে নিজে নিজে আবার চালাবে না,
     // user "আবার চেষ্টা করো" চাপলে তখন চলবে
     if (isFetchNextPageError) return;
-    if (!hasNextPage || isFetchingNextPage || isRefreshing) return;
+    if (!hasNextPage || isFetchingNextPage || isRefreshingRef.current) return;
     fetchNextPage();
-  }, [
-    hasNextPage,
-    isFetchingNextPage,
-    isFetchNextPageError,
-    isRefreshing,
-    fetchNextPage,
-  ]);
+  }, [hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
 
   // ব্যাকআপ: ইউজার খুব দ্রুত স্ক্রল করে একদম শেষে চলে গেলে
   const handleEndReached = useCallback(() => {
@@ -308,7 +332,7 @@ export default function FeedList({
       return (
         <View className="py-6 px-8 items-center gap-3">
           <Text className="text-text-secondary dark:text-dark-text-secondary text-sm text-center">
-            আরও পোস্ট লোড করা যায়নি
+            {t("feedData.loadMoreFailed")}
           </Text>
           <TouchableOpacity
             onPress={() => fetchNextPage()}
@@ -316,7 +340,7 @@ export default function FeedList({
             className="px-5 py-2.5 rounded-full border border-border dark:border-dark-border"
           >
             <Text className="text-sm font-semibold text-text dark:text-dark-text">
-              আবার চেষ্টা করো
+              {t("common.retry")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -328,7 +352,7 @@ export default function FeedList({
       return (
         <View className="py-6 items-center">
           <Text className="text-gray-500 dark:text-dark-text text-sm">
-            আর কোনো পোস্ট নেই
+            {t("feedData.noMorePosts")}
           </Text>
         </View>
       );
@@ -341,6 +365,7 @@ export default function FeedList({
     hasNextPage,
     posts.length,
     fetchNextPage,
+    t,
   ]);
 
   // Loading: header-এর নিচে শুরু হবে
@@ -407,7 +432,7 @@ export default function FeedList({
       ListEmptyComponent={
         <View className="py-10 items-center">
           <Text className="text-gray-500 dark:text-dark-text text-sm text-center px-6">
-            {emptyText}
+            {emptyText ?? t("feedData.emptyFeed")}
           </Text>
         </View>
       }
@@ -419,14 +444,17 @@ export default function FeedList({
       contentContainerStyle={{ paddingTop: topInset, paddingBottom: 10 }}
       ItemSeparatorComponent={ItemSeparator}
       refreshControl={
-        // default spinner লুকানো, gesture আগের মতোই কাজ করবে
+        // ডিফল্ট spinner পুরো লুকানো, gesture আগের মতোই কাজ করবে
         <RefreshControl
           refreshing={isRefreshing}
           onRefresh={handleRefresh}
-          colors={["transparent"]} // Android spinner লুকানো
-          progressBackgroundColor="transparent"
+          colors={["transparent"]} // Android spinner-এর রঙ লুকানো
+          progressBackgroundColor="transparent" // Android বৃত্তের পটভূমি লুকানো
           tintColor="transparent" // iOS spinner লুকানো
-          progressViewOffset={topInset}
+          // Android: বৃত্ত + shadow স্ক্রিনের বাইরে পাঠানো (শুধু transparent যথেষ্ট না)
+          progressViewOffset={
+            Platform.OS === "android" ? ANDROID_HIDDEN_SPINNER_OFFSET : topInset
+          }
         />
       }
     />

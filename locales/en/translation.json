@@ -11,8 +11,7 @@
   "notifications": "Notifications",
   "notificationsSub": "Push & email settings",
   "appSettings": "App",
-  "language": "Language",
-  "darkMode": "Dark Mode",
+
   "on": "Enabled",
   "off": "Disabled",
   "privacy": "Privacy",
@@ -135,7 +134,18 @@
     "privacyPublicDesc": "Anyone can see this",
     "privacyFriendsDesc": "Only your friends can see this",
     "privacyPrivateDesc": "Only you can see this",
-    "errMaxMedia": "You can add up to 10 photos or videos"
+    "errMaxMedia": "You can add up to 10 photos or videos",
+    "editPost": "Edit post",
+    "editQuestion": "Edit question",
+    "update": "Update",
+    "updating": "Updating...",
+    "updateFailed": "Failed to update the post, please try again",
+    "postNotFound": "Post not found",
+    "notYourPost": "This is not your post",
+    "notYourPostDesc": "Only the owner of the post can edit it",
+    "goBack": "Go back",
+    "charCountMin": "{{current}}/{{min}} (minimum)",
+    "postLoadFailed": "Failed to load the post"
   },
 
   "profileMenu": {
@@ -469,7 +479,7 @@
     "hideReplies": "Hide replies",
     "loadMoreReplies": "View more replies",
     "repliesLoadFailed": "Could not load replies",
-    "retry": "Retry",
+
     "edit": "Edit",
     "edited": "Edited",
     "editingComment": "Editing comment",
@@ -484,7 +494,13 @@
     "discard": "Discard",
     "keepWriting": "Keep writing",
     "replaceDraftTitle": "Discard current text?",
-    "replaceDraftMessage": "Your current text or edit will be lost."
+    "replaceDraftMessage": "Your current text or edit will be lost.",
+    "emptyTitle": "No comments yet",
+    "emptyHint": "Be the first to comment",
+    "errorTitle": "Something went wrong",
+    "retry": "Try again",
+    "loadMoreFailed": "Couldn't load more comments",
+    "sendFailed": "Couldn't post your comment"
   },
   "blockedData": {
     "title": "Blocked Users",
@@ -616,7 +632,11 @@
     "discardTitle": "Discard changes?",
     "discardMessage": "Your changes are not saved. They will be lost if you leave.",
     "stay": "Stay",
-    "leave": "Leave"
+    "leave": "Leave",
+    "refreshFailed": "Couldn't refresh",
+    "loadMoreFailed": "Couldn't load more",
+    "emptyInbox": "Nobody has asked you a question yet",
+    "emptySent": "You haven't asked anyone a question yet"
   },
   "saveData": {
     "defaultName": "Saved",
@@ -672,6 +692,73 @@
     "cancel": "Cancel",
     "error": "Something went wrong",
     "loadFailed": "Couldn't load topics",
+    "retry": "Try again",
+    "refreshFailed": "Couldn't refresh",
+    "loadMoreFailed": "Couldn't load more posts",
+    "noMorePosts": "No more posts"
+  },
+  "errorMessages": {
+    "network": "Check your internet connection and try again.",
+    "timeout": "The server isn't responding. Please try again later.",
+    "parsing": "The server sent an unexpected response. Please try again.",
+    "unauthorized": "Your session has expired. Please log in again.",
+    "forbidden": "You don't have permission to do this.",
+    "notFound": "We couldn't find what you were looking for.",
+    "tooManyRequests": "Too many attempts. Please wait a moment.",
+    "server": "Something went wrong on our side. Please try again later.",
+    "generic": "Something went wrong. Please try again."
+  },
+  "common": {
     "retry": "Try again"
+  },
+  "networkBanner": {
+    "offlineTitle": "No internet connection",
+    "offlineHint": "It will load automatically when you're back online",
+    "onlineTitle": "Back online",
+    "onlineHint": "Your connection is restored"
+  },
+  "settingData": {
+    "title": "Settings",
+    "edit": "Edit",
+
+    "accountSection": "Account",
+    "profileInfo": "Profile Info",
+    "profileInfoSub": "Name, bio, photo",
+    "password": "Password",
+    "passwordSub": "Change your password",
+    "notifications": "Notifications",
+    "notificationsSub": "Push, email settings",
+
+    "appSection": "App",
+    "language": "Language",
+    "languageSub": "App language",
+    "darkMode": "Dark Mode",
+    "on": "On",
+    "off": "Off",
+    "privacy": "Privacy",
+    "privacySub": "Who can see",
+    "myInterests": "My Interests",
+    "myInterestsSub": "Choose which topics you see more in your feed",
+
+    "moreSection": "More",
+    "helpSupport": "Help & Support",
+    "privacyPolicy": "Privacy Policy",
+    "termsAndConditions": "Terms & Conditions",
+    "about": "About",
+    "logout": "Log out",
+
+    "dangerZone": "Danger Zone",
+    "deleteAccount": "Delete Account",
+    "deleteAccountSub": "Delete your account with your password",
+
+    "version": "Version",
+
+    "videoSettings": "Video Settings",
+    "videoAutoplay": "Video Autoplay",
+    "videoAutoplaySub": "Videos will play automatically as you scroll",
+
+    "fontSettings": "Font Settings",
+    "customFont": "Custom Font",
+    "customFontSub": "When off, the device's default font will be used"
   }
 }

@@ -1,0 +1,119 @@
+<svg
+  id="Layer_1"
+  data-name="Layer 1"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  viewBox="-20 -80 314.2 364.52"
+  width="220"
+  height="255"
+  overflow="visible"
+  style="overflow: visible"
+>
+  <title>Pathangan loading</title>
+
+  <defs>
+    <style>
+      /* ===== রঙ: currentColor থেকে আসবে ===== */
+      .cls-1,
+      .cls-2,
+      .cls-3 {
+        fill: currentColor;
+      }
+
+      /* ===== সময় ও ইজিং ===== */
+      .head,
+      .book-left,
+      .book-right {
+        animation-duration: 3.2s;
+        animation-iteration-count: infinite;
+      }
+
+      /* ===== মাথা (গোল অংশ) ===== */
+      .head {
+        animation-name: head-move;
+        animation-timing-function: cubic-bezier(0.45, 0, 0.25, 1);
+        transform-origin: 137.6px 44.15px;
+      }
+
+      @keyframes head-move {
+        /* ওপর থেকে নেমে আসবে */
+        0%   { transform: translateY(-55px) scale(0.6); opacity: 0; }
+        22%  { transform: translateY(5px) scale(1.04); opacity: 1; }
+        30%  { transform: translateY(0) scale(1); opacity: 1; }
+        /* একটু থেমে ওপরে উঠবে (বই খুলবে) */
+        38%  { transform: translateY(0) scale(1); opacity: 1; }
+        56%  { transform: translateY(-26px) scale(1); opacity: 1; }
+        /* আবার নিচে নামবে (বই বন্ধ হবে) */
+        78%  { transform: translateY(2px) scale(1); opacity: 1; }
+        84%  { transform: translateY(0) scale(1); opacity: 1; }
+        90%  { transform: translateY(0) scale(1); opacity: 1; }
+        /* ওপরে উঠে হালকা মিলিয়ে যাবে, তারপর লুপ */
+        100% { transform: translateY(-55px) scale(0.6); opacity: 0; }
+      }
+
+      /* ===== বইয়ের বাম পাশ ===== */
+      .book-left {
+        animation-name: book-left-open;
+        animation-timing-function: cubic-bezier(0.45, 0, 0.25, 1);
+        transform-origin: 137.1px 268px;
+      }
+
+      @keyframes book-left-open {
+        0%, 38% { transform: rotate(0deg) translateY(0); }
+        56%     { transform: rotate(9deg) translateY(-2px); }
+        78%     { transform: rotate(-1.5deg) translateY(0); }
+        86%     { transform: rotate(0deg) translateY(0); }
+        100%    { transform: rotate(0deg) translateY(0); }
+      }
+
+      /* ===== বইয়ের ডান পাশ ===== */
+      .book-right {
+        animation-name: book-right-open;
+        animation-timing-function: cubic-bezier(0.45, 0, 0.25, 1);
+        transform-origin: 137.1px 268px;
+      }
+
+      @keyframes book-right-open {
+        0%, 38% { transform: rotate(0deg) translateY(0); }
+        56%     { transform: rotate(-9deg) translateY(-2px); }
+        78%     { transform: rotate(1.5deg) translateY(0); }
+        86%     { transform: rotate(0deg) translateY(0); }
+        100%    { transform: rotate(0deg) translateY(0); }
+      }
+
+      /* কেউ মোশন কমাতে চাইলে অ্যানিমেশন বন্ধ */
+      @media (prefers-reduced-motion: reduce) {
+        .head, .book-left, .book-right { animation: none; }
+      }
+    </style>
+  </defs>
+
+  <!-- বইয়ের বাম পাশ -->
+  <g class="book-left">
+    <path
+      class="cls-1"
+      fill="currentColor"
+      d="M112.93,191.54V338.27s-1.51,11.75,17.51,15.85c0,0,56.46,13.52,76.39,31.56,0,0,24.45,22.26,24.15,0s0-145.09,0-145.09-2.87-20.91-28.68-30.33L130.74,184S116,177.33,112.93,191.54Z"
+      transform="translate(-112.9 -111.05)"
+    />
+  </g>
+
+  <!-- বইয়ের ডান পাশ -->
+  <g class="book-right">
+    <path
+      class="cls-2"
+      fill="currentColor"
+      d="M387.07,191.54V338.27s1.51,11.75-17.51,15.85c0,0-56.46,13.52-76.39,31.56,0,0-24.45,22.26-24.15,0s0-145.09,0-145.09,2.87-20.91,28.68-30.33L369.26,184S384.05,177.33,387.07,191.54Z"
+      transform="translate(-112.9 -111.05)"
+    />
+  </g>
+
+  <!-- মাথা (গোল) -->
+  <circle
+    class="cls-3 head"
+    fill="currentColor"
+    cx="137.6"
+    cy="44.15"
+    r="44.15"
+  />
+</svg>

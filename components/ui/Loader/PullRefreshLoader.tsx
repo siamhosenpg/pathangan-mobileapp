@@ -1,67 +1,186 @@
-import { useEffect, useRef } from "react";
+import { useIconColor } from "@/hooks/useIconColor";
+import { useEffect, useMemo, useRef } from "react";
 import { Animated, Easing, View } from "react-native";
+import Svg, { Circle, Path } from "react-native-svg";
 
-// আপনার green রঙ
-const COLORS = ["#00914d", "#009439", "#00914d"];
+const VB = { x: -20, y: -80, w: 314.2, h: 364.52 };
+const DURATION = 3200;
+const ease = Easing.bezier(0.45, 0, 0.25, 1);
 
-// প্রতিটা ফোঁটার শুরুর delay (ms) — এতে ঢেউয়ের মতো দেখায়
-const DELAYS = [0, 160, 320];
+const LEFT_PATH =
+  "M112.93,191.54V338.27s-1.51,11.75,17.51,15.85c0,0,56.46,13.52,76.39,31.56,0,0,24.45,22.26,24.15,0s0-145.09,0-145.09-2.87-20.91-28.68-30.33L130.74,184S116,177.33,112.93,191.54Z";
 
-const Dot = ({ color, delay }: { color: string; delay: number }) => {
-  const value = useRef(new Animated.Value(0)).current;
+const RIGHT_PATH =
+  "M387.07,191.54V338.27s1.51,11.75-17.51,15.85c0,0-56.46,13.52-76.39,31.56,0,0-24.45,22.26-24.15,0s0-145.09,0-145.09,2.87-20.91,28.68-30.33L369.26,184S384.05,177.33,387.07,191.54Z";
 
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.timing(value, {
-          toValue: 1,
-          duration: 420,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(value, {
-          toValue: 0,
-          duration: 420,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-        // তিনটা ফোঁটার চক্র সমান রাখতে বাকি সময়টুকু অপেক্ষা
-        Animated.delay(480 - delay),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [value, delay]);
-
-  const scale = value.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.6, 1.1],
-  });
-  const opacity = value.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.45, 1],
-  });
-
-  return (
-    <Animated.View style={{ opacity, transform: [{ scale }] }}>
-      <View
-        className="w-3 h-3 rounded-full"
-        style={{ backgroundColor: color }}
-      />
-    </Animated.View>
-  );
+type Props = {
+  size?: number;
+  color?: string;
 };
 
-// ✅ এখন আর absolute নয়। নিজের ৬৪px জায়গার ঠিক মাঝখানে বসে,
-// তাই list-এর header-এ রাখলে list-এর সাথেই scroll করবে।
-export default function PullRefreshLoader() {
+export default function PullRefreshLoader({ size = 36, color }: Props) {
+  const { secondary } = useIconColor();
+  const fill = color ?? secondary;
+
+  const t = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    t.setValue(0);
+
+    const loop = Animated.loop(
+      Animated.timing(t, {
+        toValue: 1,
+        duration: DURATION,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+
+    loop.start();
+    return () => loop.stop();
+  }, [t]);
+
+  const anim = useMemo(() => {
+    const s = size / VB.w;
+    const W = size;
+    const H = VB.h * s;
+
+    const offset = (cx: number, cy: number) => ({
+      dx: (cx - VB.x) * s - W / 2,
+      dy: (cy - VB.y) * s - H / 2,
+    });
+
+    const keyframes = (input: number[], output: number[]) =>
+      t.interpolate({
+        inputRange: input,
+        outputRange: output,
+        easing: ease,
+      });
+
+    // Head animation
+    const headIn = [0, 0.22, 0.3, 0.38, 0.56, 0.78, 0.84, 0.9, 1];
+
+    const headY = keyframes(
+      headIn,
+      [-55, 5, 0, 0, -26, 2, 0, 0, -55].map((v) => v * s),
+    );
+
+    const headScale = keyframes(headIn, [0.6, 1.04, 1, 1, 1, 1, 1, 1, 0.6]);
+
+    const headOpacity = keyframes(headIn, [0, 1, 1, 1, 1, 1, 1, 1, 0]);
+
+    const head = offset(137.6, 44.15);
+
+    // Book animation
+    const bookIn = [0, 0.38, 0.56, 0.78, 0.86, 1];
+
+    const bookY = keyframes(
+      bookIn,
+      [0, 0, -2, 0, 0, 0].map((v) => v * s),
+    );
+
+    const leftRotate = keyframes(bookIn, [0, 0, 9, -1.5, 0, 0]).interpolate({
+      inputRange: [-360, 360],
+      outputRange: ["-360deg", "360deg"],
+    });
+
+    const rightRotate = keyframes(bookIn, [0, 0, -9, 1.5, 0, 0]).interpolate({
+      inputRange: [-360, 360],
+      outputRange: ["-360deg", "360deg"],
+    });
+
+    const book = offset(137.1, 268);
+
+    return {
+      W,
+      H,
+
+      headStyle: {
+        opacity: headOpacity,
+        transform: [
+          { translateY: headY },
+          { translateX: head.dx },
+          { translateY: head.dy },
+          { scale: headScale },
+          { translateX: -head.dx },
+          { translateY: -head.dy },
+        ],
+      },
+
+      leftStyle: {
+        transform: [
+          { translateY: bookY },
+          { translateX: book.dx },
+          { translateY: book.dy },
+          { rotate: leftRotate },
+          { translateX: -book.dx },
+          { translateY: -book.dy },
+        ],
+      },
+
+      rightStyle: {
+        transform: [
+          { translateY: bookY },
+          { translateX: book.dx },
+          { translateY: book.dy },
+          { rotate: rightRotate },
+          { translateX: -book.dx },
+          { translateY: -book.dy },
+        ],
+      },
+    };
+  }, [size, t]);
+
+  const layer = {
+    position: "absolute" as const,
+    left: 0,
+    top: 0,
+    width: anim.W,
+    height: anim.H,
+  };
+
+  const viewBox = `${VB.x} ${VB.y} ${VB.w} ${VB.h}`;
+
   return (
-    <View pointerEvents="none" className="h-16 items-center justify-center">
-      <View className="flex-row items-center gap-2">
-        {COLORS.map((color, i) => (
-          <Dot key={i} color={color} delay={DELAYS[i]} />
-        ))}
+    <View
+      pointerEvents="none"
+      className="h-38 pt-4   items-center justify-center"
+    >
+      <View
+        style={{
+          width: anim.W,
+          height: anim.H,
+          overflow: "visible",
+        }}
+      >
+        {/* Left book */}
+        <Animated.View style={[layer, anim.leftStyle]}>
+          <Svg width={anim.W} height={anim.H} viewBox={viewBox}>
+            <Path
+              d={LEFT_PATH}
+              fill={fill}
+              transform="translate(-112.9 -111.05)"
+            />
+          </Svg>
+        </Animated.View>
+
+        {/* Right book */}
+        <Animated.View style={[layer, anim.rightStyle]}>
+          <Svg width={anim.W} height={anim.H} viewBox={viewBox}>
+            <Path
+              d={RIGHT_PATH}
+              fill={fill}
+              transform="translate(-112.9 -111.05)"
+            />
+          </Svg>
+        </Animated.View>
+
+        {/* Head */}
+        <Animated.View style={[layer, anim.headStyle]}>
+          <Svg width={anim.W} height={anim.H} viewBox={viewBox}>
+            <Circle cx={137.6} cy={44.15} r={44.15} fill={fill} />
+          </Svg>
+        </Animated.View>
       </View>
     </View>
   );

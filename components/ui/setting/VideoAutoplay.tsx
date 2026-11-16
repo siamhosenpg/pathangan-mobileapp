@@ -2,10 +2,12 @@ import { toggleAutoPlay } from "@/redux/features/video/videoSlice";
 import type { RootState } from "@/redux/store";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Switch, Text, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function VideoAutoplay() {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const isAutoPlay = useSelector((state: RootState) => state.video.isAutoPlay);
 
@@ -24,7 +26,7 @@ export default function VideoAutoplay() {
           <Ionicons name="videocam-outline" size={17} color="#888" />
         </View>
         <Text className="text-sm font-medium text-text dark:text-dark-text">
-          ভিডিও সেটিংস
+          {t("settingData.videoSettings")}
         </Text>
       </View>
 
@@ -36,13 +38,13 @@ export default function VideoAutoplay() {
           </View>
           <View className="flex-1">
             <Text className="text-sm font-medium text-text dark:text-dark-text">
-              ভিডিও অটো-প্লে
+              {t("settingData.videoAutoplay")}
             </Text>
             <Text
               className="text-xs text-text-tertiary dark:text-dark-text-tertiary mt-0.5"
               numberOfLines={1}
             >
-              স্ক্রল করলে ভিডিও স্বয়ংক্রিয়ভাবে চলবে
+              {t("settingData.videoAutoplaySub")}
             </Text>
           </View>
         </View>

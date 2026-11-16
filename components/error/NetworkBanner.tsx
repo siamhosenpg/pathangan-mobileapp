@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNetInfo } from "@react-native-community/netinfo";
 import { useSegments } from "expo-router";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,6 +19,7 @@ const ONLINE_VISIBLE_MS = 2500; // "আবার অনলাইনে" কত�
  * Root layout এ একবার বসালেই সব screen এ কাজ করবে।
  */
 const NetworkBanner = () => {
+  const { t } = useTranslation();
   const { isConnected, isInternetReachable } = useNetInfo();
   const insets = useSafeAreaInsets();
   const segments = useSegments();
@@ -96,10 +98,14 @@ const NetworkBanner = () => {
 
         <View className="flex-1">
           <Text className="text-sm font-bold text-text dark:text-dark-text">
-            {online ? "আবার অনলাইনে" : "ইন্টারনেট সংযোগ নেই"}
+            {online
+              ? t("networkBanner.onlineTitle")
+              : t("networkBanner.offlineTitle")}
           </Text>
           <Text className="text-xs mt-0.5 text-text-secondary dark:text-dark-text-secondary">
-            {online ? "সংযোগ ফিরে এসেছে" : "সংযোগ ফিরলে নিজে থেকেই লোড হবে"}
+            {online
+              ? t("networkBanner.onlineHint")
+              : t("networkBanner.offlineHint")}
           </Text>
         </View>
       </Animated.View>

@@ -273,10 +273,21 @@ const PostVideo = ({
           frameFallback = setTimeout(() => setFirstFrame(true), 400);
         }
 
+        // ── ফিক্স ──
+        // ভিডিও এখন স্ক্রিনে দেখা যাচ্ছে: ready হওয়ার সাথে সাথেই play করো।
+        // (নতুন player তৈরির মুহূর্তে করা আগের play() অনেক সময় হারিয়ে যেত)
+        if (isVisibleRef.current) {
+          if (isAutoPlayRef.current && !fullScreenRef.current) {
+            try {
+              player.muted = isMutedRef.current;
+              player.play();
+            } catch {}
+          }
+          return;
+        }
+
         if (warmed) return;
         warmed = true;
-
-        if (isVisibleRef.current) return;
 
         try {
           player.muted = true;

@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
+import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
@@ -14,10 +15,8 @@ interface Props {
  *   const { data, error, isLoading, refetch } = useGetPostsQuery();
  *   if (error) return <ErrorState message={getErrorMessage(error)} onRetry={refetch} />;
  */
-const ErrorState = ({
-  message = "কিছু একটা ভুল হয়েছে, আবার চেষ্টা করো।",
-  onRetry,
-}: Props) => {
+const ErrorState = ({ message, onRetry }: Props) => {
+  const { t } = useTranslation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -28,7 +27,7 @@ const ErrorState = ({
       </View>
 
       <Text className="text-sm text-center text-text-secondary dark:text-dark-text-secondary">
-        {message}
+        {message ?? t("errorMessages.generic")}
       </Text>
 
       {onRetry && (
@@ -43,7 +42,7 @@ const ErrorState = ({
             color={isDark ? "#c4c4c4" : "#3a3a3a"}
           />
           <Text className="text-sm font-semibold text-text dark:text-dark-text">
-            আবার চেষ্টা করো
+            {t("common.retry")}
           </Text>
         </TouchableOpacity>
       )}

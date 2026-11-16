@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Image,
@@ -45,6 +46,7 @@ const BODY_MIN_HEIGHT = BODY_LINE_HEIGHT * BODY_MIN_LINES + BODY_PADDING_V * 2;
 const BODY_MAX_HEIGHT = BODY_LINE_HEIGHT * BODY_MAX_LINES + BODY_PADDING_V * 2;
 
 export default function EditPostPage() {
+  const { t } = useTranslation();
   const { postid } = useLocalSearchParams<{ postid: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -90,15 +92,29 @@ export default function EditPostPage() {
   const textLen = text.trim().length;
   const questionLen = questionText.trim().length;
 
-  // শুধু visual এর জন্য
-  const hasContent = isQuestion ? questionLen > 0 : textLen > 0 || titleLen > 0;
+  // ── Original (server) values: change detect করার জন্য ──
+  const originalTitle = (post?.content?.title ?? "").trim();
+  const originalText = (post?.content?.text ?? "").trim();
+  const originalQuestion = ((post as any)?.question?.questionText ?? "").trim();
+  const originalPrivacy: Privacy =
+    (post as any)?.privacy === "private" ? "private" : "public";
+
+  const isChanged = isQuestion
+    ? questionText.trim() !== originalQuestion || privacy !== originalPrivacy
+    : title.trim() !== originalTitle ||
+      text.trim() !== originalText ||
+      privacy !== originalPrivacy;
+
+  // ── Live validation (min/max shorto) ──
+  const validationError = isQuestion
+    ? validateQuestion(questionText)
+    : validateNormalPost({ title, text });
+
+  // Button active হবে শুধু: কিছু change হলে + validation pass করলে + update চলছে না
+  const canSubmit = isChanged && !validationError && !isUpdating;
 
   const handleUpdate = async () => {
-    if (isUpdating) return;
-
-    const validationError = isQuestion
-      ? validateQuestion(questionText)
-      : validateNormalPost({ title, text });
+    if (!canSubmit) return;
 
     if (validationError) {
       setError(POST_ERROR_FALLBACK[validationError]);
@@ -121,7 +137,7 @@ export default function EditPostPage() {
 
       router.back();
     } catch (err: any) {
-      setError("পোস্ট আপডেট করতে সমস্যা হয়েছে, আবার চেষ্টা করুন");
+      setError(t("postData.updateFailed"));
     }
   };
 
@@ -140,7 +156,7 @@ export default function EditPostPage() {
       <View className="flex-1 items-center justify-center bg-background dark:bg-dark-background gap-y-2">
         <Ionicons name="alert-circle-outline" size={40} color="#9CA3AF" />
         <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
-          পোস্ট খুঁজে পাওয়া যায়নি
+          {t("postData.postNotFound")}
         </Text>
       </View>
     );
@@ -158,6 +174,7 @@ export default function EditPostPage() {
             onPress={() => router.back()}
             activeOpacity={0.7}
             accessibilityRole="button"
+            accessibilityLabel={t("postData.close")}
             className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
           >
             <Ionicons
@@ -173,10 +190,10 @@ export default function EditPostPage() {
             <Ionicons name="lock-closed-outline" size={28} color="#f87171" />
           </View>
           <Text className="text-text dark:text-dark-text text-base font-semibold text-center">
-            এটা তোমার পোস্ট না
+            {t("postData.notYourPost")}
           </Text>
           <Text className="text-text-tertiary dark:text-dark-text-tertiary text-sm text-center">
-            শুধুমাত্র পোস্টের মালিক এটি সম্পাদনা করতে পারবেন
+            {t("postData.notYourPostDesc")}
           </Text>
           <TouchableOpacity
             onPress={() => router.back()}
@@ -190,7 +207,7 @@ export default function EditPostPage() {
             }}
           >
             <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700" }}>
-              ফিরে যান
+              {t("postData.goBack")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -210,7 +227,7 @@ export default function EditPostPage() {
           onPress={() => router.back()}
           activeOpacity={0.7}
           accessibilityRole="button"
-          accessibilityLabel="বন্ধ করুন"
+          accessibilityLabel={t("postData.close")}
           className="w-9 h-9 rounded-full items-center justify-center bg-background-secondary dark:bg-dark-background-secondary"
         >
           <Ionicons
@@ -221,17 +238,18 @@ export default function EditPostPage() {
         </TouchableOpacity>
 
         <Text className="flex-1 text-lg font-bold text-text dark:text-dark-text">
-          {isQuestion ? "প্রশ্ন সম্পাদনা করুন" : "পোস্ট সম্পাদনা করুন"}
+          {isQuestion ? t("postData.editQuestion") : t("postData.editPost")}
         </Text>
 
         <TouchableOpacity
           onPress={handleUpdate}
-          disabled={isUpdating}
+          disabled={!canSubmit}
           activeOpacity={0.85}
           accessibilityRole="button"
+          accessibilityState={{ disabled: !canSubmit }}
           style={{
             backgroundColor: ACCENT,
-            opacity: hasContent ? 1 : 0.45,
+            opacity: canSubmit || isUpdating ? 1 : 0.45,
             paddingHorizontal: 20,
             paddingVertical: 8,
             borderRadius: 999,
@@ -242,7 +260,7 @@ export default function EditPostPage() {
         >
           {isUpdating && <ActivityIndicator size="small" color="#fff" />}
           <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700" }}>
-            {isUpdating ? "আপডেট হচ্ছে..." : "আপডেট করুন"}
+            {isUpdating ? t("postData.updating") : t("postData.update")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -311,7 +329,7 @@ export default function EditPostPage() {
               <TextInput
                 value={questionText}
                 onChangeText={setQuestionText}
-                placeholder="আপনার প্রশ্ন লিখুন..."
+                placeholder={t("postData.questionPlaceholder")}
                 placeholderTextColor={ph}
                 multiline
                 numberOfLines={5}
@@ -327,7 +345,10 @@ export default function EditPostPage() {
                     textAlign: "right",
                   }}
                 >
-                  {questionLen}/{QUESTION_MIN} (কমপক্ষে)
+                  {t("postData.charCountMin", {
+                    current: questionLen,
+                    min: QUESTION_MIN,
+                  })}
                 </Text>
               )}
             </View>
@@ -338,7 +359,7 @@ export default function EditPostPage() {
                 <TextInput
                   value={title}
                   onChangeText={setTitle}
-                  placeholder="শিরোনাম লিখুন (ঐচ্ছিক)"
+                  placeholder={t("postData.titlePlaceholder")}
                   placeholderTextColor={ph}
                   maxLength={TITLE_MAX}
                   className="text-text dark:text-dark-text font-medium py-3"
@@ -362,7 +383,7 @@ export default function EditPostPage() {
                 <TextInput
                   value={text}
                   onChangeText={setText}
-                  placeholder="আপনার মনের কথা লিখুন..."
+                  placeholder={t("postData.bodyPlaceholder")}
                   placeholderTextColor={ph}
                   multiline
                   scrollEnabled
@@ -383,8 +404,11 @@ export default function EditPostPage() {
                       textAlign: "right",
                     }}
                   >
-                    {text.length < TEXT_MIN
-                      ? `${textLen}/${TEXT_MIN} (কমপক্ষে)`
+                    {textLen < TEXT_MIN
+                      ? t("postData.charCountMin", {
+                          current: textLen,
+                          min: TEXT_MIN,
+                        })
                       : `${text.length}/${TEXT_MAX}`}
                   </Text>
                 )}

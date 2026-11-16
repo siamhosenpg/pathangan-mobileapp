@@ -11,8 +11,7 @@
   "notifications": "নোটিফিকেশন",
   "notificationsSub": "পুশ, ইমেইল সেটিং",
   "appSettings": "অ্যাপ",
-  "language": "ভাষা",
-  "darkMode": "ডার্ক মোড",
+
   "on": "চালু আছে",
   "off": "বন্ধ আছে",
   "privacy": "গোপনীয়তা",
@@ -115,7 +114,18 @@
     "privacyPublicDesc": "যে কেউ এটি দেখতে পারবে",
     "privacyFriendsDesc": "শুধু আপনার বন্ধুরা দেখতে পারবে",
     "privacyPrivateDesc": "শুধু আপনি দেখতে পারবেন",
-    "errMaxMedia": "সর্বোচ্চ ১০টি ছবি বা ভিডিও যোগ করা যাবে"
+    "errMaxMedia": "সর্বোচ্চ ১০টি ছবি বা ভিডিও যোগ করা যাবে",
+    "editPost": "পোস্ট সম্পাদনা করুন",
+    "editQuestion": "প্রশ্ন সম্পাদনা করুন",
+    "update": "আপডেট করুন",
+    "updating": "আপডেট হচ্ছে...",
+    "updateFailed": "পোস্ট আপডেট করতে সমস্যা হয়েছে, আবার চেষ্টা করুন",
+    "postNotFound": "পোস্ট খুঁজে পাওয়া যায়নি",
+    "notYourPost": "এটা আপনার পোস্ট না",
+    "notYourPostDesc": "শুধুমাত্র পোস্টের মালিক এটি সম্পাদনা করতে পারবেন",
+    "goBack": "ফিরে যান",
+    "charCountMin": "{{current}}/{{min}} (কমপক্ষে)",
+    "postLoadFailed": "পোস্ট লোড করতে সমস্যা হয়েছে"
   },
 
   "profileMenu": {
@@ -473,7 +483,13 @@
     "discard": "বাদ দিন",
     "keepWriting": "লিখতে থাকুন",
     "replaceDraftTitle": "বর্তমান লেখা বাদ দেবেন?",
-    "replaceDraftMessage": "আপনার লেখা বা সম্পাদনা মুছে যাবে।"
+    "replaceDraftMessage": "আপনার লেখা বা সম্পাদনা মুছে যাবে।",
+    "emptyTitle": "এখনো কোনো মন্তব্য নেই",
+    "emptyHint": "প্রথম মন্তব্যটি আপনিই করুন",
+    "errorTitle": "কিছু একটা সমস্যা হয়েছে",
+
+    "loadMoreFailed": "আরও মন্তব্য লোড করা যায়নি",
+    "sendFailed": "মন্তব্য পাঠানো যায়নি"
   },
   "blockedData": {
     "title": "ব্লক করা ব্যবহারকারী",
@@ -606,7 +622,11 @@
     "discardTitle": "পরিবর্তন বাতিল করবেন?",
     "discardMessage": "আপনার করা পরিবর্তন সেভ হয়নি। বের হয়ে গেলে হারিয়ে যাবে।",
     "stay": "থাকুন",
-    "leave": "বের হয়ে যান"
+    "leave": "বের হয়ে যান",
+    "refreshFailed": "রিফ্রেশ হয়নি",
+    "loadMoreFailed": "আরও লোড করা যায়নি",
+    "emptyInbox": "এখনো কেউ আপনাকে প্রশ্ন করেনি",
+    "emptySent": "আপনি এখনো কাউকে প্রশ্ন করেননি"
   },
   "saveData": {
     "defaultName": "সেভড",
@@ -662,6 +682,73 @@
     "cancel": "বাতিল",
     "error": "সমস্যা হয়েছে",
     "loadFailed": "বিষয়ের তালিকা লোড করা যায়নি",
-    "retry": "আবার চেষ্টা করুন"
+    "retry": "আবার চেষ্টা করুন",
+    "refreshFailed": "রিফ্রেশ হয়নি",
+    "loadMoreFailed": "আরও পোস্ট লোড করা যায়নি",
+    "noMorePosts": "আর কোনো পোস্ট নেই"
+  },
+  "errorMessages": {
+    "network": "ইন্টারনেট সংযোগ চেক করে আবার চেষ্টা করো।",
+    "timeout": "সার্ভার সাড়া দিচ্ছে না, একটু পরে আবার চেষ্টা করো।",
+    "parsing": "সার্ভার থেকে অপ্রত্যাশিত উত্তর এসেছে, আবার চেষ্টা করো।",
+    "unauthorized": "সেশন শেষ হয়ে গেছে, আবার লগইন করো।",
+    "forbidden": "এই কাজটি করার অনুমতি তোমার নেই।",
+    "notFound": "যা খুঁজছো তা পাওয়া যায়নি।",
+    "tooManyRequests": "অনেক বেশি চেষ্টা করা হয়েছে, একটু অপেক্ষা করো।",
+    "server": "সার্ভারে সমস্যা হয়েছে, একটু পরে চেষ্টা করো।",
+    "generic": "কিছু একটা ভুল হয়েছে, আবার চেষ্টা করো।"
+  },
+  "common": {
+    "retry": "আবার চেষ্টা করো"
+  },
+  "networkBanner": {
+    "offlineTitle": "ইন্টারনেট সংযোগ নেই",
+    "offlineHint": "সংযোগ ফিরলে নিজে থেকেই লোড হবে",
+    "onlineTitle": "আবার অনলাইনে",
+    "onlineHint": "সংযোগ ফিরে এসেছে"
+  },
+  "settingData": {
+    "title": "সেটিংস",
+    "edit": "সম্পাদনা",
+
+    "accountSection": "অ্যাকাউন্ট",
+    "profileInfo": "প্রোফাইল তথ্য",
+    "profileInfoSub": "নাম, বায়ো, ছবি",
+    "password": "পাসওয়ার্ড",
+    "passwordSub": "পাসওয়ার্ড পরিবর্তন করুন",
+    "notifications": "নোটিফিকেশন",
+    "notificationsSub": "পুশ, ইমেইল সেটিং",
+
+    "appSection": "অ্যাপ",
+    "language": "ভাষা",
+    "languageSub": "অ্যাপের ভাষা",
+    "darkMode": "ডার্ক মোড",
+    "on": "চালু আছে",
+    "off": "বন্ধ আছে",
+    "privacy": "গোপনীয়তা",
+    "privacySub": "কে দেখতে পাবে",
+    "myInterests": "আমার আগ্রহ",
+    "myInterestsSub": "ফিডে কোন বিষয়ের পোস্ট বেশি দেখবেন",
+
+    "moreSection": "আরও",
+    "helpSupport": "সাহায্য ও সমর্থন",
+    "privacyPolicy": "গোপনীয়তা নীতি",
+    "termsAndConditions": "শর্তাবলী",
+    "about": "আমাদের সম্পর্কে",
+    "logout": "লগআউট",
+
+    "dangerZone": "ঝুঁকিপূর্ণ এলাকা",
+    "deleteAccount": "অ্যাকাউন্ট ডিলিট",
+    "deleteAccountSub": "পাসওয়ার্ড দিয়ে অ্যাকাউন্ট মুছে ফেলুন",
+
+    "version": "সংস্করণ",
+
+    "videoSettings": "ভিডিও সেটিংস",
+    "videoAutoplay": "ভিডিও অটো-প্লে",
+    "videoAutoplaySub": "স্ক্রল করলে ভিডিও স্বয়ংক্রিয়ভাবে চলবে",
+
+    "fontSettings": "ফন্ট সেটিংস",
+    "customFont": "কাস্টম ফন্ট",
+    "customFontSub": "বন্ধ করলে ডিভাইসের ডিফল্ট ফন্ট ব্যবহার হবে"
   }
 }

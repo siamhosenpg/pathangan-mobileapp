@@ -10,7 +10,7 @@ import { useGetAllQuestionsInfiniteQuery } from "@/redux/api/post/questionApi";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import { Ionicons } from "@expo/vector-icons";
 import NetInfo from "@react-native-community/netinfo";
-import { useCallback } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
@@ -25,6 +25,10 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+
+// Android-এর ডিফল্ট spinner স্ক্রিনের উপরে বাইরে পাঠিয়ে লুকানোর জন্য
+// (বড় negative মান দিলে বৃত্তটা কখনোই দেখা যায় না, কিন্তু টানার gesture ঠিকই কাজ করে)
+const ANDROID_HIDDEN_SPINNER_OFFSET = -300;
 
 export default function QuestionScreen() {
   const insets = useSafeAreaInsets();
@@ -44,34 +48,63 @@ export default function QuestionScreen() {
     isFetchingNextPage,
     isFetchNextPageError,
     refetch,
-    isFetching,
   } = useGetAllQuestionsInfiniteQuery({ limit: 10 });
 
-  const allQuestions = data?.pages.flatMap((page) => page.questions) ?? [];
+  const allQuestions = useMemo(
+    () => data?.pages.flatMap((page) => page.questions) ?? [],
+    [data],
+  );
+
+  // pull-to-refresh এর নিজস্ব state: user ছাড়লেই true, কাজ শেষে false
+  // (isFetching থেকে নেওয়া হয় না, নইলে background fetch-এও loader আসবে)
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // দুবার refresh চালু হওয়া আটকাতে (state-এর চেয়ে ref তাৎক্ষণিক)
+  const isRefreshingRef = useRef(false);
 
   const handleEndReached = useCallback(() => {
     // next page-এর error থাকলে নিজে নিজে আবার চালাবে না,
     // user "আবার চেষ্টা করো" চাপলে তখন চলবে
     if (isFetchNextPageError) return;
+    if (isRefreshingRef.current) return;
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
 
   const handleRefresh = useCallback(async () => {
-    // নেট না থাকলে refetch চালাবে না (উপরে NetworkBanner আগে থেকেই দেখাচ্ছে)
-    const net = await NetInfo.fetch();
-    if (net.isConnected === false || net.isInternetReachable === false) {
-      return;
-    }
+    if (isRefreshingRef.current) return;
 
-    const result = await refetch();
+    // ছাড়ার সাথে সাথেই আমাদের loader চালু, যাতে ডিফল্ট spinner-এর
+    // জন্য কোনো ফাঁকা সময় না থাকে
+    isRefreshingRef.current = true;
+    setIsRefreshing(true);
 
-    // refresh fail হলেও পুরনো প্রশ্নগুলো থাকবে, শুধু user কে জানাই
-    if (result.isError && allQuestions.length > 0) {
-      Alert.alert("রিফ্রেশ হয়নি", getErrorMessage(result.error));
+    try {
+      // নেট না থাকলে refetch চালাবে না (উপরে NetworkBanner আগে থেকেই দেখাচ্ছে)
+      const net = await NetInfo.fetch();
+      if (net.isConnected === false || net.isInternetReachable === false) {
+        return; // finally-তে loader বন্ধ হবে
+      }
+
+      const result = await refetch();
+
+      // refresh fail হলেও পুরনো প্রশ্নগুলো থাকবে, শুধু user কে জানাই
+      if (result.isError && allQuestions.length > 0) {
+        Alert.alert("রিফ্রেশ হয়নি", getErrorMessage(result.error));
+      }
+    } finally {
+      isRefreshingRef.current = false;
+      setIsRefreshing(false);
     }
   }, [refetch, allQuestions.length]);
+
+  const renderItem = useCallback(
+    ({ item }: { item: (typeof allQuestions)[number] }) => (
+      <QuestionCard post={item} />
+    ),
+    [],
+  );
 
   const renderFooter = useCallback(() => {
     // 1) next page আসছে -> skeleton
@@ -102,19 +135,18 @@ export default function QuestionScreen() {
     return null;
   }, [isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
 
-  // প্রথম load বাদে, refetch চলাকালীন refreshing true থাকবে
-  const isRefreshing = !isLoading && isFetching && !isFetchingNextPage;
-
   // Refresh loader — list-এর header-এর ভেতরে, তাই প্রশ্নের সাথে scroll করবে
   // null না দিয়ে undefined, নইলে type error আসে
   const refreshLoader = isRefreshing ? (
     Platform.OS === "ios" ? (
+      // iOS: pull করলে ওপরে যে ফাঁকা জায়গা তৈরি হয়, loader সেই জায়গায় বসে
       <View style={{ height: 0 }} pointerEvents="none">
         <View style={{ position: "absolute", top: -64, left: 0, right: 0 }}>
           <PullRefreshLoader />
         </View>
       </View>
     ) : (
+      // Android: list-এর ওপরে নিজের জায়গা নিয়ে বসে, প্রশ্ন একটু নিচে নামে
       <PullRefreshLoader />
     )
   ) : undefined;
@@ -162,7 +194,7 @@ export default function QuestionScreen() {
           <FlatList
             data={allQuestions}
             keyExtractor={(item) => item._id}
-            renderItem={({ item }) => <QuestionCard post={item} />}
+            renderItem={renderItem}
             contentContainerStyle={{
               paddingTop: barH,
               paddingBottom: insets.bottom + 10,
@@ -176,13 +208,19 @@ export default function QuestionScreen() {
             ListHeaderComponent={refreshLoader}
             ListFooterComponent={renderFooter}
             refreshControl={
+              // ডিফল্ট spinner পুরো লুকানো, gesture আগের মতোই কাজ করবে
               <RefreshControl
                 refreshing={isRefreshing}
                 onRefresh={handleRefresh}
-                colors={["transparent"]}
-                progressBackgroundColor="transparent"
-                tintColor="transparent"
-                progressViewOffset={barH}
+                colors={["transparent"]} // Android spinner-এর রঙ লুকানো
+                progressBackgroundColor="transparent" // Android বৃত্তের পটভূমি লুকানো
+                tintColor="transparent" // iOS spinner লুকানো
+                // Android: বৃত্ত + shadow স্ক্রিনের বাইরে পাঠানো (শুধু transparent যথেষ্ট না)
+                progressViewOffset={
+                  Platform.OS === "android"
+                    ? ANDROID_HIDDEN_SPINNER_OFFSET
+                    : barH
+                }
               />
             }
           />

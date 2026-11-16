@@ -3,7 +3,8 @@ import BackHeader from "@/components/ui/headers/BackHeader";
 import { useGetPostByIdQuery } from "@/redux/api/postApi";
 
 import { useLocalSearchParams } from "expo-router";
-import React, { useRef } from "react";
+import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import {
   SafeAreaView,
@@ -11,6 +12,7 @@ import {
 } from "react-native-safe-area-context";
 
 export default function PostDetailScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const insets = useSafeAreaInsets();
@@ -34,7 +36,7 @@ export default function PostDetailScreen() {
     return (
       <View className="flex-1 items-center justify-center bg-background dark:bg-dark-background">
         <Text className="text-sm text-text-tertiary dark:text-dark-text-tertiary">
-          পোস্ট লোড করতে সমস্যা হয়েছে
+          {t("postData.postLoadFailed")}
         </Text>
       </View>
     );

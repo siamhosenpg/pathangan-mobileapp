@@ -1,19 +1,32 @@
 import CourseCardFeed from "@/components/ui/card/course/CourseCardFeed";
 import Postcard from "@/components/ui/card/postcard/Postcard";
 import QuestionCard from "@/components/ui/card/questioncard/QuestionCard";
+import PullRefreshLoader from "@/components/ui/Loader/PullRefreshLoader";
 import usePostViewTracker from "@/hooks/viewcount/usePostViewTracker";
 import { useGetPostsByUserIdInfiniteQuery } from "@/redux/api/postApi";
 import type { Post } from "@/types/postTypes";
+import { getErrorMessage } from "@/utils/getErrorMessage";
+import NetInfo from "@react-native-community/netinfo";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
+  Platform,
   RefreshControl,
   Text,
   View,
 } from "react-native";
 import PostCardSkeleton from "../card/postcard/PostCardSkeleton";
+
+// Android-এর ডিফল্ট spinner স্ক্রিনের উপরে বাইরে পাঠিয়ে লুকানোর জন্য
+// (বড় negative মান দিলে বৃত্তটা কখনোই দেখা যায় না, কিন্তু টানার gesture ঠিকই কাজ করে)
+const ANDROID_HIDDEN_SPINNER_OFFSET = -300;
+
+const VIEWABILITY_CONFIG = { itemVisiblePercentThreshold: 60 };
+
+const ItemSeparator = () => <View className="h-0" />;
 
 interface Props {
   userid: string;
@@ -37,10 +50,23 @@ export default function ProfilePosts({ userid, listHeader, onRefresh }: Props) {
   );
 
   const [visibleIndex, setVisibleIndex] = useState<number | null>(null);
+
+  // pull-to-refresh এর নিজস্ব state: user ছাড়লেই true, কাজ শেষে false
   const [refreshing, setRefreshing] = useState(false);
+
+  // দুবার refresh চালু হওয়া আটকাতে (state-এর চেয়ে ref তাৎক্ষণিক)
+  const isRefreshingRef = useRef(false);
+
   const lastVisibleIndexRef = useRef<number | null>(null);
 
-  const posts = data?.pages.flatMap((page) => page.posts) ?? [];
+  const posts = useMemo(
+    () => data?.pages.flatMap((page) => page.posts) ?? [],
+    [data],
+  );
+
+  const postsLengthRef = useRef(posts.length);
+  postsLengthRef.current = posts.length;
+
   const { onViewableItemsChanged: trackViews, clearAllTimers } =
     usePostViewTracker();
 
@@ -54,18 +80,39 @@ export default function ProfilePosts({ userid, listHeader, onRefresh }: Props) {
     }, [clearAllTimers]),
   );
 
-  const handleEndReached = () => {
+  const handleEndReached = useCallback(() => {
+    // refresh cholar somoy notun page anbo na
+    if (isRefreshingRef.current) return;
     if (hasNextPage && !isFetchingNextPage) fetchNextPage();
-  };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // ── Pull to refresh: posts + parent এর data একসাথে ──
   const handleRefresh = useCallback(async () => {
+    if (isRefreshingRef.current) return;
+
+    // ছাড়ার সাথে সাথেই আমাদের loader চালু, যাতে ডিফল্ট spinner-এর
+    // জন্য কোনো ফাঁকা সময় না থাকে
+    isRefreshingRef.current = true;
     setRefreshing(true);
+
     try {
-      await Promise.all([refetch(), onRefresh?.()]);
+      // নেট না থাকলে refetch চালাবে না, পুরনো data থাকবে
+      // (finally-তে loader বন্ধ হবে)
+      const net = await NetInfo.fetch();
+      if (net.isConnected === false || net.isInternetReachable === false) {
+        return;
+      }
+
+      const [postsResult] = await Promise.all([refetch(), onRefresh?.()]);
+
+      // refresh fail হলেও পুরনো পোস্ট থাকবে, শুধু user কে জানাই
+      if (postsResult?.isError && postsLengthRef.current > 0) {
+        Alert.alert("রিফ্রেশ হয়নি", getErrorMessage(postsResult.error));
+      }
     } catch {
       // error হলে আগের data-ই থাকবে
     } finally {
+      isRefreshingRef.current = false;
       setRefreshing(false);
     }
   }, [refetch, onRefresh]);
@@ -105,6 +152,9 @@ export default function ProfilePosts({ userid, listHeader, onRefresh }: Props) {
   );
 
   const renderFooter = () => {
+    // refresh-এর সময় নিচে spinner দেখাবে না (উপরে আমাদের loader আছে)
+    if (refreshing) return null;
+
     if (isFetchingNextPage) {
       return (
         <View className="py-4 items-center">
@@ -143,27 +193,57 @@ export default function ProfilePosts({ userid, listHeader, onRefresh }: Props) {
     );
   };
 
+  // Refresh loader — list-এর header-এর ভেতরে, তাই profile-এর সাথে scroll করবে
+  const refreshLoader = refreshing ? (
+    Platform.OS === "ios" ? (
+      // iOS: pull করলে ওপরে যে ফাঁকা জায়গা তৈরি হয়, loader সেই জায়গায় বসে
+      <View style={{ height: 0 }} pointerEvents="none">
+        <View style={{ position: "absolute", top: -64, left: 0, right: 0 }}>
+          <PullRefreshLoader />
+        </View>
+      </View>
+    ) : (
+      // Android: list-এর ওপরে নিজের জায়গা নিয়ে বসে, profile একটু নিচে নামে
+      <PullRefreshLoader />
+    )
+  ) : null;
+
+  // ফাংশন না, element হিসেবে দেওয়া হয়েছে: তাহলে loader চালু/বন্ধ হলে
+  // profile header আবার mount হয় না
+  const header = (
+    <View>
+      {refreshLoader}
+      {listHeader}
+    </View>
+  );
+
   return (
     <FlatList
       data={posts}
       keyExtractor={(item) => item._id}
       renderItem={renderItem}
-      ListHeaderComponent={listHeader}
+      ListHeaderComponent={header}
       ListFooterComponent={renderFooter}
       ListEmptyComponent={renderEmpty}
       onEndReached={handleEndReached}
       onEndReachedThreshold={0.5}
       onViewableItemsChanged={handleViewableItemsChanged}
-      viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
+      viewabilityConfig={VIEWABILITY_CONFIG}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: 10 }}
-      ItemSeparatorComponent={() => <View className="h-0" />}
+      ItemSeparatorComponent={ItemSeparator}
       refreshControl={
+        // ডিফল্ট spinner পুরো লুকানো, gesture আগের মতোই কাজ করবে
         <RefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor="#00914d"
-          colors={["#00914d"]}
+          colors={["transparent"]} // Android spinner-এর রঙ লুকানো
+          progressBackgroundColor="transparent" // Android বৃত্তের পটভূমি লুকানো
+          tintColor="transparent" // iOS spinner লুকানো
+          // Android: বৃত্ত + shadow স্ক্রিনের বাইরে পাঠানো (শুধু transparent যথেষ্ট না)
+          progressViewOffset={
+            Platform.OS === "android" ? ANDROID_HIDDEN_SPINNER_OFFSET : 0
+          }
         />
       }
     />

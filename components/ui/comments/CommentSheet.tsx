@@ -28,7 +28,7 @@ interface Props {
 const ACCENT = "#00914d";
 const PAGE_SIZE = 10;
 
-// English digits -> Bengali digits
+// English digits -> Bengali digits (শুধু বাংলা ভাষায়)
 const toBn = (n: number | string) =>
   String(n).replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]);
 
@@ -103,30 +103,40 @@ const IconBubble = ({
   </View>
 );
 
-const RetryButton = ({ onPress }: { onPress: () => void }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    activeOpacity={0.8}
-    className="flex-row items-center gap-2 px-5 py-2.5 rounded-full bg-accent"
-  >
-    <Ionicons name="refresh" size={15} color="#fff" />
-    <Text className="text-sm font-semibold text-white">আবার চেষ্টা করো</Text>
-  </TouchableOpacity>
-);
+const RetryButton = ({ onPress }: { onPress: () => void }) => {
+  const { t } = useTranslation();
 
-const EmptyComments = () => (
-  <View className="flex-1 items-center justify-center gap-3 py-16 px-8">
-    <IconBubble name="chatbubble-ellipses-outline" />
-    <View className="items-center gap-1">
-      <Text className="text-base font-semibold text-text dark:text-dark-text">
-        এখনো কোনো মন্তব্য নেই
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      className="flex-row items-center gap-2 px-5 py-2.5 rounded-full bg-accent"
+    >
+      <Ionicons name="refresh" size={15} color="#fff" />
+      <Text className="text-sm font-semibold text-white">
+        {t("commentData.retry")}
       </Text>
-      <Text className="text-sm text-center text-text-secondary dark:text-dark-text-secondary">
-        প্রথম মন্তব্যটি আপনিই করুন
-      </Text>
+    </TouchableOpacity>
+  );
+};
+
+const EmptyComments = () => {
+  const { t } = useTranslation();
+
+  return (
+    <View className="flex-1 items-center justify-center gap-3 py-16 px-8">
+      <IconBubble name="chatbubble-ellipses-outline" />
+      <View className="items-center gap-1">
+        <Text className="text-base font-semibold text-text dark:text-dark-text">
+          {t("commentData.emptyTitle")}
+        </Text>
+        <Text className="text-sm text-center text-text-secondary dark:text-dark-text-secondary">
+          {t("commentData.emptyHint")}
+        </Text>
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
 const ErrorState = ({
   message,
@@ -134,24 +144,32 @@ const ErrorState = ({
 }: {
   message: string;
   onRetry: () => void;
-}) => (
-  <View className="items-center justify-center py-16 px-8 gap-4">
-    <IconBubble name="cloud-offline-outline" />
-    <View className="items-center gap-1">
-      <Text className="text-base font-semibold text-text dark:text-dark-text">
-        কিছু একটা সমস্যা হয়েছে
-      </Text>
-      <Text className="text-sm text-center text-text-secondary dark:text-dark-text-secondary">
-        {message}
-      </Text>
+}) => {
+  const { t } = useTranslation();
+
+  return (
+    <View className="items-center justify-center py-16 px-8 gap-4">
+      <IconBubble name="cloud-offline-outline" />
+      <View className="items-center gap-1">
+        <Text className="text-base font-semibold text-text dark:text-dark-text">
+          {t("commentData.errorTitle")}
+        </Text>
+        <Text className="text-sm text-center text-text-secondary dark:text-dark-text-secondary">
+          {message}
+        </Text>
+      </View>
+      <RetryButton onPress={onRetry} />
     </View>
-    <RetryButton onPress={onRetry} />
-  </View>
-);
+  );
+};
 
 // ===================== MAIN =====================
 const CommentSheet = ({ postId }: Props) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  // বাংলা হলে বাংলা সংখ্যা, নইলে যেমন আছে তেমন
+  const formatNumber = (n: number | string) =>
+    i18n.language?.startsWith("bn") ? toBn(n) : String(n);
 
   const [text, setText] = useState("");
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
@@ -278,7 +296,7 @@ const CommentSheet = ({ postId }: Props) => {
       setReplyingTo(null);
       Keyboard.dismiss();
     } catch (err) {
-      Alert.alert("মন্তব্য পাঠানো যায়নি", getErrorMessage(err));
+      Alert.alert(t("commentData.sendFailed"), getErrorMessage(err));
     }
   };
 
@@ -351,7 +369,7 @@ const CommentSheet = ({ postId }: Props) => {
       return (
         <View className="py-6 px-8 items-center gap-3">
           <Text className="text-sm text-center text-text-secondary dark:text-dark-text-secondary">
-            আরও মন্তব্য লোড করা যায়নি
+            {t("commentData.loadMoreFailed")}
           </Text>
           <RetryButton onPress={() => refetch()} />
         </View>
@@ -367,7 +385,7 @@ const CommentSheet = ({ postId }: Props) => {
     }
 
     return null;
-  }, [isFetching, isError, comments.length, data?.hasMore, refetch]);
+  }, [isFetching, isError, comments.length, data?.hasMore, refetch, t]);
 
   return (
     <View className="flex-1 bg-background dark:bg-dark-background">
@@ -381,7 +399,7 @@ const CommentSheet = ({ postId }: Props) => {
             {data?.total ? (
               <View className="px-2 py-0.5 rounded-full bg-accent/10">
                 <Text className="text-xs font-semibold text-accent">
-                  {toBn(data.total)}
+                  {formatNumber(data.total)}
                 </Text>
               </View>
             ) : null}
