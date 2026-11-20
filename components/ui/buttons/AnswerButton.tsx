@@ -1,4 +1,4 @@
-import AnswerIcon from "@/assets/icons/questionlite.svg";
+import { AnswerIcon } from "@/assets/icon";
 import { useColorScheme } from "nativewind";
 import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity } from "react-native";

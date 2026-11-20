@@ -30,7 +30,7 @@ import {
   View,
 } from "react-native";
 
-// wrapper (HomeFeed / ForYouFeed) নিজের cache অনুযায়ী refresh করে এই ফল ফেরত দেয়
+// wrapper (HomeFeed / ForYouFeed / ProfilePosts / SavedPostsList) নিজের cache অনুযায়ী refresh করে এই ফল ফেরত দেয়
 export interface FeedRefreshResult {
   failed: boolean;
   error?: unknown;
@@ -50,13 +50,19 @@ interface FeedListProps {
   // pull-to-refresh: cache ছেঁটে refetch করার কাজ wrapper-এর
   refresh: () => Promise<FeedRefreshResult>;
   onScroll?: (scrollY: number) => void;
-  // header-এ বাড়তি কিছু (যেমন বিষয় বাছাইয়ের কার্ড)
+  // header-এ বাড়তি কিছু (যেমন বিষয় বাছাইয়ের কার্ড, প্রোফাইল হেডার)
   headerExtra?: ReactElement | null;
   emptyText?: string;
   // tab লুকানো থাকলে false: ভিডিও থামে, view timer বন্ধ হয়
   isActive?: boolean;
   // Header + Tabs bar-এর উচ্চতা: list-এর উপরে এই পরিমাণ ফাঁকা থাকবে
   topInset?: number;
+  // list-এর নিচে বাড়তি ফাঁকা (যেমন bottom tab-এর জন্য)
+  bottomInset?: number;
+  // আপলোড প্রগ্রেস বার দেখাবে কিনা (প্রোফাইলে false দিন)
+  showUploadProgress?: boolean;
+  // true হলে লোডিং/error এর সময়ও list থাকবে (header আর pull-to-refresh ঠিক থাকবে)
+  keepListOnEmpty?: boolean;
 }
 
 const ItemSeparator = () => <View style={{ height: 0 }} />;
@@ -124,6 +130,9 @@ export default function FeedList({
   emptyText,
   isActive = true,
   topInset = 0,
+  bottomInset = 10,
+  showUploadProgress = true,
+  keepListOnEmpty = false,
 }: FeedListProps) {
   const { t } = useTranslation();
 
@@ -318,6 +327,9 @@ export default function FeedList({
   );
 
   const renderFooter = useCallback(() => {
+    // refresh-এর সময় নিচে কিছু দেখাবে না (উপরে আমাদের loader আছে)
+    if (isRefreshing) return null;
+
     // 1) next page আসছে -> skeleton
     if (isFetchingNextPage) {
       return (
@@ -360,6 +372,7 @@ export default function FeedList({
 
     return null;
   }, [
+    isRefreshing,
     isFetchingNextPage,
     isFetchNextPageError,
     hasNextPage,
@@ -368,8 +381,41 @@ export default function FeedList({
     t,
   ]);
 
+  // list-এর ভেতরে loading / error / খালি অবস্থা
+  // (keepListOnEmpty = true হলে header ও pull-to-refresh ঠিক থাকে)
+  const renderEmpty = useCallback(() => {
+    if (isLoading) return <PostCardSkeleton />;
+
+    if (isError) {
+      return (
+        <View className="py-10 px-8 items-center gap-3">
+          <Text className="text-text-secondary dark:text-dark-text-secondary text-sm text-center">
+            {getErrorMessage(error)}
+          </Text>
+          <TouchableOpacity
+            onPress={() => onRetry()}
+            activeOpacity={0.8}
+            className="px-5 py-2.5 rounded-full border border-border dark:border-dark-border"
+          >
+            <Text className="text-sm font-semibold text-text dark:text-dark-text">
+              {t("common.retry")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return (
+      <View className="py-10 items-center">
+        <Text className="text-gray-500 dark:text-dark-text text-sm text-center px-6">
+          {emptyText ?? t("feedData.emptyFeed")}
+        </Text>
+      </View>
+    );
+  }, [isLoading, isError, error, onRetry, emptyText, t]);
+
   // Loading: header-এর নিচে শুরু হবে
-  if (isLoading) {
+  if (isLoading && !keepListOnEmpty) {
     return (
       <View
         className="flex-1 bg-background-secondary dark:bg-dark-background-secondary"
@@ -382,7 +428,7 @@ export default function FeedList({
   }
 
   // শুধু তখনই full-screen error, যখন দেখানোর মতো একটা post-ও নেই
-  if (isError && posts.length === 0) {
+  if (isError && posts.length === 0 && !keepListOnEmpty) {
     return (
       <View
         className="flex-1 bg-background-secondary dark:bg-dark-background-secondary"
@@ -424,24 +470,21 @@ export default function FeedList({
       ListHeaderComponent={
         <View className="">
           {refreshLoader}
-          {isActive && <UploadProgressBar />}
+          {isActive && showUploadProgress && <UploadProgressBar />}
           {headerExtra}
         </View>
       }
       ListFooterComponent={renderFooter}
-      ListEmptyComponent={
-        <View className="py-10 items-center">
-          <Text className="text-gray-500 dark:text-dark-text text-sm text-center px-6">
-            {emptyText ?? t("feedData.emptyFeed")}
-          </Text>
-        </View>
-      }
+      ListEmptyComponent={renderEmpty}
       onEndReached={handleEndReached}
       // এটা শুধু ব্যাকআপ, আসল ট্রিগার handleViewableItemsChanged-এ
       onEndReachedThreshold={1}
       showsVerticalScrollIndicator={false}
-      // header (+ tabs) এর নিচ থেকে content শুরু হবে
-      contentContainerStyle={{ paddingTop: topInset, paddingBottom: 10 }}
+      // header (+ tabs) এর নিচ থেকে content শুরু হবে, নিচে bottomInset পরিমাণ ফাঁকা
+      contentContainerStyle={{
+        paddingTop: topInset,
+        paddingBottom: bottomInset,
+      }}
       ItemSeparatorComponent={ItemSeparator}
       refreshControl={
         // ডিফল্ট spinner পুরো লুকানো, gesture আগের মতোই কাজ করবে

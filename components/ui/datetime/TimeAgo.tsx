@@ -1,5 +1,4 @@
-import { toBanglaNumber } from "@/utils/toBanglaNumber";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text } from "react-native";
 
@@ -12,8 +11,6 @@ const TimeAgo = ({ date, className }: Props) => {
   const { i18n } = useTranslation();
   const isBn = i18n.language === "bn";
   const [label, setLabel] = useState("");
-
-  const n = (num: number) => (isBn ? toBanglaNumber(num) : String(num));
 
   const getLabel = () => {
     const now = new Date();
@@ -69,7 +66,7 @@ const TimeAgo = ({ date, className }: Props) => {
       ];
 
       if (isBn) {
-        return `${n(day)} ${monthsBn[past.getMonth()]} ${n(year)}`;
+        return `${day} ${monthsBn[past.getMonth()]} ${year}`;
       } else {
         return `${day} ${monthsEn[past.getMonth()]} ${year}`;
       }
@@ -77,17 +74,17 @@ const TimeAgo = ({ date, className }: Props) => {
 
     // ২৪ ঘণ্টার বেশি → X দিন আগে (৪ মাস পর্যন্ত)
     if (hours >= 24) {
-      return isBn ? `${n(days)} দিন আগে` : `${days}d ago`;
+      return isBn ? `${days} দিন আগে` : `${days}d ago`;
     }
 
     // ১ ঘণ্টার বেশি → X ঘণ্টা আগে
     if (minutes >= 60) {
-      return isBn ? `${n(hours)} ঘণ্টা আগে` : `${hours}h ago`;
+      return isBn ? `${hours} ঘণ্টা আগে` : `${hours}h ago`;
     }
 
     // ১ মিনিটের বেশি → X মিনিট আগে
     if (seconds >= 60) {
-      return isBn ? `${n(minutes)} মিনিট আগে` : `${minutes}m ago`;
+      return isBn ? `${minutes} মিনিট আগে` : `${minutes}m ago`;
     }
 
     // এইমাত্র
@@ -97,7 +94,7 @@ const TimeAgo = ({ date, className }: Props) => {
   useEffect(() => {
     setLabel(getLabel());
 
-    // ৫ মিনিট পর্যন্ত প্রতি ৩০ সেকেন্ডে update
+    // প্রতি ৩০ সেকেন্ডে update
     const interval = setInterval(() => {
       setLabel(getLabel());
     }, 30000);
@@ -108,7 +105,7 @@ const TimeAgo = ({ date, className }: Props) => {
   return (
     <Text
       className={
-        className ?? " text-text-tertiary dark:text-dark-text-tertiary"
+        className ?? " text-text-tertiary  dark:text-dark-text-tertiary"
       }
     >
       {label}

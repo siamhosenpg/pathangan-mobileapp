@@ -1,3 +1,9 @@
+import {
+  AlertCircleIcon,
+  ArrowRightIcon,
+  LockIcon,
+  MailIcon,
+} from "@/assets/icon";
 import { useGetMeQuery, useLoginMutation } from "@/redux/api/authApi";
 import { setUser } from "@/redux/features/auth/authSlice";
 import { useAppDispatch } from "@/redux/hooks";
@@ -17,15 +23,6 @@ import {
 import AuthHeader from "./auth/AuthHeader";
 import AuthInput from "./auth/AuthInput";
 import GoogleLoginButton from "./buttons/GoogleLoginButton";
-
-// ইমেইল ফিল্ডের আইকন (খামের মতো)
-import MailIcon from "@/assets/icons/envelope.svg";
-// পাসওয়ার্ড ফিল্ডের আইকন (তালা)
-import LockIcon from "@/assets/icons/lock.svg";
-// error বক্সের আইকন (গোল, ভেতরে ! চিহ্ন)
-import AlertCircleIcon from "@/assets/icons/diamond-exclamation.svg";
-// লগইন বাটনের ডান পাশের তীর
-import ArrowRightIcon from "@/assets/icons/angle-small-right.svg";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

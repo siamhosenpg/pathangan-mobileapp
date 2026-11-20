@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import type { ReactNode } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 
 import AddIcon from "@/assets/icons/add.svg";
 import BellIcon from "@/assets/icons/bell.svg";
@@ -12,6 +12,8 @@ import { useGetUnreadNotificationCountQuery } from "@/redux/api/notification/not
 import { useAppSelector } from "@/redux/hooks";
 import { useColorScheme } from "nativewind";
 import ProfileImage from "../avatar/ProfileImage";
+import GreenMark from "../badges/GreenMark";
+import TextFont from "../font/TextFont";
 
 interface HeaderProps {
   title?: string;
@@ -58,14 +60,23 @@ export function Header({ title, bottom }: HeaderProps) {
               />
             </TouchableOpacity>
 
-            <View className="flex-shrink">
-              <Text
-                className="text-lg font-bold text-text dark:text-dark-text"
+            <View className="flex-row items-center gap-1 flex-shrink">
+              <TextFont
+                className="text-lg leading-* font-bold text-text dark:text-dark-text flex-shrink"
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
                 {title ?? user?.name}
-              </Text>
+              </TextFont>
+
+              {/* title না থাকলে (অর্থাৎ user-এর নাম দেখালে) তবেই green mark */}
+              {!title && (
+                <GreenMark
+                  mark={user?.greenmarkVerified || false}
+                  size={16}
+                  style={{ flexShrink: 0 }}
+                />
+              )}
             </View>
           </View>
 

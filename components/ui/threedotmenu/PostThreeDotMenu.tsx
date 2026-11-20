@@ -1,8 +1,10 @@
-import NotInterestedIcon from "@/assets/icons/do-not-enter.svg";
-import CopyIcon from "@/assets/icons/duplicate.svg";
-import EditIcon from "@/assets/icons/file-edit.svg";
-import FlagIcon from "@/assets/icons/finish-flag.svg";
-import DeleteIcon from "@/assets/icons/trash.svg";
+import {
+  CopyIcon,
+  EditIcon,
+  FlagIcon,
+  NotInterestedIcon,
+  TrashIcon,
+} from "@/assets/icon";
 import { useBottomSheet } from "@/components/ui/bottom-sheet/BottomSheetProvider";
 import { useNotInterestedMutation } from "@/redux/api/feedApi";
 import { useDeletePostMutation } from "@/redux/api/postApi";
@@ -29,13 +31,11 @@ interface MenuItemProps {
   title: string;
   subtitle: string;
   onPress: () => void;
-  danger?: boolean;
   loading?: boolean;
   disabled?: boolean;
 }
 
 const ICON_SIZE = 18;
-const DANGER_COLOR = "#EF4444";
 
 /* তোমার ওয়েবসাইটের আসল ডোমেইন এখানে বসাও (শেষে / দিও না) */
 const WEB_BASE_URL = "https://pathangan.com";
@@ -46,20 +46,14 @@ const MenuItem = ({
   title,
   subtitle,
   onPress,
-  danger,
   loading,
   disabled,
 }: MenuItemProps) => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const iconColor = danger ? DANGER_COLOR : isDark ? "#9CA3AF" : "#6B7280";
-
-  const iconBg = danger
-    ? "bg-red-500/10"
-    : "bg-gray-500/10 dark:bg-gray-400/10";
-
-  const titleColor = danger ? "text-red-500" : "text-text dark:text-dark-text";
+  // সব আইটেমের আইকনের রং একই
+  const iconColor = isDark ? "#f1f1f1" : "#1b1b1b";
 
   return (
     <TouchableOpacity
@@ -68,9 +62,7 @@ const MenuItem = ({
       activeOpacity={0.7}
       className="flex-row items-center gap-3 px-3 py-3 rounded-2xl active:bg-background-secondary dark:active:bg-dark-background-secondary"
     >
-      <View
-        className={`w-9 h-9 rounded-full items-center justify-center ${iconBg}`}
-      >
+      <View className="w-9 h-9 rounded-full items-center justify-center bg-gray-500/10 dark:bg-gray-400/10">
         {loading ? (
           <ActivityIndicator size="small" color={iconColor} />
         ) : (
@@ -84,7 +76,10 @@ const MenuItem = ({
       </View>
 
       <View className="flex-1">
-        <Text className={` font-semibold ${titleColor}`} numberOfLines={1}>
+        <Text
+          className="font-semibold text-text dark:text-dark-text"
+          numberOfLines={1}
+        >
           {title}
         </Text>
       </View>
@@ -204,7 +199,6 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
               subtitle={t("reportPostSub")}
               onPress={handleReport}
               disabled={isDeleting}
-              danger
             />
           </>
         )}
@@ -214,12 +208,11 @@ const PostThreeDotMenu = ({ postId, postAuthorId }: Props) => {
             <View className="h-px bg-border dark:bg-dark-border my-1 mx-3" />
 
             <MenuItem
-              Icon={DeleteIcon}
+              Icon={TrashIcon}
               title={isDeleting ? t("deleteing") : t("deletePost")}
               subtitle={t("deletePostSub")}
               onPress={handleDeletePost}
               loading={isDeleting}
-              danger
             />
           </>
         )}

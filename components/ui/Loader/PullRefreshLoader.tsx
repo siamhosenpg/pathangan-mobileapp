@@ -18,9 +18,9 @@ type Props = {
   color?: string;
 };
 
-export default function PullRefreshLoader({ size = 36, color }: Props) {
-  const { secondary } = useIconColor();
-  const fill = color ?? secondary;
+export default function PullRefreshLoader({ size = 30, color }: Props) {
+  const { secondary, tertiary } = useIconColor();
+  const fill = color ?? tertiary;
 
   const t = useRef(new Animated.Value(0)).current;
 

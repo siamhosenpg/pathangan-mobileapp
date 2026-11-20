@@ -1,3 +1,4 @@
+import AnimatedLogo from "@/components/ui/logo/AnimatedLogo";
 import { useRecordViewMutation } from "@/redux/api/postApi";
 import { toggleMute } from "@/redux/features/video/videoSlice";
 import type { RootState } from "@/redux/store";
@@ -6,7 +7,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Animated,
   AppState,
   Dimensions,
@@ -70,6 +70,8 @@ const VideoLoader = ({
     }).start();
   }, [visible, opacity]);
 
+  const logoSize = cover ? 26 : 20;
+
   return (
     <Animated.View
       pointerEvents="none"
@@ -102,7 +104,8 @@ const VideoLoader = ({
             justifyContent: "center",
           }}
         >
-          <ActivityIndicator size={cover ? "large" : "small"} color="#ffffff" />
+          {/* লোডার দেখা গেলেই animation চলবে, লুকালে থামবে */}
+          <AnimatedLogo size={logoSize} active={visible} />
         </View>
         {cover && (
           <Text

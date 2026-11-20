@@ -9,24 +9,23 @@ import { Drawer } from "react-native-drawer-layout";
 import { Pressable } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import {
+  HomeBoldIcon,
+  HomeIcon,
+  PeopleBoldIcon,
+  PeopleIcon,
+  QuestionBoldIcon,
+  QuestionIcon,
+  SearchIcon,
+  SheetBoldIcon,
+  SheetIcon,
+} from "@/assets/icon";
 import { DrawerContext } from "@/components/layout/menu/DrawerContext";
 import { MenuDrawerContent } from "@/components/layout/menu/MenuDrawerContent";
 import AuthGuard from "@/components/ui/guard/AuthGuard";
 import { useTranslation } from "react-i18next";
 
 import TermsGate from "@/components/layout/terms/TermsGate";
-import HomeBold from "../../assets/icons/house.svg";
-import Home from "../../assets/icons/houselite.svg";
-import Sheet from "../../assets/icons/journal.svg";
-import SheetBold from "../../assets/icons/journalbold.svg";
-import QuestionBold from "../../assets/icons/question.svg";
-import Question from "../../assets/icons/questionlite.svg";
-import {
-  default as Search,
-  default as SearchBold,
-} from "../../assets/icons/search.svg";
-import PeopleBold from "../../assets/icons/users.svg";
-import People from "../../assets/icons/userslite.svg";
 
 const DRAWER_WIDTH = Dimensions.get("window").width * 0.78;
 
@@ -112,7 +111,7 @@ export default function TabLayout() {
                 tabBarButton: hapticTabButton,
                 title: t("community"),
                 tabBarIcon: ({ color, focused }) => {
-                  const Icon = focused ? HomeBold : Home;
+                  const Icon = focused ? HomeBoldIcon : HomeIcon;
                   return <Icon width={24} height={24} color={color} />;
                 },
               }}
@@ -123,7 +122,7 @@ export default function TabLayout() {
                 tabBarButton: hapticTabButton,
                 title: t("questions"),
                 tabBarIcon: ({ color, focused }) => {
-                  const Icon = focused ? QuestionBold : Question;
+                  const Icon = focused ? QuestionBoldIcon : QuestionIcon;
                   return <Icon width={24} height={24} color={color} />;
                 },
               }}
@@ -133,10 +132,9 @@ export default function TabLayout() {
               options={{
                 tabBarButton: hapticTabButton,
                 title: t("search"),
-                tabBarIcon: ({ color, focused }) => {
-                  const Icon = focused ? SearchBold : Search;
-                  return <Icon width={24} height={24} color={color} />;
-                },
+                tabBarIcon: ({ color }) => (
+                  <SearchIcon width={24} height={24} color={color} />
+                ),
               }}
             />
             <Tabs.Screen name="courses" options={{ href: null }} />
@@ -147,7 +145,7 @@ export default function TabLayout() {
                 tabBarButton: hapticTabButton,
                 title: t("people"),
                 tabBarIcon: ({ color, focused }) => {
-                  const Icon = focused ? PeopleBold : People;
+                  const Icon = focused ? PeopleBoldIcon : PeopleIcon;
                   return <Icon width={24} height={24} color={color} />;
                 },
               }}
@@ -158,7 +156,7 @@ export default function TabLayout() {
                 tabBarButton: hapticTabButton,
                 title: t("handouts"),
                 tabBarIcon: ({ color, focused }) => {
-                  const Icon = focused ? SheetBold : Sheet;
+                  const Icon = focused ? SheetBoldIcon : SheetIcon;
                   return <Icon width={24} height={24} color={color} />;
                 },
               }}

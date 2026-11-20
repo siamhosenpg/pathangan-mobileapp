@@ -48,10 +48,11 @@ const HandoutCard = ({ handout }: Props) => {
       <OptimizedImage
         uri={handout.coverImage}
         width={96}
-        radius={16}
+        radius={14}
         aspectRatio={2 / 3}
         fallbackIcon="book-outline"
         recyclingKey={handout.slug}
+        className="bg-background dark:bg-dark-background border border-border dark:border-dark-border"
       />
 
       {/* কনটেন্ট (ডানে) */}
@@ -78,23 +79,27 @@ const HandoutCard = ({ handout }: Props) => {
           </TextFont>
 
           {/* লেখক তথ্য */}
-          <View className="flex-row items-center gap-2 mt-1">
+          <View className="flex-row items-center gap-1.5 mt-1">
             <OptimizedImage
               uri={handout.user?.profileImage}
               width={20}
               circle
               gravity="face"
               fallbackIcon="person"
+              className="bg-background dark:bg-dark-background border border-border dark:border-dark-border"
             />
 
             <View className="items-center flex-row gap-1 flex-1">
               <TextFont
                 numberOfLines={1}
-                className="text-xs text-text-secondary dark:text-dark-text-secondary font-bold flex-shrink"
+                className="text-xs leading-7 text-text-secondary dark:text-dark-text-secondary font-bold flex-shrink"
               >
                 {handout.user?.name ?? handout.user?.username}
               </TextFont>
-              <GreenMark mark={handout.user?.greenmarkVerified} size={11} />
+              <GreenMark
+                mark={handout.user?.greenmarkVerified || false}
+                size={11}
+              />
             </View>
           </View>
         </View>

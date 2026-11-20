@@ -79,9 +79,9 @@ const PostProfileTop = ({ user, createdAt, postId }: Props) => {
               <GreenMark mark={!!user.greenmarkVerified} size={14} />
             )}
           </View>
-          <Text className="text-text-secondary dark:text-dark-text-secondary">
+          <Text className="text-text-secondary mt-0.5  dark:text-dark-text-secondary">
             <TimeAgo
-              className="text-xs text-text-tertiary dark:text-dark-text-tertiary font-semibold"
+              className="text-xs  text-text-tertiary dark:text-dark-text-tertiary font-semibold"
               date={createdAt}
             />
           </Text>

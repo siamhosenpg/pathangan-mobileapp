@@ -1,4 +1,3 @@
-import { useNumber } from "@/hooks/useNumber";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 
@@ -7,7 +6,7 @@ interface Props {
   commentsCount?: number;
   sharesCount?: number;
   viewsCount?: number;
-  classStyle?: String;
+  classStyle?: string;
 }
 
 const PostCountLeft = ({
@@ -18,37 +17,37 @@ const PostCountLeft = ({
   viewsCount = 0,
 }: Props) => {
   const { t } = useTranslation();
-  const n = useNumber();
+
   return (
     <View
-      className={`flex-row items-center  justify-between gap-3 ${classStyle ? classStyle : "w-full "}`}
+      className={`flex-row items-center justify-between gap-3 ${classStyle ? classStyle : "w-full"}`}
     >
       <View className="flex-row items-center gap-3">
         <View className="flex-row items-center gap-1">
-          <Text className="text-xs font-medium  text-text-tertiary dark:text-dark-text-tertiary">
-            {t("countLove", { count: n(likesCount) })}
+          <Text className="text-xs font-medium text-text-tertiary dark:text-dark-text-tertiary">
+            {t("countLove", { count: likesCount })}
           </Text>
         </View>
 
         {commentsCount > 0 && (
           <View className="flex-row items-center gap-1">
             <Text className="font-medium text-xs text-text-tertiary dark:text-dark-text-tertiary">
-              {t("countComments", { count: n(commentsCount) })}
+              {t("countComments", { count: commentsCount })}
             </Text>
           </View>
         )}
 
         <View className="flex-row items-center gap-1">
           <Text className="font-medium text-xs text-text-tertiary dark:text-dark-text-tertiary">
-            {t("countShare", { count: n(sharesCount) })}
+            {t("countShare", { count: sharesCount })}
           </Text>
         </View>
       </View>
-      {/* ← views add */}
+
       {viewsCount > 0 && (
-        <View className="flex-row  items-center gap-1">
+        <View className="flex-row items-center gap-1">
           <Text className="font-medium text-xs text-text-tertiary dark:text-dark-text-tertiary">
-            {t("countViews", { count: n(viewsCount) })}
+            {t("countViews", { count: viewsCount })}
           </Text>
         </View>
       )}

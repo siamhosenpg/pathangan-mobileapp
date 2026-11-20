@@ -1,11 +1,17 @@
+import AnimatedLogo from "@/components/ui/logo/AnimatedLogo";
+import { useIconColor } from "@/hooks/useIconColor";
 import { useGetMeQuery } from "@/redux/api/authApi";
 import { useAppSelector } from "@/redux/hooks";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { View } from "react-native";
+
+const LOGO_SIZE = 96;
 
 export default function IndexScreen() {
   const router = useRouter();
+  const { accent } = useIconColor();
+
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const { isLoading } = useGetMeQuery(undefined, {
     refetchOnMountOrArgChange: true,
@@ -22,8 +28,8 @@ export default function IndexScreen() {
   }, [isLoading, isAuthenticated]);
 
   return (
-    <View className="flex-1 items-center justify-center bg-background">
-      <ActivityIndicator size="large" color="#4F46E5" />
+    <View className="flex-1 items-center justify-center bg-background dark:bg-dark-background">
+      <AnimatedLogo size={LOGO_SIZE} color={accent} />
     </View>
   );
 }

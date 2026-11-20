@@ -68,7 +68,7 @@ const CommentFeedInput = ({
   }, [replyingTo, editingComment]);
 
   return (
-    <View className="border-t border-border dark:border-dark-border bg-background dark:bg-dark-background px-3 pt-2.5 pb-4">
+    <View className=" bg-background dark:bg-dark-background px-3 pt-2.5 pb-4">
       {/* Edit indicator */}
       {editingComment && (
         <View className="flex-row items-center bg-accent/10 rounded-xl mb-2.5 overflow-hidden">

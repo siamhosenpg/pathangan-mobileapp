@@ -1,4 +1,6 @@
 import { useBottomSheet } from "@/components/ui/bottom-sheet/useBottomSheet";
+import TextFont from "@/components/ui/font/TextFont";
+import { useIconColor } from "@/hooks/useIconColor";
 import {
   useCreateCollectionMutation,
   useDeleteCollectionMutation,
@@ -6,8 +8,10 @@ import {
   type Collection,
 } from "@/redux/api/save/savedCollectionApi";
 import { getSaveErrorKey } from "@/utils/saveError";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+
 import {
   ActivityIndicator,
   Alert,
@@ -15,36 +19,33 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  useColorScheme,
   View,
 } from "react-native";
 import CollectionEditSheet from "./CollectionEditSheet";
 
-// ── icons ──
-import CreateIcon from "@/assets/icons/add.svg"; // @/assets/icons/add.svg
-import BookMark from "@/assets/icons/bookmarkBold.svg"; // @/assets/icons/bookmarkBold.svg
-import EditIcon from "@/assets/icons/file-edit.svg"; // @/assets/icons/file-edit.svg (rename বাটন)
-import FolderIcon from "@/assets/icons/folder.svg"; // @/assets/icons/folder.svg
-import LockIcon from "@/assets/icons/lock.svg"; // @/assets/icons/lock.svg (default collection-এর জন্য)
-import TrashIcon from "@/assets/icons/trash.svg"; // @/assets/icons/trash.svg (delete বাটন)
+// ── সব আইকন এক জায়গা (index) থেকে ──
+import {
+  AddIcon,
+  ArrowRightIcon,
+  BookmarkBoldIcon,
+  EditIcon,
+  FolderIcon,
+  LockIcon,
+  TrashIcon,
+} from "@/assets/icon";
 
 interface Props {
   activeId: string;
   onSelect: (id: string) => void;
 }
 
-const ACCENT = "#00914d";
-const DANGER = "#ef4444";
-
 export function SavedCollectionPanel({ activeId, onSelect }: Props) {
   const { t } = useTranslation();
+  const router = useRouter();
   const { open } = useBottomSheet();
 
-  // dark / light mode অনুযায়ী রং
-  const isDark = useColorScheme() === "dark";
-  const iconColor = isDark ? "#a3a3a3" : "#6d6d6d";
-  const strongIconColor = isDark ? "#ffffff" : "#111111";
-  const placeholderColor = isDark ? "#8a8a8a" : "#6d6d6d";
+  // শুধু theme-এর দুটো রং: primary (গাঢ়) আর tertiary (হালকা)
+  const { primary, tertiary } = useIconColor();
 
   const [newName, setNewName] = useState("");
   const [showInput, setShowInput] = useState(false);
@@ -115,8 +116,19 @@ export function SavedCollectionPanel({ activeId, onSelect }: Props) {
 
   return (
     <View className="bg-background dark:bg-dark-background border-b border-border dark:border-dark-border">
-      {/* ── চিপ তালিকা + যোগ বাটন ── */}
+      {/* ── back বাটন + চিপ তালিকা + যোগ বাটন ── */}
       <View className="flex-row items-center gap-3 pl-4 pr-4 pt-3 pb-3">
+        {/* back বাটন — ArrowRightIcon ১৮০° ঘুরিয়ে বাঁ-তীর */}
+        <TouchableOpacity
+          onPress={() => router.back()}
+          activeOpacity={0.7}
+          className="w-10 h-10 rounded-full bg-background-secondary dark:bg-dark-background-secondary items-center justify-center shrink-0"
+        >
+          <View style={{ transform: [{ rotate: "180deg" }] }}>
+            <ArrowRightIcon width={22} height={22} color={primary} />
+          </View>
+        </TouchableOpacity>
+
         {isLoading ? (
           <View className="flex-1 flex-row gap-2">
             {[...Array(3)].map((_, i) => (
@@ -136,7 +148,9 @@ export function SavedCollectionPanel({ activeId, onSelect }: Props) {
           >
             {collections?.map((col) => {
               const isActive = activeId === col._id;
-              const CollectionIcon = col.default ? BookMark : FolderIcon;
+              const CollectionIcon = col.default
+                ? BookmarkBoldIcon
+                : FolderIcon;
 
               return (
                 <TouchableOpacity
@@ -145,25 +159,25 @@ export function SavedCollectionPanel({ activeId, onSelect }: Props) {
                   activeOpacity={0.8}
                   className={`h-10 flex-row items-center gap-2 px-4 rounded-full border ${
                     isActive
-                      ? "bg-accent border-accent"
+                      ? "bg-background-tertiary dark:bg-dark-background-tertiary border-text dark:border-dark-text"
                       : "bg-background-secondary dark:bg-dark-background-secondary border-border dark:border-dark-border"
                   }`}
                 >
                   <CollectionIcon
                     width={16}
                     height={16}
-                    color={isActive ? "#ffffff" : iconColor}
+                    color={isActive ? primary : tertiary}
                   />
-                  <Text
+                  <TextFont
                     numberOfLines={1}
-                    className={`text-sm font-semibold max-w-[140px] ${
+                    className={`text-sm leading-9 font-semibold max-w-[140px] ${
                       isActive
-                        ? "text-white"
+                        ? "text-text dark:text-dark-text"
                         : "text-text-secondary dark:text-dark-text-secondary"
                     }`}
                   >
                     {col.default ? t("saveData.defaultName") : col.name}
-                  </Text>
+                  </TextFont>
                 </TouchableOpacity>
               );
             })}
@@ -174,12 +188,12 @@ export function SavedCollectionPanel({ activeId, onSelect }: Props) {
         <TouchableOpacity
           onPress={toggleInput}
           activeOpacity={0.8}
-          className="w-10 h-10 rounded-full bg-accent/10 items-center justify-center shrink-0"
+          className="w-10 h-10 rounded-full bg-background-secondary dark:bg-dark-background-secondary items-center justify-center shrink-0"
         >
           <View
             style={{ transform: [{ rotate: showInput ? "45deg" : "0deg" }] }}
           >
-            <CreateIcon width={20} height={20} color={ACCENT} />
+            <AddIcon width={20} height={20} color={primary} />
           </View>
         </TouchableOpacity>
       </View>
@@ -196,7 +210,7 @@ export function SavedCollectionPanel({ activeId, onSelect }: Props) {
               }}
               onSubmitEditing={handleCreate}
               placeholder={t("saveData.collectionNamePlaceholder")}
-              placeholderTextColor={placeholderColor}
+              placeholderTextColor={tertiary}
               maxLength={40}
               autoFocus
               returnKeyType="done"
@@ -205,20 +219,22 @@ export function SavedCollectionPanel({ activeId, onSelect }: Props) {
             <TouchableOpacity
               onPress={handleCreate}
               disabled={creating || !newName.trim()}
-              className="bg-accent px-4 rounded-xl items-center justify-center"
+              className="px-4 rounded-xl items-center justify-center border border-border dark:border-dark-border bg-background-secondary dark:bg-dark-background-secondary"
               style={{ opacity: creating || !newName.trim() ? 0.5 : 1 }}
             >
               {creating ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={primary} />
               ) : (
-                <Text className="text-white text-sm font-semibold">
+                <Text className="text-text dark:text-dark-text text-sm font-semibold">
                   {t("saveData.add")}
                 </Text>
               )}
             </TouchableOpacity>
           </View>
           {inputError ? (
-            <Text className="text-xs text-red-500 mt-1.5">{inputError}</Text>
+            <Text className="text-xs text-text-secondary dark:text-dark-text-secondary mt-1.5">
+              {inputError}
+            </Text>
           ) : null}
         </View>
       )}
@@ -227,11 +243,11 @@ export function SavedCollectionPanel({ activeId, onSelect }: Props) {
       {activeCol && (
         <View className="flex-row items-center justify-between px-4 pb-3">
           <View className="flex-1 flex-row items-center gap-3 mr-3">
-            <View className="w-9 h-9 rounded-xl bg-accent/10 items-center justify-center">
+            <View className="w-9 h-9 rounded-xl bg-background-secondary dark:bg-dark-background-secondary items-center justify-center">
               {activeCol.default ? (
-                <BookMark width={18} height={18} color={ACCENT} />
+                <BookmarkBoldIcon width={18} height={18} color={primary} />
               ) : (
-                <FolderIcon width={18} height={18} color={ACCENT} />
+                <FolderIcon width={18} height={18} color={primary} />
               )}
             </View>
 
@@ -253,7 +269,7 @@ export function SavedCollectionPanel({ activeId, onSelect }: Props) {
           {activeCol.default ? (
             // ডিফল্ট collection বদলানো/মোছা যায় না
             <View className="w-9 h-9 rounded-full bg-background-secondary dark:bg-dark-background-secondary items-center justify-center">
-              <LockIcon width={16} height={16} color={iconColor} />
+              <LockIcon width={16} height={16} color={tertiary} />
             </View>
           ) : (
             <View className="flex-row items-center gap-2">
@@ -262,19 +278,19 @@ export function SavedCollectionPanel({ activeId, onSelect }: Props) {
                 activeOpacity={0.7}
                 className="w-10 h-10 rounded-full bg-background-secondary dark:bg-dark-background-secondary items-center justify-center"
               >
-                <EditIcon width={18} height={18} color={strongIconColor} />
+                <EditIcon width={18} height={18} color={primary} />
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => handleDelete(activeCol)}
                 disabled={!!deletingId}
                 activeOpacity={0.7}
-                className="w-10 h-10 rounded-full bg-red-500/10 items-center justify-center"
+                className="w-10 h-10 rounded-full bg-background-secondary dark:bg-dark-background-secondary items-center justify-center"
               >
                 {deletingId === activeCol._id ? (
-                  <ActivityIndicator size="small" color={DANGER} />
+                  <ActivityIndicator size="small" color={primary} />
                 ) : (
-                  <TrashIcon width={18} height={18} color={DANGER} />
+                  <TrashIcon width={18} height={18} color={primary} />
                 )}
               </TouchableOpacity>
             </View>

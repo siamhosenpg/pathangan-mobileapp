@@ -390,7 +390,7 @@ const CommentSheet = ({ postId }: Props) => {
   return (
     <View className="flex-1 bg-background dark:bg-dark-background">
       {/* Header */}
-      <View className="px-4 py-3.5 border-b border-border dark:border-dark-border">
+      <View className="px-4 py-3.5 ">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-2">
             <Text className="text-base font-bold text-text dark:text-dark-text">

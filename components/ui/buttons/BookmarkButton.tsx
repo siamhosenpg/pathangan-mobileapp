@@ -1,5 +1,4 @@
-import Bookmark from "@/assets/icons/bookmark.svg";
-import BookmarkBold from "@/assets/icons/bookmarkBold.svg";
+import { BookmarkBoldIcon, BookmarkIcon } from "@/assets/icon";
 import { useBottomSheet } from "@/components/ui/bottom-sheet/useBottomSheet";
 import SaveBottomSheet from "@/components/ui/save/SaveBottomSheet";
 import { useSavedCollection } from "@/contexts/SavedCollectionContext";
@@ -84,9 +83,9 @@ export default function BookmarkButton({ postId }: { postId: string }) {
       style={{ opacity: isLoading ? 0.5 : 1 }}
     >
       {isSaved ? (
-        <BookmarkBold width={16} height={16} color={iconColor} />
+        <BookmarkBoldIcon width={16} height={16} color={iconColor} />
       ) : (
-        <Bookmark width={16} height={16} color={iconColor} />
+        <BookmarkIcon width={16} height={16} color={iconColor} />
       )}
     </TouchableOpacity>
   );

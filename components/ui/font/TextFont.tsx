@@ -12,6 +12,9 @@ import { StyleSheet, TextProps } from "react-native";
 
 type Props = TextProps & { className?: string };
 
+// Android-এ ফন্টের বাড়তি উপর-নিচ padding সরায়, বাংলা টেক্সটের alignment ঠিক রাখে
+const baseStyle = { includeFontPadding: false } as const;
+
 function renderChildren(
   children: React.ReactNode,
   weight: FontWeightKey,
@@ -53,7 +56,7 @@ export default function TextFont({ children, style, ...rest }: Props) {
 
   if (!enabled || hasOwnFamily) {
     return (
-      <OriginalText {...rest} style={style}>
+      <OriginalText {...rest} style={[baseStyle, style]}>
         {children}
       </OriginalText>
     );
@@ -70,8 +73,8 @@ export default function TextFont({ children, style, ...rest }: Props) {
           {...rest}
           style={
             family
-              ? [style, { fontFamily: family, fontWeight: "normal" }]
-              : style
+              ? [baseStyle, style, { fontFamily: family, fontWeight: "normal" }]
+              : [baseStyle, style]
           }
         >
           {children}
@@ -81,7 +84,7 @@ export default function TextFont({ children, style, ...rest }: Props) {
   }
 
   return (
-    <OriginalText {...rest} style={style}>
+    <OriginalText {...rest} style={[baseStyle, style]}>
       {renderChildren(children, weight)}
     </OriginalText>
   );

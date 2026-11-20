@@ -1,4 +1,4 @@
-import Share from "@/assets/icons/redo.svg";
+import { ShareIcon } from "@/assets/icon";
 import { useColorScheme } from "nativewind";
 import { useTranslation } from "react-i18next";
 import { Share as RNShare, Text, TouchableOpacity } from "react-native";
@@ -34,8 +34,8 @@ const ShareButton = ({ postId, title }: ShareButtonProps) => {
       className="flex-row items-center gap-1.5 py-3.5"
       onPress={handleShare}
     >
-      <Share width={18} height={16} color={iconColor} />
-      <Text className="font-semibold text-base text-text dark:text-dark-text">
+      <ShareIcon width={18} height={16} color={iconColor} />
+      <Text className="font-semibold  text-base text-text dark:text-dark-text">
         {t("share")}
       </Text>
     </TouchableOpacity>

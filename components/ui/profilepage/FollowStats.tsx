@@ -3,7 +3,6 @@ import FollowListSheet from "@/components/ui/bottom-sheet/follow/FollowListSheet
 import type { ActivityStats } from "@/types/userTypes";
 import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity, View } from "react-native";
-import BanglaNumber from "../extra/BanglaNumber";
 
 interface Props {
   activityStats?: ActivityStats;
@@ -31,7 +30,7 @@ const FollowStats = ({ activityStats, userId }: Props) => {
         className="flex-row items-center gap-2"
       >
         <Text className="text-lg font-bold text-foreground dark:text-dark-foreground">
-          <BanglaNumber value={activityStats?.totalFollowers ?? 0} />
+          {activityStats?.totalFollowers ?? 0}
         </Text>
         <Text className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary">
           {t("followers")}
@@ -47,7 +46,7 @@ const FollowStats = ({ activityStats, userId }: Props) => {
         className="flex-row items-center gap-2"
       >
         <Text className="text-lg font-bold text-foreground dark:text-dark-foreground">
-          <BanglaNumber value={activityStats?.totalFollowing ?? 0} />
+          {activityStats?.totalFollowing ?? 0}
         </Text>
         <Text className="text-sm font-semibold text-text-secondary dark:text-dark-text-secondary">
           {t("following")}

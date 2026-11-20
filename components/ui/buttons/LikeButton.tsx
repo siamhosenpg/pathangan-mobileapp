@@ -1,5 +1,4 @@
-import Heart from "@/assets/icons/heart.svg";
-import HeartBold from "@/assets/icons/heartBold.svg";
+import { HeartBoldIcon, HeartIcon } from "@/assets/icon";
 import { useIconColor } from "@/hooks/useIconColor";
 import { patchForYouPost } from "@/redux/api/feedApi";
 import { useToggleReactionMutation } from "@/redux/api/reactionApi";
@@ -75,9 +74,9 @@ const LikeButton = ({
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         {isLiked ? (
-          <HeartBold width={18} height={18} color={iconColor} />
+          <HeartBoldIcon width={18} height={18} color={iconColor} />
         ) : (
-          <Heart width={18} height={18} color={iconColor} />
+          <HeartIcon width={18} height={18} color={iconColor} />
         )}
       </Animated.View>
       <Text
