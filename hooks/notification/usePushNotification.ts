@@ -23,6 +23,8 @@ type PushData = {
   postId?: string;
   commentId?: string;
   actorId?: string;
+  actorUsername?: string;
+  actorUserid?: string;
 };
 
 // ===================== MODULE-LEVEL GUARD =====================
@@ -107,15 +109,26 @@ export const usePushNotification = () => {
   const navigateFromData = (data: PushData) => {
     switch (data?.type) {
       case "follow":
-        if (data.actorId) router.push(`/user/${data.actorId}` as any);
+        // route হলো user/[username], তাই _id নয়, username পাঠাতে হবে
+        if (data.actorUsername) {
+          router.push(`/user/${data.actorUsername}` as any);
+        } else {
+          router.push("/notifications" as any);
+        }
         break;
+
       case "like":
       case "comment":
       case "reply":
       case "rating":
       case "share":
-        if (data.postId) router.push(`/post/${data.postId}` as any);
+        if (data.postId) {
+          router.push(`/post/${data.postId}` as any);
+        } else {
+          router.push("/notifications" as any);
+        }
         break;
+
       default:
         router.push("/notifications" as any);
     }
@@ -162,6 +175,8 @@ export const usePushNotification = () => {
     const data = lastResponse.notification.request.content.data as PushData;
 
     dispatch(baseApi.util.invalidateTags(["Notification"]));
-    navigateFromData(data);
+
+    // অ্যাপ পুরো বন্ধ থাকলে navigator ready হওয়ার জন্য একটু সময় দেওয়া হলো
+    setTimeout(() => navigateFromData(data), 300);
   }, [lastResponse, userId]);
 };
