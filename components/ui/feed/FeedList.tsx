@@ -139,6 +139,23 @@ export default function FeedList({
   const [view, setView] = useState<ViewState>(EMPTY_VIEW);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // ── Screen focus ──
+  // অন্য পেজ (যেমন post পেজ) এর উপরে গেলে এই feed focus হারায়।
+  // তখন কোনো ভিডিও চলবে না, কিন্তু যেটা চলছিল সেটা pause অবস্থায় লোড থাকবে।
+  const [focused, setFocused] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      setFocused(true);
+      return () => setFocused(false);
+    }, []),
+  );
+
+  // tab দেখা যাচ্ছে + screen focus এ আছে = সত্যিকারের "live"
+  const isLive = isActive && focused;
+  const isLiveRef = useRef(isLive);
+  isLiveRef.current = isLive;
+
   // দুবার refresh চালু হওয়া আটকাতে (state-এর চেয়ে ref তাৎক্ষণিক)
   const isRefreshingRef = useRef(false);
 
@@ -147,9 +164,6 @@ export default function FeedList({
 
   const postsRef = useRef(posts);
   postsRef.current = posts;
-
-  const isActiveRef = useRef(isActive);
-  isActiveRef.current = isActive;
 
   // ── View tracker hook ──
   const { onViewableItemsChanged: trackViews, clearAllTimers } =
@@ -160,24 +174,19 @@ export default function FeedList({
     setView((prev) => (sameView(prev, next) ? prev : next));
   }, []);
 
-  // ── Tab/screen change এ timers clear করো ──
-  // isActive false হলে cleanup চলে (ভিডিও থামে ও unload হয়), true হলে আগের অবস্থা ফেরে
-  useFocusEffect(
-    useCallback(() => {
-      if (!isActive) return;
-      setView(lastViewRef.current);
-      return () => {
-        setView(EMPTY_VIEW);
-        clearAllTimers();
-      };
-    }, [isActive, clearAllTimers]),
-  );
+  // ── live না থাকলে (অন্য পেজে গেলে / tab লুকালে) view-timer বন্ধ ──
+  // view state মোছা হয় না, তাই ফিরে এলে একই ভিডিও একই জায়গা থেকে চলবে
+  useEffect(() => {
+    if (!isLive) clearAllTimers();
+  }, [isLive, clearAllTimers]);
 
   // ── প্রথম অবস্থা (initial view) ──
   // FlashList প্রথমবার list দেখানোর পর (বা refresh-এর পর) viewability callback
   // সবসময় ফায়ার করে না, স্ক্রল করলে তবেই করে। তাই কোনো অবস্থা set না থাকলে
   // প্রথম post-কেই ডিফল্ট ধরা হয়: ভিডিও হলে সেটাই চলবে।
   // পরে আসল callback এলে সেটাই অগ্রাধিকার পাবে।
+  // নোট: এটা শুধু state বসায়। আসলে চলবে কিনা তা isLive ঠিক করে,
+  // তাই feed পেছনে থাকলে এই effect কোনো ভিডিও চালাবে না।
   const firstPostId = posts[0]?._id;
 
   useEffect(() => {
@@ -199,8 +208,19 @@ export default function FeedList({
 
   const baseIndex = view.playing ?? view.base;
 
+  // এখন যে ভিডিও আসলেই চলবে (live না হলে কিছুই না)
+  const playingIndex = isLive ? view.playing : null;
+
   const preloadSet = useMemo(() => {
     const set = new Set<number>();
+
+    // live না থাকলে: শুধু যে ভিডিওটা চলছিল সেটা লোড (pause) অবস্থায় রাখো,
+    // তাহলে ফিরে এলে timeline একই থাকবে। বাকি সব unload।
+    if (!isLive) {
+      if (view.playing !== null) set.add(view.playing);
+      return set;
+    }
+
     if (baseIndex === null) return set;
 
     // base-এর সমান বা পরের প্রথম ভিডিও কোনটা
@@ -216,7 +236,7 @@ export default function FeedList({
       if (idx !== undefined) set.add(idx);
     }
     return set;
-  }, [videoIndices, baseIndex]);
+  }, [videoIndices, baseIndex, isLive, view.playing]);
 
   // ── Pull to refresh ──
   const handleRefresh = useCallback(async () => {
@@ -267,8 +287,8 @@ export default function FeedList({
   // ── ভিডিও visibility + আগে থেকে load + view tracker ──
   const handleViewableItemsChanged = useCallback(
     (info: any) => {
-      // লুকানো tab থেকে কিছু গোনা হবে না
-      if (!isActiveRef.current) return;
+      // লুকানো tab বা পেছনে থাকা screen থেকে কিছু গোনা হবে না
+      if (!isLiveRef.current) return;
 
       const list = postsRef.current;
       const viewable = (info.viewableItems ?? [])
@@ -318,12 +338,12 @@ export default function FeedList({
       return (
         <Postcard
           post={post}
-          isVideoVisible={view.playing === index}
+          isVideoVisible={playingIndex === index}
           isVideoNearVisible={preloadSet.has(index)}
         />
       );
     },
-    [view.playing, preloadSet],
+    [playingIndex, preloadSet],
   );
 
   const renderFooter = useCallback(() => {
@@ -460,8 +480,8 @@ export default function FeedList({
       scrollEventThrottle={16}
       onViewableItemsChanged={handleViewableItemsChanged}
       data={posts}
-      // playing / preload window / post সংখ্যা বদলালে cell গুলো আবার render হবে
-      extraData={`${view.playing}|${baseIndex}|${posts.length}`}
+      // playing / preload window / post সংখ্যা / focus বদলালে cell গুলো আবার render হবে
+      extraData={`${playingIndex}|${baseIndex}|${posts.length}|${isLive}`}
       keyExtractor={(item) => item._id}
       getItemType={getItemType}
       renderItem={renderItem}

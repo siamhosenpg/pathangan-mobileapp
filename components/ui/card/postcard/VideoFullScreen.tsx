@@ -1,8 +1,7 @@
-import type { RootState } from "@/redux/store";
-import { getVideoSource } from "@/utils/videoSource";
 import { Ionicons } from "@expo/vector-icons";
-import { useVideoPlayer, VideoView } from "expo-video";
-import { useEffect, useMemo, useRef, useState } from "react";
+import type { VideoPlayer } from "expo-video";
+import { VideoView } from "expo-video";
+import { useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   GestureResponderEvent,
@@ -13,31 +12,20 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSelector } from "react-redux";
 import VideoControls from "./VideoControls";
 
 interface Props {
-  uri: string;
+  // feed এর PostVideo এর একই player: নতুন করে লোড হয় না, timeline একই থাকে
+  player: VideoPlayer;
   visible: boolean;
   onClose: () => void;
   videoMeta?: { width: number; height: number };
-  startTime?: number;
 }
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 const PADDING = 20;
 
-// ── Streaming buffer সেটিং ──
-// অল্প buffer জমলেই play শুরু হবে, বাকিটা চলতে চলতে নামবে
-const BUFFER_OPTIONS = {
-  preferredForwardBufferDuration: 4,
-  waitsToMinimizeStalling: false,
-  minBufferForPlayback: 0.5,
-};
-
-const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
-  const isMuted = useSelector((state: RootState) => state.video.isMuted);
-
+const VideoFullScreen = ({ player, visible, onClose }: Props) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -48,16 +36,12 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
 
   const durationRef = useRef(0);
   const isSeekingRef = useRef(false);
-  const playerRef = useRef<any>(null);
+  const playerRef = useRef<any>(player);
+  playerRef.current = player;
   const is2xActiveRef = useRef(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const startTimeAppliedRef = useRef(false);
-  const playStartedRef = useRef(false);
   const isLandscapeRef = useRef(false);
-
-  const isMutedRef = useRef(isMuted);
-  isMutedRef.current = isMuted;
 
   // ── Landscape হলে container size swap ──
   // Portrait:  container = SCREEN_W x SCREEN_H
@@ -73,93 +57,37 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
     trackWidthRef.current = trackWidth;
   }, [trackWidth]);
 
-  // source memo করা: প্রতি render-এ player নতুন করে বানাবে না
-  // HLS (.m3u8) হলে contentType: "hls", পুরনো MP4 হলে useCaching
-  const source = useMemo(
-    () => (visible ? getVideoSource(uri) : null),
-    [visible, uri],
-  );
-
-  const player = useVideoPlayer(source, (p) => {
-    p.loop = true;
-    p.muted = isMuted;
-    // streaming: অল্প buffer জমলেই play শুরু
-    try {
-      (p as any).bufferOptions = BUFFER_OPTIONS;
-    } catch {}
-  });
-
+  // ── খোলা/বন্ধ হওয়া ──
+  // player আগে থেকেই লোড ও সঠিক সময়ে আছে, তাই seek বা নতুন লোডের দরকার নেই।
+  // শুধু play চালু রাখি আর আইকনকে player-এর আসল অবস্থার সাথে মেলাই।
   useEffect(() => {
-    playerRef.current = player;
-  }, [player]);
-
-  // ── খোলার সাথে সাথে নিজে নিজে play ──
-  // নতুন player তৈরির মুহূর্তে করা play() হারিয়ে যায়, তাই readyToPlay এর জন্য অপেক্ষা করি।
-  // ready হলে: আগে startTime-এ seek, তারপর play।
-  useEffect(() => {
-    if (!player) return;
-
     if (!visible) {
-      try {
-        player.pause();
-      } catch {}
-      setIsPlaying(false);
-      startTimeAppliedRef.current = false;
-      playStartedRef.current = false;
       setIsLandscape(false);
       isLandscapeRef.current = false;
+      setIs2x(false);
+      is2xActiveRef.current = false;
       return;
     }
 
-    playStartedRef.current = false;
-    startTimeAppliedRef.current = false;
+    try {
+      player.play();
+    } catch {}
+    setIsPlaying(!!player.playing);
 
-    const startPlayback = () => {
-      if (playStartedRef.current) return;
-      playStartedRef.current = true;
-      try {
-        if (!startTimeAppliedRef.current && startTime > 0) {
-          player.currentTime = startTime;
-          startTimeAppliedRef.current = true;
-        }
-        player.muted = isMutedRef.current;
-        player.play();
-      } catch {}
-    };
-
-    const statusSub = player.addListener("statusChange", ({ status }) => {
-      if (status === "readyToPlay") startPlayback();
-    });
-
-    // আইকন সবসময় player-এর আসল অবস্থা দেখাবে
     const playingSub = player.addListener("playingChange", (e: any) => {
       setIsPlaying(!!e.isPlaying);
     });
 
-    if (player.status === "readyToPlay") {
-      startPlayback();
-    } else {
-      // এখনই চেষ্টা, না হলে readyToPlay এলে আবার হবে
-      try {
-        player.play();
-      } catch {}
-    }
-
     resetControlsTimer();
 
     return () => {
-      statusSub.remove();
       playingSub.remove();
     };
   }, [visible, player]);
 
+  // ── progress আপডেট ──
   useEffect(() => {
-    if (!player) return;
-    player.muted = isMuted;
-  }, [isMuted, player]);
-
-  useEffect(() => {
-    if (!player || !visible) return;
+    if (!visible) return;
     const interval = setInterval(() => {
       if (isSeekingRef.current) return;
       const dur = player.duration ?? 0;
@@ -231,6 +159,10 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
   };
 
   const handleClose = () => {
+    // ২x এ থাকলে স্বাভাবিক গতিতে ফেরাও, কারণ player টা feed এ ফিরে যাচ্ছে
+    try {
+      if (playerRef.current) playerRef.current.playbackRate = 1;
+    } catch {}
     setIsLandscape(false);
     isLandscapeRef.current = false;
     onClose();
@@ -331,7 +263,7 @@ const VideoFullScreen = ({ uri, visible, onClose, startTime = 0 }: Props) => {
             overflow: "hidden",
           }}
         >
-          {/* Video */}
+          {/* Video (feed এর একই player) */}
           <VideoView
             player={player}
             style={{ width: containerW, height: containerH }}

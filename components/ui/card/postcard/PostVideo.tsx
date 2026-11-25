@@ -184,12 +184,15 @@ const PostVideo = ({
   const [is2x, setIs2x] = useState(false);
   const [fullScreenVisible, setFullScreenVisible] = useState(false);
 
+  // ফুলস্ক্রিন বন্ধ হলে VideoView আবার নতুন করে বসানোর জন্য
+  // (একই player দুই VideoView এ থাকলে ফিরে এসে feed এর view কালো থাকতে পারে)
+  const [viewKey, setViewKey] = useState(0);
+
   const [status, setStatus] = useState<string>("idle");
   const [firstFrame, setFirstFrame] = useState(false);
 
   const playerRef = useRef<any>(null);
   const is2xActiveRef = useRef(false);
-  const startTimeRef = useRef(0);
 
   const isVisibleRef = useRef(isVisible);
   isVisibleRef.current = isVisible;
@@ -276,9 +279,7 @@ const PostVideo = ({
           frameFallback = setTimeout(() => setFirstFrame(true), 400);
         }
 
-        // ── ফিক্স ──
-        // ভিডিও এখন স্ক্রিনে দেখা যাচ্ছে: ready হওয়ার সাথে সাথেই play করো।
-        // (নতুন player তৈরির মুহূর্তে করা আগের play() অনেক সময় হারিয়ে যেত)
+        // ভিডিও এখন স্ক্রিনে দেখা যাচ্ছে: ready হওয়ার সাথে সাথেই play করো
         if (isVisibleRef.current) {
           if (isAutoPlayRef.current && !fullScreenRef.current) {
             try {
@@ -341,9 +342,12 @@ const PostVideo = ({
   }, [isMuted, player]);
 
   // ── Play / pause ──
+  // ফুলস্ক্রিন খোলা থাকলে player টা ফুলস্ক্রিনের হাতে, এখানে কিছু করা হবে না।
+  // বন্ধ হলে এই effect আবার চলে: দেখা যাচ্ছে হলে যেখানে ছিল সেখান থেকেই চলবে।
   useEffect(() => {
+    if (fullScreenVisible) return;
     try {
-      if (!isVisible || fullScreenVisible || !isAutoPlay) {
+      if (!isVisible || !isAutoPlay) {
         player.pause();
       } else {
         player.play();
@@ -376,14 +380,14 @@ const PostVideo = ({
     return () => subscription.remove();
   }, []);
 
-  // ── Tap → full screen ──
+  // ── Tap → full screen (একই player, তাই timeline একই থাকবে) ──
   const openFullscreen = useCallback(() => {
-    try {
-      startTimeRef.current = playerRef.current?.currentTime ?? 0;
-    } catch {
-      startTimeRef.current = 0;
-    }
     setFullScreenVisible(true);
+  }, []);
+
+  const closeFullscreen = useCallback(() => {
+    setFullScreenVisible(false);
+    setViewKey((k) => k + 1);
   }, []);
 
   // ── চেপে ধরলে ২x ──
@@ -442,6 +446,7 @@ const PostVideo = ({
         className="bg-black border-t border-b border-border dark:border-dark-border/50"
       >
         <VideoView
+          key={viewKey}
           player={player}
           style={{ width: SCREEN_WIDTH, height: videoHeight }}
           contentFit="cover"
@@ -503,12 +508,12 @@ const PostVideo = ({
         </TouchableOpacity>
       </View>
 
+      {/* একই player পাঠানো হচ্ছে: নতুন করে লোড হবে না, timeline একই থাকবে */}
       <VideoFullScreen
-        uri={uri}
+        player={player}
         visible={fullScreenVisible}
-        onClose={() => setFullScreenVisible(false)}
+        onClose={closeFullscreen}
         videoMeta={videoMeta}
-        startTime={startTimeRef.current}
       />
     </>
   );
